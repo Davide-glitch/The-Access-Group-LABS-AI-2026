@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AI, LLMs & Agentic AI</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --bg-2: #11141b;
+    --fg: #e7ecf3;
+    --muted: #8a93a6;
+    --accent: #7c9cff;
+    --accent-2: #4be0c1;
+    --warn: #ffb648;
+    --border: #1f2532;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    overflow: hidden;
+  }
+  .deck { position: relative; width: 100vw; height: 100vh; }
+  .slide {
+    position: absolute; inset: 0;
+    padding: 6vh 8vw;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    animation: fade .35s ease;
+  }
+  .slide.active { display: flex; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  h1 { font-size: clamp(2.2rem, 5vw, 4rem); margin: 0 0 .4em; letter-spacing: -0.02em; line-height: 1.05; }
+  h2 { font-size: clamp(1.6rem, 3.2vw, 2.6rem); margin: 0 0 .6em; letter-spacing: -0.01em; }
+  h3 { font-size: 1.1rem; color: var(--muted); margin: 0 0 1.5em; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; }
+  p, li { font-size: clamp(1rem, 1.5vw, 1.35rem); line-height: 1.55; color: #d2d8e3; }
+  ul { padding-left: 1.2em; }
+  li { margin: .5em 0; }
+  .muted { color: var(--muted); }
+  .accent { color: var(--accent); }
+  .accent-2 { color: var(--accent-2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3vw; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2vw; }
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.4em 1.4em;
+  }
+  .card h4 { margin: 0 0 .5em; font-size: 1.15rem; color: var(--accent); }
+  .card p, .card li { font-size: 1rem; }
+
+  .pill {
+    display: inline-block;
+    padding: .25em .8em;
+    border-radius: 999px;
+    background: rgba(124,156,255,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(124,156,255,0.3);
+    font-size: .85rem;
+    margin-right: .4em;
+  }
+
+  .title-slide {
+    align-items: flex-start;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(124,156,255,0.18), transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(75,224,193,0.12), transparent 50%);
+  }
+  .title-slide h1 {
+    background: linear-gradient(90deg, #fff, var(--accent) 70%, var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .footer {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .7em 1.2em;
+    font-size: .8rem; color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: rgba(11,13,18,0.7);
+    backdrop-filter: blur(6px);
+  }
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width .25s ease;
+    z-index: 10;
+  }
+  kbd {
+    background: #1c2230; border: 1px solid var(--border);
+    padding: 1px 6px; border-radius: 4px; font-family: ui-monospace, monospace;
+    font-size: .8em;
+  }
+
+  .flow {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1em; margin-top: 1.5em; flex-wrap: wrap;
+  }
+  .node {
+    flex: 1 1 0;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1em;
+    text-align: center;
+    min-width: 140px;
+  }
+  .node strong { color: var(--accent-2); display: block; margin-bottom: .2em; }
+  .arrow { color: var(--muted); font-size: 1.4em; }
+
+  .timeline {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1em;
+    margin-top: 1.5em;
+  }
+  .timeline div {
+    border-top: 2px solid var(--accent);
+    padding-top: .8em;
+  }
+  .timeline strong { display: block; color: var(--accent); margin-bottom: .3em; }
+  .timeline span { font-size: .95rem; color: #d2d8e3; }
+
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    background: #0f1320; padding: 1px 6px; border-radius: 4px; font-size: .9em;
+    border: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="deck" id="deck">
+
+    <!-- 1 Title -->
+    <section class="slide title-slide active">
+      <h3>A practical introduction</h3>
+      <h1>AI, LLMs &amp; Agentic AI</h1>
+      <p class="muted" style="max-width: 60ch;">
+        From statistical pattern-matchers to autonomous agents — what's actually
+        happening, what works today, and where things are heading.
+      </p>
+      <p class="muted" style="margin-top:3em; font-size:.95rem;">
+        Use <kbd>→</kbd> / <kbd>←</kbd> to navigate · <kbd>F</kbd> for fullscreen
+      </p>
+    </section>
+
+    <!-- 2 Agenda -->
+    <section class="slide">
+      <h3>Agenda</h3>
+      <h2>What we'll cover</h2>
+      <div class="grid-2">
+        <ul>
+          <li>What AI actually is (and isn't)</li>
+          <li>A short history: from rules to learning</li>
+          <li>How Large Language Models work</li>
+          <li>Capabilities &amp; sharp edges</li>
+        </ul>
+        <ul>
+          <li>Prompting: the new interface</li>
+          <li>From chatbots to <span class="accent">agents</span></li>
+          <li>Architectures &amp; patterns</li>
+          <li>Risks, costs, and what's next</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 3 What is AI -->
+    <section class="slide">
+      <h3>Definitions</h3>
+      <h2>What is "AI"?</h2>
+      <p>
+        <strong>Artificial Intelligence</strong> is the field of building systems that
+        perform tasks normally associated with human cognition — perception,
+        reasoning, language, decision-making.
+      </p>
+      <div class="grid-3" style="margin-top: 1.5em;">
+        <div class="card">
+          <h4>Symbolic AI</h4>
+          <p>Hand-coded rules, logic, search. Great for narrow, well-defined problems. Brittle outside them.</p>
+        </div>
+        <div class="card">
+          <h4>Machine Learning</h4>
+          <p>Systems that learn patterns from data instead of being explicitly programmed.</p>
+        </div>
+        <div class="card">
+          <h4>Deep Learning</h4>
+          <p>ML using large neural networks. The engine behind almost all of today's breakthroughs.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 Timeline -->
+    <section class="slide">
+      <h3>How we got here</h3>
+      <h2>A very short history</h2>
+      <div class="timeline">
+        <div><strong>1950s–80s</strong><span>Symbolic AI, expert systems, early neural nets</span></div>
+        <div><strong>1990s–2000s</strong><span>Statistical ML, SVMs, the data era begins</span></div>
+        <div><strong>2012</strong><span>Deep learning breakthrough (AlexNet, ImageNet)</span></div>
+        <div><strong>2017</strong><span>"Attention is All You Need" — the Transformer</span></div>
+        <div><strong>2022→</strong><span>ChatGPT, scaling, multimodal, agents</span></div>
+      </div>
+      <p class="muted" style="margin-top:2em;">
+        The leap of the last few years isn't a new idea — it's <em>scale</em>:
+        more data, more compute, the same core architecture.
+      </p>
+    </section>
+
+    <!-- 5 What is an LLM -->
+    <section class="slide">
+      <h3>The core technology</h3>
+      <h2>What is a Large Language Model?</h2>
+      <div class="grid-2">
+        <div>
+          <p>
+            An LLM is a neural network trained to predict the next
+            <span class="accent">token</span> (roughly: word piece) given everything that came before.
+          </p>
+          <p>
+            That single objective — over trillions of tokens of text — produces
+            a model that can summarise, translate, code, reason step-by-step, and follow instructions.
+          </p>
+          <p class="muted" style="font-size:1rem;">
+            It's not a database, a search engine, or a person. It's a learned
+            distribution over plausible continuations of text.
+          </p>
+        </div>
+        <div class="card">
+          <h4>The prediction loop</h4>
+          <p style="font-family: ui-monospace, monospace; font-size: 1rem; line-height: 1.8;">
+            "The capital of France is" →<br>
+            <span class="accent-2">Paris</span> (94%)<br>
+            <span class="muted">the (2%)</span><br>
+            <span class="muted">a (1%)</span><br>
+            <span class="muted">…</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 How LLMs work -->
+    <section class="slide">
+      <h3>Under the hood</h3>
+      <h2>How an LLM produces an answer</h2>
+      <div class="flow">
+        <div class="node"><strong>Tokenize</strong>Split text into ~subword pieces</div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Embed</strong>Map tokens to vectors</div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Transformer</strong>Layers of attention &amp; MLPs</div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Predict</strong>Probability for each next token</div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Sample</strong>Pick one, append, repeat</div>
+      </div>
+      <p style="margin-top:2em;">
+        <span class="pill">Pretraining</span>
+        <span class="pill">Instruction tuning</span>
+        <span class="pill">RLHF / preference tuning</span>
+      </p>
+      <p class="muted">Training stages shape <em>what</em> the model learned and <em>how</em> it behaves when asked.</p>
+    </section>
+
+    <!-- 7 Capabilities -->
+    <section class="slide">
+      <h3>What they're good at</h3>
+      <h2>Capabilities</h2>
+      <div class="grid-3">
+        <div class="card"><h4>Language</h4><p>Summarisation, translation, rewriting, extraction, classification.</p></div>
+        <div class="card"><h4>Code</h4><p>Generation, refactoring, debugging, explaining, test writing.</p></div>
+        <div class="card"><h4>Reasoning</h4><p>Multi-step problems, planning, analysis — improving fast with "thinking" models.</p></div>
+        <div class="card"><h4>Knowledge work</h4><p>Drafting, research synthesis, structured data extraction from messy inputs.</p></div>
+        <div class="card"><h4>Multimodal</h4><p>Images, audio, video, documents — increasingly native to the model.</p></div>
+        <div class="card"><h4>Tool use</h4><p>Calling APIs, running code, querying databases. The bridge to action.</p></div>
+      </div>
+    </section>
+
+    <!-- 8 Limitations -->
+    <section class="slide">
+      <h3>Where they fail</h3>
+      <h2>Sharp edges</h2>
+      <ul>
+        <li><strong style="color:var(--warn)">Hallucination.</strong> Confident output that isn't grounded in fact. Mitigated, not solved, by retrieval and tools.</li>
+        <li><strong style="color:var(--warn)">Stale knowledge.</strong> Training data has a cutoff. The model doesn't <em>know</em> what's happened since.</li>
+        <li><strong style="color:var(--warn)">No real memory.</strong> A bare LLM is stateless — it only "remembers" what's in the current context window.</li>
+        <li><strong style="color:var(--warn)">Brittleness to phrasing.</strong> Small changes in prompts can produce large changes in output.</li>
+        <li><strong style="color:var(--warn)">Cost &amp; latency.</strong> Big models are expensive per token; agentic loops multiply that cost.</li>
+      </ul>
+    </section>
+
+    <!-- 9 Prompting -->
+    <section class="slide">
+      <h3>The interface</h3>
+      <h2>Prompting, briefly</h2>
+      <div class="grid-2">
+        <div>
+          <p>The prompt <em>is</em> the program. Treat it like one:</p>
+          <ul>
+            <li>Be specific about role, task, and output format</li>
+            <li>Give examples (few-shot) when behaviour matters</li>
+            <li>Provide the data it needs — don't rely on memory</li>
+            <li>For hard problems, ask it to think step by step</li>
+            <li>Iterate: prompts are debugged, not written</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>A decent template</h4>
+          <p style="font-family: ui-monospace, monospace; font-size:.95rem; white-space: pre-wrap;">You are a {role}.
+Goal: {what success looks like}.
+Constraints: {format, length, tone}.
+Context:
+{relevant data}
+Task: {the actual ask}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 RAG -->
+    <section class="slide">
+      <h3>Grounding</h3>
+      <h2>Retrieval-Augmented Generation (RAG)</h2>
+      <p>
+        Don't ask the model what it remembers — give it the documents and ask it to answer from them.
+      </p>
+      <div class="flow">
+        <div class="node"><strong>Question</strong>User input</div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Retrieve</strong>Search vector DB / index</div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Augment</strong>Stuff context into prompt</div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Generate</strong>LLM answers from sources</div>
+      </div>
+      <p class="muted" style="margin-top:1.5em;">
+        Reduces hallucination, keeps knowledge fresh, and gives you citations.
+        It's the single most common LLM application pattern in production.
+      </p>
+    </section>
+
+    <!-- 11 Agentic AI -->
+    <section class="slide">
+      <h3>The shift</h3>
+      <h2>What is Agentic AI?</h2>
+      <p>
+        A model that doesn't just <em>answer</em> — it <span class="accent">acts</span>.
+        Given a goal, it plans, takes steps, uses tools, observes results, and adapts until the goal is met.
+      </p>
+      <div class="grid-2" style="margin-top:1em;">
+        <div class="card">
+          <h4>Chatbot</h4>
+          <p>One turn in, one turn out. Human drives every step.</p>
+        </div>
+        <div class="card">
+          <h4 style="color:var(--accent-2)">Agent</h4>
+          <p>Goal in, result out. Model decides the steps, calls tools, reflects, retries.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 Anatomy of an agent -->
+    <section class="slide">
+      <h3>Building blocks</h3>
+      <h2>Anatomy of an agent</h2>
+      <div class="grid-3">
+        <div class="card"><h4>Model</h4><p>The reasoning core. Decides what to do next.</p></div>
+        <div class="card"><h4>Tools</h4><p>Functions it can call: search, code execution, APIs, file I/O.</p></div>
+        <div class="card"><h4>Memory</h4><p>Short-term (context) and long-term (vector store, files, DB).</p></div>
+        <div class="card"><h4>Planner</h4><p>Decomposes a goal into steps — sometimes implicit, sometimes a separate component.</p></div>
+        <div class="card"><h4>Loop</h4><p>Observe → think → act → observe. The engine that turns a model into an agent.</p></div>
+        <div class="card"><h4>Guardrails</h4><p>Permissions, validation, human-in-the-loop checkpoints, budgets.</p></div>
+      </div>
+    </section>
+
+    <!-- 13 Agent loop -->
+    <section class="slide">
+      <h3>The loop</h3>
+      <h2>How an agent actually runs</h2>
+      <div class="flow">
+        <div class="node"><strong>Goal</strong>"Book me a flight under £200"</div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Think</strong>Plan next step</div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Act</strong>Call a tool</div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Observe</strong>Read the result</div>
+        <span class="arrow">↺</span>
+        <div class="node"><strong>Repeat</strong>Until done or stuck</div>
+      </div>
+      <p class="muted" style="margin-top:1.5em;">
+        Patterns you'll hear: <span class="pill">ReAct</span><span class="pill">Plan-and-Execute</span><span class="pill">Reflexion</span><span class="pill">Multi-agent</span>
+      </p>
+    </section>
+
+    <!-- 14 Use cases -->
+    <section class="slide">
+      <h3>In the wild</h3>
+      <h2>Where agents are working today</h2>
+      <div class="grid-3">
+        <div class="card"><h4>Coding agents</h4><p>Read repos, write changes, run tests, open PRs. (Like the one running this slide deck.)</p></div>
+        <div class="card"><h4>Customer support</h4><p>Resolve tickets end-to-end: lookup, action, follow-up.</p></div>
+        <div class="card"><h4>Research &amp; analysis</h4><p>Browse, synthesise, cite — with humans reviewing the output.</p></div>
+        <div class="card"><h4>Ops automation</h4><p>Triage alerts, run diagnostics, draft remediations.</p></div>
+        <div class="card"><h4>Data workflows</h4><p>Extract from documents, populate systems, reconcile records.</p></div>
+        <div class="card"><h4>Personal assistants</h4><p>Calendars, email, scheduling, browsing — slowly getting real.</p></div>
+      </div>
+    </section>
+
+    <!-- 15 Risks -->
+    <section class="slide">
+      <h3>Take seriously</h3>
+      <h2>Risks &amp; responsibilities</h2>
+      <ul>
+        <li><strong>Hallucination at scale.</strong> An agent acting on a wrong belief does damage faster than a chatbot does.</li>
+        <li><strong>Prompt injection.</strong> Untrusted text in tool outputs can hijack the agent's instructions.</li>
+        <li><strong>Privacy &amp; data leakage.</strong> What you put in the prompt may flow to logs, training data, or third parties.</li>
+        <li><strong>Cost runaway.</strong> Loops + big models = surprising bills. Add budgets and step limits.</li>
+        <li><strong>Accountability.</strong> When an agent acts, <em>someone</em> is responsible. Design for traceability and human review.</li>
+      </ul>
+    </section>
+
+    <!-- 16 Building well -->
+    <section class="slide">
+      <h3>Practical advice</h3>
+      <h2>If you're building with this</h2>
+      <div class="grid-2">
+        <ul>
+          <li>Start narrow. Pick one task, do it well, then expand.</li>
+          <li>Ground the model — RAG, tools, structured outputs.</li>
+          <li>Write evals before you write prompts. You can't improve what you can't measure.</li>
+          <li>Treat prompts as code: version, review, test.</li>
+        </ul>
+        <ul>
+          <li>Prefer the smallest model that works. Cost compounds in agent loops.</li>
+          <li>Log everything. Traces beat guesses.</li>
+          <li>Keep humans in the loop where the blast radius is real.</li>
+          <li>Assume the model will be wrong — design for graceful failure.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 17 Future -->
+    <section class="slide">
+      <h3>What's next</h3>
+      <h2>Where this is heading</h2>
+      <ul>
+        <li><strong class="accent">Longer-horizon agents.</strong> From minutes of autonomy to hours, then days, on real tasks.</li>
+        <li><strong class="accent">Native multimodality.</strong> Voice, vision, video as first-class inputs and outputs.</li>
+        <li><strong class="accent">Smaller, cheaper, local.</strong> Capable models running on your laptop, your phone, your edge device.</li>
+        <li><strong class="accent">Better tool ecosystems.</strong> Standard protocols (e.g. MCP) so agents plug into the world reliably.</li>
+        <li><strong class="accent">The interesting bottleneck</strong> stops being the model and becomes the surrounding system: evals, memory, oversight, integration.</li>
+      </ul>
+    </section>
+
+    <!-- 18 Closing -->
+    <section class="slide title-slide">
+      <h3>Thank you</h3>
+      <h1>Questions?</h1>
+      <p class="muted" style="max-width: 60ch;">
+        The interesting work isn't picking a model — it's designing the
+        system around it: what it knows, what it can do, and who's watching.
+      </p>
+    </section>
+
+  </div>
+
+  <div class="footer">
+    <span>AI, LLMs &amp; Agentic AI</span>
+    <span><span id="cur">1</span> / <span id="total">18</span></span>
+  </div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  let i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    document.getElementById('cur').textContent = i + 1;
+    document.getElementById('progress').style.width = ((i + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { show(i + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(i - 1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(total - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.footer')) return;
+    show(i + 1);
+  });
+
+  show(0);
+</script>
+</body>
+</html>
