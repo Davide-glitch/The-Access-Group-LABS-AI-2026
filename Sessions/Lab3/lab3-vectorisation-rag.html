@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 3 — Vectorisation &amp; RAG</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #080a0f;
+    --bg-2: #0d1018;
+    --bg-3: #111520;
+    --fg: #e8edf5;
+    --muted: #5a6478;
+    --muted-2: #8892a4;
+    --accent: #00e5ff;
+    --accent-dim: rgba(0,229,255,0.12);
+    --accent-border: rgba(0,229,255,0.25);
+    --green: #00ff9d;
+    --green-dim: rgba(0,255,157,0.1);
+    --orange: #ff7b2c;
+    --orange-dim: rgba(255,123,44,0.1);
+    --border: #1a1f2e;
+    --border-2: #232838;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .deck { position: relative; width: 100vw; height: 100vh; }
+
+  .slide {
+    position: absolute; inset: 0;
+    padding: 5vh 7vw;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+    animation: slideIn .3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .slide.active { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin-bottom: 0.4em;
+  }
+  h2 {
+    font-size: clamp(1.7rem, 3.2vw, 2.7rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6em;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 1em;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  p, li {
+    font-size: clamp(.95rem, 1.4vw, 1.22rem);
+    line-height: 1.6;
+    color: #c4cad8;
+    font-family: var(--sans);
+    font-weight: 400;
+  }
+  ul { padding-left: 0; list-style: none; }
+  li {
+    padding: .45em 0 .45em 1.4em;
+    position: relative;
+  }
+  li::before {
+    content: '›';
+    position: absolute; left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  strong { color: var(--fg); font-weight: 700; }
+
+  .accent   { color: var(--accent); }
+  .green    { color: var(--green); }
+  .orange   { color: var(--orange); }
+  .muted    { color: var(--muted-2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8vw; }
+
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    padding: 1.3em 1.4em;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: .5;
+  }
+  .card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: .5em;
+    font-family: var(--sans);
+  }
+  .card.green-card::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .card.green-card h4 { color: var(--green); }
+  .card.orange-card::before { background: linear-gradient(90deg, var(--orange), transparent); }
+  .card.orange-card h4 { color: var(--orange); }
+  .card p, .card li { font-size: .97rem; }
+
+  .code-block {
+    background: #070910;
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: 1.2em 1.4em;
+    font-family: var(--mono);
+    font-size: clamp(.78rem, 1.1vw, .92rem);
+    line-height: 1.75;
+    overflow: auto;
+    position: relative;
+    white-space: pre;
+  }
+  .code-block::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: 1em;
+    font-size: .68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .kw  { color: #7c9cff; }
+  .ty  { color: var(--accent); }
+  .str { color: var(--green); }
+  .cm  { color: var(--muted); font-style: italic; }
+  .fn  { color: #ffb648; }
+  .nu  { color: #ff7b9c; }
+
+  .flow {
+    display: flex; align-items: stretch;
+    gap: 0; margin-top: .8em;
+    flex-wrap: nowrap;
+  }
+  .flow-node {
+    flex: 1;
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: .9em .8em;
+    text-align: center;
+    position: relative;
+  }
+  .flow-node strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--accent);
+    margin-bottom: .3em;
+  }
+  .flow-node.green-node { border-color: rgba(0,255,157,0.25); background: rgba(0,255,157,0.04); }
+  .flow-node.green-node strong { color: var(--green); }
+  .flow-node span { font-size: .78rem; color: var(--muted-2); }
+  .flow-arrow {
+    display: flex; align-items: center;
+    color: var(--muted);
+    font-size: 1.1rem;
+    padding: 0 .3em;
+    flex-shrink: 0;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: .22em .75em;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    font-family: var(--mono);
+    font-size: .78rem;
+    margin: .2em .2em .2em 0;
+  }
+  .tag.green-tag {
+    background: var(--green-dim);
+    color: var(--green);
+    border-color: rgba(0,255,157,0.25);
+  }
+  .tag.orange-tag {
+    background: var(--orange-dim);
+    color: var(--orange);
+    border-color: rgba(255,123,44,0.25);
+  }
+
+  .title-slide {
+    justify-content: flex-end;
+    padding-bottom: 10vh;
+  }
+  .title-slide h1 {
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    background: linear-gradient(135deg, #fff 30%, var(--accent) 70%, var(--green));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    max-width: 14ch;
+  }
+  .title-glow {
+    position: absolute;
+    top: 10%; left: -5%;
+    width: 60vw; height: 60vh;
+    background: radial-gradient(ellipse, rgba(0,229,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .title-glow-2 {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 50vw; height: 50vh;
+    background: radial-gradient(ellipse, rgba(0,255,157,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .lab-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .8rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: .4em .9em;
+    margin-bottom: 2em;
+  }
+  .lab-badge span { color: var(--accent); font-weight: 700; }
+
+  .steps { list-style: none; padding: 0; counter-reset: steps; }
+  .steps li {
+    counter-increment: steps;
+    padding: .6em 0 .6em 2.8em;
+  }
+  .steps li::before {
+    content: counter(steps, decimal-leading-zero);
+    position: absolute; left: 0;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 2em; height: 1.7em;
+    display: flex; align-items: center; justify-content: center;
+    top: .65em;
+  }
+
+  .timeline {
+    display: flex; gap: 0;
+    margin-top: 1.5em;
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .tl-item {
+    flex: 1;
+    padding: 1em 1.1em;
+    border-right: 1px solid var(--border-2);
+    position: relative;
+  }
+  .tl-item:last-child { border-right: none; }
+  .tl-item .tl-time {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: .35em;
+    letter-spacing: .05em;
+  }
+  .tl-item .tl-title {
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--fg);
+    margin-bottom: .2em;
+  }
+  .tl-item .tl-desc {
+    font-size: .82rem;
+    color: var(--muted-2);
+    line-height: 1.45;
+  }
+  .tl-item.highlight { background: var(--accent-dim); }
+  .tl-item.highlight .tl-time { color: var(--green); }
+
+  .progress {
+    position: fixed; top: 0; left: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    transition: width .3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    box-shadow: 0 0 12px rgba(0,229,255,0.6);
+  }
+  .footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .65em 1.4em;
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: rgba(8,10,15,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 50;
+  }
+  .footer .slide-num { color: var(--muted-2); }
+  .footer .slide-num em { color: var(--accent); font-style: normal; }
+  kbd {
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    padding: 1px 5px; border-radius: 4px;
+    font-size: .78em; font-family: var(--mono);
+  }
+
+  .big-stat {
+    font-family: var(--mono);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .warn-li::before { color: var(--orange) !important; content: '!' !important; }
+
+  /* phase label for RAG pipeline rows */
+  .phase-row {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    margin-bottom: .6em;
+  }
+  .phase-label {
+    font-family: var(--mono);
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    min-width: 4.5em;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .phase-label.ingest { color: var(--green); }
+  .phase-label.query  { color: var(--accent); }
+</style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="deck" id="deck">
+
+    <!-- 1 · TITLE -->
+    <section class="slide title-slide active">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 03</span></div>
+      <h1>Vectorisation &amp; RAG</h1>
+      <p class="muted" style="max-width:55ch; margin-top:.8em; font-size:1.1rem;">
+        How to give your agent a memory that scales to thousands of documents —
+        without stuffing them all into the prompt.
+      </p>
+      <p class="muted" style="margin-top:2.5em; font-size:.88rem;">
+        <kbd>→</kbd> next &nbsp; <kbd>←</kbd> previous &nbsp; <kbd>F</kbd> fullscreen
+      </p>
+    </section>
+
+    <!-- 2 · AGENDA -->
+    <section class="slide">
+      <div class="eyebrow">Agenda</div>
+      <h2>What we'll cover today</h2>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-time">5 min</div>
+          <div class="tl-title">Recap</div>
+          <div class="tl-desc">Where Lab 2 left off</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">25 min</div>
+          <div class="tl-title">Theory</div>
+          <div class="tl-desc">Embeddings, similarity, chunking, vector DBs</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">5 min</div>
+          <div class="tl-title">Pipeline</div>
+          <div class="tl-desc">Full RAG ingest + query flow</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">15 min</div>
+          <div class="tl-title">Live Demo</div>
+          <div class="tl-desc">Agent answers from company docs</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">45 min</div>
+          <div class="tl-title">Hands-on</div>
+          <div class="tl-desc">Build it from scratch, step by step</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">5 min</div>
+          <div class="tl-title">Wrap-up</div>
+          <div class="tl-desc">Pitfalls + what's next</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · THE PROBLEM -->
+    <section class="slide">
+      <div class="eyebrow">Motivation</div>
+      <h2>Tool calling isn't enough for large document sets</h2>
+      <div class="grid-2" style="gap:3vw; align-items:center;">
+        <div>
+          <p>Lab 2 gave the agent <strong>live data</strong> — current weather, exchange rates, flight search. That works when the universe of facts is small.</p>
+          <p style="margin-top:.9em;">But what if you have:</p>
+          <ul style="margin-top:.5em;">
+            <li>500 internal policy documents</li>
+            <li>10,000 support tickets</li>
+            <li>A full product knowledge base</li>
+          </ul>
+          <p style="margin-top:1em;">
+            You can't fit them all into the prompt.
+            You can't write a tool for each one.
+            <strong class="accent">You need retrieval.</strong>
+          </p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card orange-card">
+            <h4>Context window is finite</h4>
+            <p>Even a 128k token window holds only ~300 pages. And filling it is slow and expensive.</p>
+          </div>
+          <div class="card orange-card">
+            <h4>Needle-in-a-haystack fails</h4>
+            <p>Long prompts make models lose focus on the relevant parts. Retrieval precision beats volume every time.</p>
+          </div>
+          <div class="card green-card">
+            <h4>RAG: find, then answer</h4>
+            <p>Retrieve only the 3–5 most relevant chunks. The model has everything it needs, and nothing it doesn't.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · WHAT IS AN EMBEDDING -->
+    <section class="slide">
+      <div class="eyebrow">Theory</div>
+      <h2>What is an embedding?</h2>
+      <div class="grid-2" style="gap:3vw; align-items:center;">
+        <div>
+          <p>An embedding model takes a piece of text and outputs a <strong>fixed-size vector of numbers</strong> — a point in a very high-dimensional space.</p>
+          <p style="margin-top:.9em;">The key property: <strong class="accent">similar meanings end up close together</strong>. The geometry <em>is</em> the semantics.</p>
+          <div class="code-block" data-lang="concept" style="margin-top:1.1em; font-size:.88rem; line-height:1.9;">
+<span class="str">"How do I reset my password?"</span>
+    → [<span class="nu">0.12</span>, <span class="nu">-0.87</span>, <span class="nu">0.34</span>, ... <span class="nu">1536 values</span>]
+
+<span class="str">"Steps to change account credentials"</span>
+    → [<span class="nu">0.11</span>, <span class="nu">-0.85</span>, <span class="nu">0.36</span>, ... <span class="nu">1536 values</span>]
+<span class="cm">                     ↑ very close in vector space</span>
+          </div>
+          <div style="margin-top:1em;">
+            <span class="tag">text-embedding-3-small</span>
+            <span class="tag green-tag">1536 dimensions</span>
+          </div>
+        </div>
+        <div>
+          <svg viewBox="0 0 340 280" xmlns="http://www.w3.org/2000/svg" style="width:100%; max-height:46vh;">
+            <defs>
+              <radialGradient id="gHR" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.18"/>
+                <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="gIT" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#00ff9d" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="#00ff9d" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="gFin" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#ff7b2c" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="#ff7b2c" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+
+            <!-- faint axes -->
+            <line x1="20" y1="260" x2="320" y2="260" stroke="#1a1f2e" stroke-width="1"/>
+            <line x1="20" y1="20"  x2="20"  y2="260" stroke="#1a1f2e" stroke-width="1"/>
+            <text x="320" y="258" font-family="'JetBrains Mono',monospace" font-size="9" fill="#2a3040" text-anchor="end">semantic dimension 1</text>
+            <text x="22" y="18"   font-family="'JetBrains Mono',monospace" font-size="9" fill="#2a3040">dim 2</text>
+
+            <!-- HR cluster halo -->
+            <ellipse cx="95" cy="105" rx="52" ry="48" fill="url(#gHR)"/>
+            <!-- IT cluster halo -->
+            <ellipse cx="250" cy="85"  rx="50" ry="44" fill="url(#gIT)"/>
+            <!-- Finance cluster halo -->
+            <ellipse cx="190" cy="210" rx="50" ry="38" fill="url(#gFin)"/>
+
+            <!-- HR cluster dots -->
+            <circle cx="75"  cy="90"  r="5" fill="#00e5ff" opacity=".85"/>
+            <circle cx="115" cy="80"  r="5" fill="#00e5ff" opacity=".85"/>
+            <circle cx="88"  cy="125" r="5" fill="#00e5ff" opacity=".85"/>
+            <circle cx="108" cy="118" r="5" fill="#00e5ff" opacity=".85"/>
+            <text x="54"  y="87"  font-family="'JetBrains Mono',monospace" font-size="8.5" fill="#8892a4">Leave Policy</text>
+            <text x="118" y="78"  font-family="'JetBrains Mono',monospace" font-size="8.5" fill="#8892a4">Onboarding</text>
+            <text x="60"  y="140" font-family="'JetBrains Mono',monospace" font-size="8.5" fill="#8892a4">Benefits</text>
+            <text x="111" y="131" font-family="'JetBrains Mono',monospace" font-size="8.5" fill="#8892a4">Expenses</text>
+            <text x="58"  y="110" font-family="'JetBrains Mono',monospace" font-size="9" fill="#00e5ff" font-weight="700">HR</text>
+
+            <!-- IT cluster dots -->
+            <circle cx="232" cy="72"  r="5" fill="#00ff9d" opacity=".85"/>
+            <circle cx="268" cy="68"  r="5" fill="#00ff9d" opacity=".85"/>
+            <circle cx="248" cy="105" r="5" fill="#00ff9d" opacity=".85"/>
+            <text x="210" y="69"  font-family="'JetBrains Mono',monospace" font-size="8.5" fill="#8892a4">VPN Setup</text>
+            <text x="272" y="65"  font-family="'JetBrains Mono',monospace" font-size="8.5" fill="#8892a4">Helpdesk</text>
+            <text x="252" y="120" font-family="'JetBrains Mono',monospace" font-size="8.5" fill="#8892a4">Pw Reset</text>
+            <text x="260" y="90"  font-family="'JetBrains Mono',monospace" font-size="9" fill="#00ff9d" font-weight="700">IT</text>
+
+            <!-- Finance cluster dots -->
+            <circle cx="170" cy="203" r="5" fill="#ff7b2c" opacity=".85"/>
+            <circle cx="208" cy="198" r="5" fill="#ff7b2c" opacity=".85"/>
+            <circle cx="190" cy="228" r="5" fill="#ff7b2c" opacity=".85"/>
+            <text x="134" y="200" font-family="'JetBrains Mono',monospace" font-size="8.5" fill="#8892a4">Invoices</text>
+            <text x="212" y="196" font-family="'JetBrains Mono',monospace" font-size="8.5" fill="#8892a4">Budget</text>
+            <text x="193" y="243" font-family="'JetBrains Mono',monospace" font-size="8.5" fill="#8892a4">Pricing</text>
+            <text x="168" y="222" font-family="'JetBrains Mono',monospace" font-size="9" fill="#ff7b2c" font-weight="700">Finance</text>
+
+            <!-- Query point (star-like) near IT cluster -->
+            <polygon points="275,105 278,113 287,113 280,118 283,126 275,121 268,126 271,118 264,113 272,113"
+                     fill="#ffb648" opacity=".9"/>
+            <text x="250" y="140" font-family="'JetBrains Mono',monospace" font-size="8" fill="#ffb648">← your query</text>
+          </svg>
+          <p class="muted" style="font-size:.82rem; margin-top:.4em; text-align:center;">Each dot is a document chunk. Your query lands near the most relevant ones.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · COSINE SIMILARITY -->
+    <section class="slide">
+      <div class="eyebrow">Theory</div>
+      <h2>Cosine similarity — direction is meaning</h2>
+      <div class="grid-2" style="gap:3vw; align-items:center;">
+        <div>
+          <p>To find relevant chunks, we measure the <strong>angle</strong> between two vectors. Small angle = similar meaning.</p>
+          <div class="code-block" data-lang="C#" style="margin-top:1em; font-size:.84rem; line-height:1.85;">
+<span class="kw">static float</span> <span class="fn">CosineSimilarity</span>(<span class="ty">float</span>[] a, <span class="ty">float</span>[] b)
+{
+    <span class="kw">float</span> dot = <span class="nu">0</span>, magA = <span class="nu">0</span>, magB = <span class="nu">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="nu">0</span>; i &lt; a.Length; i++)
+    {
+        dot  += a[i] * b[i];
+        magA += a[i] * a[i];
+        magB += b[i] * b[i];
+    }
+    <span class="kw">return</span> dot / (<span class="ty">MathF</span>.<span class="fn">Sqrt</span>(magA) * <span class="ty">MathF</span>.<span class="fn">Sqrt</span>(magB));
+}
+          </div>
+          <p class="muted" style="margin-top:.9em; font-size:.92rem;">Returns a score between <strong>-1</strong> and <strong>+1</strong>. In practice, text embeddings score between ~0.0 (unrelated) and ~0.95 (near-identical).</p>
+        </div>
+        <div>
+          <svg viewBox="0 0 320 280" xmlns="http://www.w3.org/2000/svg" style="width:100%; max-height:46vh;">
+            <!-- origin -->
+            <circle cx="60" cy="230" r="4" fill="#232838"/>
+
+            <!-- vector A (high similarity, small angle) -->
+            <line x1="60" y1="230" x2="230" y2="60"  stroke="#00e5ff" stroke-width="2.5" marker-end="url(#va)"/>
+            <line x1="60" y1="230" x2="265" y2="80"  stroke="#00ff9d" stroke-width="2.5" marker-end="url(#vb)"/>
+            <!-- arc for small angle -->
+            <path d="M 95,197 A 48,48 0 0,1 113,186" stroke="#ffb648" stroke-width="1.5" fill="none" stroke-dasharray="3,2"/>
+            <text x="115" y="185" font-family="'JetBrains Mono',monospace" font-size="10" fill="#ffb648">small angle</text>
+            <text x="115" y="197" font-family="'JetBrains Mono',monospace" font-size="10" fill="#ffb648">≈ 0.97</text>
+
+            <!-- labels -->
+            <text x="234" y="55"  font-family="'JetBrains Mono',monospace" font-size="9.5" fill="#00e5ff">"How do I reset</text>
+            <text x="234" y="67"  font-family="'JetBrains Mono',monospace" font-size="9.5" fill="#00e5ff"> my password?"</text>
+            <text x="268" y="78"  font-family="'JetBrains Mono',monospace" font-size="9.5" fill="#00ff9d">"Password</text>
+            <text x="268" y="89"  font-family="'JetBrains Mono',monospace" font-size="9.5" fill="#00ff9d"> Reset Guide"</text>
+
+            <!-- vector C (low similarity, large angle) -->
+            <line x1="60" y1="230" x2="60"  y2="30"  stroke="#5a6478" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#vc)"/>
+            <!-- arc for large angle -->
+            <path d="M 60,182 A 48,48 0 0,1 100,196" stroke="#ff7b2c" stroke-width="1.5" fill="none" stroke-dasharray="3,2"/>
+            <text x="12"  y="120" font-family="'JetBrains Mono',monospace" font-size="9.5" fill="#5a6478">"Expense</text>
+            <text x="12"  y="132" font-family="'JetBrains Mono',monospace" font-size="9.5" fill="#5a6478"> Policy"</text>
+            <text x="78"  y="196" font-family="'JetBrains Mono',monospace" font-size="10" fill="#ff7b2c">large angle ≈ 0.12</text>
+
+            <defs>
+              <marker id="va" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L8,3.5 Z" fill="#00e5ff"/></marker>
+              <marker id="vb" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L8,3.5 Z" fill="#00ff9d"/></marker>
+              <marker id="vc" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L8,3.5 Z" fill="#5a6478"/></marker>
+            </defs>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · CHUNKING -->
+    <section class="slide">
+      <div class="eyebrow">Theory</div>
+      <h2>Chunking — why you can't embed a whole document</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Embedding models have a <strong>token limit</strong> (usually 512–8192 tokens). More importantly, a long document produces a vector that averages over all its topics — making it hard to retrieve precisely.</p>
+          <p style="margin-top:.9em;">The solution: split documents into smaller, overlapping <strong>chunks</strong> before embedding.</p>
+          <div style="margin-top:1.2em;">
+            <span class="tag">chunk size</span>
+            <span class="tag">overlap</span>
+            <span class="tag green-tag">precision vs. recall</span>
+          </div>
+          <p class="muted" style="margin-top:1em; font-size:.92rem;">Start with <strong>chunk size 300–500 tokens</strong>, overlap 50–100 tokens. Tune from there.</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card green-card">
+            <h4>Fixed-size (what we'll use)</h4>
+            <p>Split every N characters with an M-character overlap window. Simple, predictable, works well for most prose documents.</p>
+          </div>
+          <div class="card">
+            <h4>Sentence / paragraph</h4>
+            <p>Split on natural boundaries. Better semantic coherence, but variable chunk sizes need more handling.</p>
+          </div>
+          <div class="card orange-card">
+            <h4>Too small → loses context</h4>
+            <p>A 50-token chunk might have the answer but no surrounding context. The model can't form a complete response.</p>
+          </div>
+          <div class="card orange-card">
+            <h4>Too large → loses precision</h4>
+            <p>A 2000-token chunk might match too many queries. Retrieval returns irrelevant noise alongside the real answer.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · VECTOR DATABASES -->
+    <section class="slide">
+      <div class="eyebrow">Theory</div>
+      <h2>Vector databases</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>A vector database stores <strong>(id, vector, metadata)</strong> tuples and supports fast <strong>approximate nearest-neighbour (ANN)</strong> search — finding the top-k most similar vectors to a query without comparing all of them.</p>
+          <p style="margin-top:.9em;">The dominant index algorithm is <span class="tag">HNSW</span> (Hierarchical Navigable Small World graph). Scales to billions of vectors in milliseconds.</p>
+          <div class="card" style="margin-top:1.1em; padding:.9em 1.1em;">
+            <h4>Each entry has three parts</h4>
+            <ul style="margin-top:.4em;">
+              <li><strong>ID</strong> — uniquely identifies the chunk</li>
+              <li><strong>Vector</strong> — the embedding (1536 floats)</li>
+              <li><strong>Metadata</strong> — source file, page, chunk index, raw text</li>
+            </ul>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.8em;">
+          <div class="card green-card" style="padding:.85em 1.1em;">
+            <h4 style="margin-bottom:.2em;">In-memory list ← today</h4>
+            <p style="font-size:.9rem;">Pure C#. No setup. You see the algorithm. Zero persistence — perfect for labs.</p>
+          </div>
+          <div class="card" style="padding:.85em 1.1em;">
+            <h4 style="margin-bottom:.2em;">Qdrant</h4>
+            <p style="font-size:.9rem;">Docker image, REST + gRPC, high-performance. Good first production choice.</p>
+          </div>
+          <div class="card" style="padding:.85em 1.1em;">
+            <h4 style="margin-bottom:.2em;">pgvector</h4>
+            <p style="font-size:.9rem;">PostgreSQL extension. Add vectors to an existing relational DB — no new infra.</p>
+          </div>
+          <div class="card" style="padding:.85em 1.1em;">
+            <h4 style="margin-bottom:.2em;">Azure AI Search</h4>
+            <p style="font-size:.9rem;">Fully managed, enterprise-grade. Hybrid search (keyword + semantic) built-in.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · RAG PIPELINE -->
+    <section class="slide">
+      <div class="eyebrow">Architecture</div>
+      <h2>The full RAG pipeline</h2>
+
+      <div style="margin-top:1em;">
+        <!-- INGEST ROW -->
+        <div class="phase-row">
+          <span class="phase-label ingest">INGEST</span>
+          <div class="flow" style="flex:1; margin-top:0;">
+            <div class="flow-node green-node">
+              <strong>Documents</strong>
+              <span>Markdown files, PDFs, tickets…</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node green-node">
+              <strong>Chunk</strong>
+              <span>Split into ~400-token pieces with overlap</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node green-node">
+              <strong>Embed</strong>
+              <span>text-embedding-3-small via GitHub Models</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node green-node">
+              <strong>Store</strong>
+              <span>Vector + metadata in memory</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- divider -->
+        <div style="border-top:1px dashed var(--border-2); margin:.6em 0 .6em 5.5em;"></div>
+
+        <!-- QUERY ROW -->
+        <div class="phase-row">
+          <span class="phase-label query">QUERY</span>
+          <div class="flow" style="flex:1; margin-top:0;">
+            <div class="flow-node">
+              <strong>User Query</strong>
+              <span>"How many leave days do I get?"</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">
+              <strong>Embed Query</strong>
+              <span>Same embedding model</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">
+              <strong>Search</strong>
+              <span>Cosine similarity, top-k results</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">
+              <strong>Augment</strong>
+              <span>Inject chunks into the prompt</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="border-color:var(--accent-border); background:var(--accent-dim);">
+              <strong style="color:var(--fg);">LLM → Answer</strong>
+              <span>Grounded in retrieved text</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:1.4em; gap:2vw;">
+        <p class="muted" style="font-size:.9rem;">
+          The ingest phase runs <strong>once</strong> (or on document update). The query phase runs on <strong>every user question</strong>.
+        </p>
+        <p class="muted" style="font-size:.9rem;">
+          The LLM never sees the raw documents — only the retrieved chunks. This keeps latency low and the prompt focused.
+        </p>
+      </div>
+    </section>
+
+    <!-- 9 · RAG AS AN AGENT TOOL -->
+    <section class="slide">
+      <div class="eyebrow">Integration</div>
+      <h2>RAG as an agent tool</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>The retrieval pipeline from Lab 3 is just a <strong>function</strong>. Wrap it in a <code style="font-family:var(--mono); background:#111520; padding:1px 6px; border-radius:4px; font-size:.9em;">[Description]</code> attribute and the agent decides <em>when</em> to ground itself in documents vs. answer from general knowledge.</p>
+          <div class="code-block" data-lang="C#" style="margin-top:1em; font-size:.8rem; line-height:1.85;">
+[<span class="ty">Description</span>(
+  <span class="str">"Search the company knowledge base for information "</span> +
+  <span class="str">"about policies, procedures, or products. Use this "</span> +
+  <span class="str">"whenever the user asks about internal company topics."</span>)]
+<span class="kw">public static async</span> <span class="ty">Task</span>&lt;<span class="ty">string</span>&gt; <span class="fn">SearchKnowledgeBase</span>(
+    [<span class="ty">Description</span>(<span class="str">"The user's question, rephrased as a search query"</span>)]
+    <span class="ty">string</span> query)
+{
+    <span class="kw">var</span> chunks = <span class="kw">await</span> <span class="fn">RetrieveTopKAsync</span>(query, k: <span class="nu">5</span>);
+    <span class="kw">return</span> <span class="ty">string</span>.<span class="fn">Join</span>(<span class="str">"\n---\n"</span>, chunks);
+}
+          </div>
+        </div>
+        <div>
+          <div class="card green-card">
+            <h4>The agent chooses when to call it</h4>
+            <p>Ask "What's the weather in Paris?" — no retrieval. Ask "How many sick days do I get?" — the agent calls <code style="font-family:var(--mono); font-size:.85em;">SearchKnowledgeBase</code> automatically.</p>
+          </div>
+          <div class="card" style="margin-top:.9em;">
+            <h4>This is the pattern in production</h4>
+            <p>Real-world RAG agents combine this with other tools: web search, database queries, live APIs. Retrieval is one of many grounding mechanisms.</p>
+          </div>
+          <div style="margin-top:1em;">
+            <span class="tag">Lab 2 pattern</span>
+            <span class="tag green-tag">+ vector search</span>
+            <span class="tag green-tag">= grounded agent</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 · WHAT WE'RE BUILDING -->
+    <section class="slide">
+      <div class="eyebrow">Setup</div>
+      <h2>What we're building today</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>A company knowledge-base agent. No new packages — everything already in the Lab 2 starter.</p>
+          <div class="code-block" data-lang="bash" style="margin-top:1em; font-size:.85rem; line-height:1.9;">
+<span class="cm"># No new packages needed!</span>
+<span class="cm"># OpenAI SDK handles both chat and embeddings.</span>
+
+dotnet run
+<span class="str">> How many days of annual leave do I get?</span>
+<span class="cm"># → agent calls SearchKnowledgeBase("annual leave")</span>
+<span class="cm"># → retrieves Leave Policy chunk</span>
+<span class="cm"># → answers with the correct figure</span>
+          </div>
+          <p style="margin-top:1em; font-size:.95rem;">
+            The embedding model: <span class="tag">text-embedding-3-small</span><br/>
+            Same GitHub Models API key from Lab 2.
+          </p>
+        </div>
+        <div>
+          <p style="margin-bottom:.8em; font-size:.95rem; color:#c4cad8;">The 6 company documents you'll work with:</p>
+          <div style="display:flex; flex-direction:column; gap:.5em;">
+            <div style="display:flex; align-items:center; gap:.8em; padding:.55em .9em; background:var(--bg-2); border:1px solid var(--border-2); border-radius:8px;">
+              <span style="font-family:var(--mono); font-size:.75rem; color:var(--green); min-width:1.2em;">📄</span>
+              <span style="font-size:.9rem; color:#c4cad8;">leave-policy.md</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:.8em; padding:.55em .9em; background:var(--bg-2); border:1px solid var(--border-2); border-radius:8px;">
+              <span style="font-family:var(--mono); font-size:.75rem; color:var(--green); min-width:1.2em;">📄</span>
+              <span style="font-size:.9rem; color:#c4cad8;">expense-policy.md</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:.8em; padding:.55em .9em; background:var(--bg-2); border:1px solid var(--border-2); border-radius:8px;">
+              <span style="font-family:var(--mono); font-size:.75rem; color:var(--green); min-width:1.2em;">📄</span>
+              <span style="font-size:.9rem; color:#c4cad8;">it-helpdesk-faq.md</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:.8em; padding:.55em .9em; background:var(--bg-2); border:1px solid var(--border-2); border-radius:8px;">
+              <span style="font-family:var(--mono); font-size:.75rem; color:var(--green); min-width:1.2em;">📄</span>
+              <span style="font-size:.9rem; color:#c4cad8;">onboarding-guide.md</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:.8em; padding:.55em .9em; background:var(--bg-2); border:1px solid var(--border-2); border-radius:8px;">
+              <span style="font-family:var(--mono); font-size:.75rem; color:var(--green); min-width:1.2em;">📄</span>
+              <span style="font-size:.9rem; color:#c4cad8;">benefits-handbook.md</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:.8em; padding:.55em .9em; background:var(--bg-2); border:1px solid var(--border-2); border-radius:8px;">
+              <span style="font-family:var(--mono); font-size:.75rem; color:var(--green); min-width:1.2em;">📄</span>
+              <span style="font-size:.9rem; color:#c4cad8;">product-faq.md</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 · EXERCISE 01 -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · Exercise 01 — 15 min</div>
+      <h2>Build the ingestion pipeline</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Load the company docs, chunk them, embed each chunk, and store in-memory. Then test retrieval with a raw query.</p>
+          <ol class="steps" style="margin-top:1em;">
+            <li>Load all <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">.md</code> files from the <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">Docs/</code> folder</li>
+            <li>Split each file into chunks of ~1500 characters with 200-character overlap</li>
+            <li>Call <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">text-embedding-3-small</code> to embed each chunk</li>
+            <li>Store each <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">(vector, text, source)</code> in a <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">List&lt;Chunk&gt;</code></li>
+            <li>Run a test query: embed it, then print top-3 results with similarity scores</li>
+          </ol>
+        </div>
+        <div>
+          <div class="code-block" data-lang="C#" style="font-size:.78rem; line-height:1.85;">
+<span class="kw">record</span> <span class="ty">Chunk</span>(<span class="ty">float</span>[] Vector, <span class="ty">string</span> Text, <span class="ty">string</span> Source);
+
+<span class="kw">var</span> store = <span class="kw">new</span> <span class="ty">List</span>&lt;<span class="ty">Chunk</span>&gt;();
+
+<span class="kw">foreach</span> (<span class="kw">var</span> file <span class="kw">in</span> <span class="ty">Directory</span>.<span class="fn">GetFiles</span>(<span class="str">"Docs"</span>, <span class="str">"*.md"</span>))
+{
+    <span class="kw">var</span> text = <span class="kw">await</span> <span class="ty">File</span>.<span class="fn">ReadAllTextAsync</span>(file);
+    <span class="kw">foreach</span> (<span class="kw">var</span> chunk <span class="kw">in</span> <span class="fn">SplitIntoChunks</span>(text, <span class="nu">1500</span>, <span class="nu">200</span>))
+    {
+        <span class="kw">var</span> embedding = <span class="kw">await</span> <span class="fn">EmbedAsync</span>(chunk);
+        store.<span class="fn">Add</span>(<span class="kw">new</span> <span class="ty">Chunk</span>(embedding, chunk, file));
+    }
+}
+          </div>
+          <div class="card orange-card" style="margin-top:.8em;">
+            <h4>Watch the API calls</h4>
+            <p>Print how many chunks you generated and how long ingestion took. Real intuition: 6 docs → roughly 15–30 chunks total.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 · EXERCISE 02 -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · Exercise 02 — 20 min</div>
+      <h2>Wire retrieval into an agent</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Take the vector store from Exercise 01 and expose it as a <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">SearchKnowledgeBase</code> tool on a MAF agent.</p>
+          <ol class="steps" style="margin-top:1em;">
+            <li>Wrap the retrieval logic in a function with a clear <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">[Description]</code></li>
+            <li>Register it with the agent alongside the Lab 2 tools</li>
+            <li>Test with a <strong>company question</strong> — it should retrieve and answer correctly</li>
+            <li>Test with a <strong>general knowledge question</strong> — it should answer directly without retrieval</li>
+          </ol>
+          <p class="muted" style="margin-top:1em; font-size:.92rem;">Goal: watch the agent decide autonomously <em>when</em> grounding is needed.</p>
+        </div>
+        <div>
+          <p style="font-size:.95rem; color:#c4cad8; margin-bottom:.8em;">Test questions to try:</p>
+          <div style="display:flex; flex-direction:column; gap:.5em;">
+            <div class="card" style="padding:.7em 1em;">
+              <p style="font-size:.9rem; color:var(--green);">"How do I submit an expense claim?"</p>
+              <p style="font-size:.82rem; color:var(--muted-2); margin-top:.2em;">→ should retrieve from expense-policy.md</p>
+            </div>
+            <div class="card" style="padding:.7em 1em;">
+              <p style="font-size:.9rem; color:var(--green);">"What's the process for requesting a new laptop?"</p>
+              <p style="font-size:.82rem; color:var(--muted-2); margin-top:.2em;">→ should retrieve from it-helpdesk-faq.md</p>
+            </div>
+            <div class="card" style="padding:.7em 1em;">
+              <p style="font-size:.9rem; color:var(--accent);">"What is the capital of France?"</p>
+              <p style="font-size:.82rem; color:var(--muted-2); margin-top:.2em;">→ should answer directly, no retrieval</p>
+            </div>
+            <div class="card orange-card" style="padding:.7em 1em;">
+              <p style="font-size:.9rem;">"Who is the CEO of the company?"</p>
+              <p style="font-size:.82rem; color:var(--muted-2); margin-top:.2em;">→ interesting: retrieves but may not find — observe graceful fallback</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 · EXERCISE 03 BONUS -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · Exercise 03 bonus — 10 min</div>
+      <h2>Tuning chunk size and overlap</h2>
+      <div class="grid-2" style="gap:3vw; align-items:center;">
+        <div>
+          <p>Chunk size and overlap are the biggest levers on retrieval quality. In this exercise, experiment and observe.</p>
+          <ol class="steps" style="margin-top:1em;">
+            <li>Re-ingest the docs with chunk size <strong>300</strong>, overlap <strong>50</strong></li>
+            <li>Run the same test queries — do results improve or degrade?</li>
+            <li>Try chunk size <strong>2000</strong>, overlap <strong>400</strong></li>
+            <li>For each setting, print the top-3 similarity scores and chunk previews</li>
+          </ol>
+          <p class="muted" style="margin-top:1em; font-size:.92rem;">
+            There's no universally correct answer — it depends on the document structure. Learning to tune this by observation is the real skill.
+          </p>
+        </div>
+        <div>
+          <div class="card green-card">
+            <h4>The pattern you'll see</h4>
+            <p>Small chunks → higher similarity scores but less context. Large chunks → lower scores but the answer is in there. Overlap prevents splitting a sentence across chunks.</p>
+          </div>
+          <div class="card" style="margin-top:.9em;">
+            <h4>Going further</h4>
+            <p>Add a <strong>source citation</strong> to the retrieved text before injecting it into the prompt. Ask the agent to mention where each fact came from.</p>
+          </div>
+          <div class="card" style="margin-top:.9em;">
+            <h4>Stretch goal</h4>
+            <p>After retrieving top-5, re-rank by asking a small LLM: <em>"Which of these chunks best answers the query?"</em> This is called a <strong>reranker</strong> and dramatically improves precision.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 · PITFALLS -->
+    <section class="slide">
+      <div class="eyebrow">Pitfalls</div>
+      <h2>What can go wrong</h2>
+      <ul>
+        <li class="warn-li"><strong>Chunks too large or too small.</strong> Large chunks dilute similarity; small chunks lose surrounding context. Tune empirically — there's no universal answer.</li>
+        <li class="warn-li"><strong>Embedding model mismatch.</strong> The query and documents must be embedded with the same model. Switching models mid-project invalidates your whole index.</li>
+        <li class="warn-li"><strong>Missing metadata.</strong> Store the source file and chunk index with every vector. Without it, you can't tell the model where the answer came from — or debug bad retrievals.</li>
+        <li class="warn-li"><strong>Retrieving without checking relevance.</strong> If top-k returns a score of 0.2, the chunk is probably irrelevant. Add a similarity threshold (e.g. discard anything below 0.5) to avoid injecting noise.</li>
+        <li class="warn-li"><strong>Stale index.</strong> Documents change. If you update a policy file but don't re-embed it, the agent will answer from old information with full confidence.</li>
+        <li class="warn-li"><strong>Top-k too large.</strong> Injecting 20 chunks fills the context window and confuses the model. Start with k=3 to k=5.</li>
+      </ul>
+    </section>
+
+    <!-- 15 · CLOSING -->
+    <section class="slide title-slide">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 03</span></div>
+      <h1>Questions?</h1>
+      <p class="muted" style="max-width:58ch; margin-top:.8em; font-size:1.1rem;">
+        RAG isn't magic — it's a retrieval problem dressed in AI clothes.
+        Get the chunking right, trust the similarity scores, and ground the model before it guesses.
+      </p>
+      <p class="muted" style="margin-top:1.8em; font-size:.9rem;">
+        Skeleton code: <span class="accent">github.com/aclabs/lab3-start</span>
+      </p>
+      <p class="muted" style="margin-top:.6em; font-size:.9rem;">
+        Next up — <span class="accent">Lab 04:</span> MCP &amp; multi-agent coordination
+      </p>
+    </section>
+
+  </div><!-- /deck -->
+
+  <div class="footer">
+    <span>AC Labs 2026 · Lab 03 — Vectorisation &amp; RAG</span>
+    <span class="slide-num"><em id="cur">1</em> / <span id="total">15</span></span>
+    <span><kbd>→</kbd> <kbd>←</kbd> <kbd>F</kbd></span>
+  </div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  let i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    document.getElementById('cur').textContent = i + 1;
+    document.getElementById('progress').style.width = ((i + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight','PageDown',' '].includes(e.key)) { show(i+1); e.preventDefault(); }
+    else if (['ArrowLeft','PageUp'].includes(e.key)) { show(i-1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(total - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.footer')) return;
+    show(i + 1);
+  });
+
+  show(0);
+</script>
+</body>
+</html>

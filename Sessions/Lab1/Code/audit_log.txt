@@ -208,3 +208,7 @@ The current date and time is **Thursday, May 14, 2026, 2:40:25 PM**.
 
 Please let me know which flight you would like to book!
 
+[2026-05-14T19:42:44.5342359+03:00] USER: Care este limita de cazare daca merg într-o delega?ie în Londra?
+[2026-05-20T23:05:02.2002645+03:00] USER: how are you all good?
+[2026-05-20T23:05:04.7096704+03:00] ASSISTANT: I am unable to engage in personal conversations. How can I assist you today?
+
