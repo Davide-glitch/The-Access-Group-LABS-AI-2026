@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 4 — Step-by-step guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.2);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --green-border: rgba(5,150,105,0.2);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --orange-border: rgba(217,119,6,0.2);
+    --border: #e5e7eb;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --display: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  /* ── layout ── */
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  /* ── hero ── */
+  .hero {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .3em .8em;
+    margin-bottom: 1.5rem;
+  }
+  .hero-badge span { color: var(--accent); font-weight: 700; }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: .8rem;
+    color: var(--fg);
+  }
+  .hero p {
+    font-size: 1.1rem;
+    color: var(--muted-2);
+    max-width: 62ch;
+  }
+
+  /* ── overview box ── */
+  .overview {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 3rem;
+  }
+  .overview h3 {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--fg);
+  }
+  .step-index {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .4rem;
+  }
+  .step-index a {
+    display: flex; align-items: center; gap: .6em;
+    font-size: .88rem;
+    color: var(--muted-2);
+    text-decoration: none;
+    padding: .3em .5em;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+  }
+  .step-index a:hover { background: var(--bg-3); color: var(--accent); }
+  .step-index a .num {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 1.9em; height: 1.6em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── step ── */
+  .step {
+    margin-bottom: 3.5rem;
+    scroll-margin-top: 2rem;
+  }
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  .step-num {
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 8px;
+    min-width: 2.4em; height: 2.4em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: .15em;
+  }
+  .step-num.done {
+    background: var(--green-dim);
+    border-color: var(--green-border);
+    color: var(--green);
+  }
+  .step h2 {
+    font-family: var(--display);
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--fg);
+  }
+  .step p, .step li {
+    font-size: .97rem;
+    line-height: 1.7;
+    color: #374151;
+  }
+  .step ul, .step ol {
+    padding-left: 1.4rem;
+    margin: .6rem 0;
+  }
+  .step li { margin-bottom: .3em; }
+  .step p + p { margin-top: .7em; }
+
+  .step-body { padding-left: 3.4rem; }
+
+  /* ── callouts ── */
+  .callout {
+    border-radius: 10px;
+    padding: 1em 1.2em;
+    margin: 1.1em 0;
+    font-size: .93rem;
+    line-height: 1.6;
+    border-left: 3px solid;
+  }
+  .callout strong { display: block; margin-bottom: .2em; font-size: .88rem; text-transform: uppercase; letter-spacing: .06em; }
+  .callout.why   { background: var(--accent-dim); border-color: var(--accent); color: #1e3a8a; }
+  .callout.why strong { color: var(--accent); }
+  .callout.check { background: var(--green-dim); border-color: var(--green); color: #065f46; }
+  .callout.check strong { color: var(--green); }
+  .callout.warn  { background: var(--orange-dim); border-color: var(--orange); color: #78350f; }
+  .callout.warn strong { color: var(--orange); }
+
+  /* ── before/after ── */
+  .diff {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.1em 0;
+  }
+  .diff-label {
+    font-family: var(--mono);
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    margin-bottom: .4em;
+  }
+  .diff-label.before { color: var(--orange); }
+  .diff-label.after  { color: var(--green); }
+
+  /* ── code ── */
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.1em 1.3em;
+    font-family: var(--mono);
+    font-size: .84rem;
+    line-height: 1.85;
+    overflow-x: auto;
+    white-space: pre;
+    color: #cdd5e0;
+    position: relative;
+  }
+  .code-block[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: .9em;
+    font-size: .65rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .code-block.sm { font-size: .78rem; }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+  .hi  { background: rgba(37,99,235,0.25); border-radius: 3px; padding: 0 2px; }  /* highlight */
+  .hi-green { background: rgba(5,150,105,0.2); border-radius: 3px; padding: 0 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .87em;
+    background: var(--bg-3);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  /* ── divider ── */
+  .step-divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 3rem 0;
+  }
+
+  /* ── final cta ── */
+  .final {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 2rem;
+    margin-top: 4rem;
+    text-align: center;
+  }
+  .final h2 {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: .5rem;
+  }
+  .final p { color: var(--muted-2); font-size: .97rem; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div class="hero-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 04</span> &nbsp;·&nbsp; Self-paced guide</div>
+    <h1>From List&lt;Chunk&gt; to a real vector database</h1>
+    <p>Start from the Lab 3 solution and migrate it step by step to <code>IVectorStore</code> — first backed by an in-memory store, then swapped to Qdrant for persistence.</p>
+  </div>
+
+  <!-- ── OVERVIEW ── -->
+  <div class="overview">
+    <h3>Steps in this guide</h3>
+    <div class="step-index">
+      <a href="#s1"><span class="num">01</span> Add NuGet packages</a>
+      <a href="#s2"><span class="num">02</span> Add using statements</a>
+      <a href="#s3"><span class="num">03</span> Remodel Chunk</a>
+      <a href="#s4"><span class="num">04</span> Create the vector store</a>
+      <a href="#s5"><span class="num">05</span> Add InferCategory</a>
+      <a href="#s6"><span class="num">06</span> Update ingestion</a>
+      <a href="#s7"><span class="num">07</span> Update KnowledgeBase</a>
+      <a href="#s8"><span class="num">08</span> Replace cosine search</a>
+      <a href="#s9"><span class="num">09</span> Add category filter</a>
+      <a href="#s10"><span class="num">10</span> Delete CosineSimilarity</a>
+      <a href="#s11"><span class="num">11</span> Run and verify</a>
+      <a href="#s12"><span class="num">12</span> Swap to Qdrant</a>
+      <a href="#s13"><span class="num">13</span> Verify persistence</a>
+    </div>
+  </div>
+
+  <!-- ── STEP 1 ── -->
+  <div class="step" id="s1">
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <h2>Add NuGet packages</h2>
+    </div>
+    <div class="step-body">
+      <p>Open <code>Lab4.csproj</code> and add two new package references inside the existing <code>&lt;ItemGroup&gt;</code>. Keep the existing <code>Microsoft.Agents.AI</code> and <code>OpenAI</code> references — you're adding to them, not replacing them.</p>
+
+      <div class="code-block" data-lang="xml" style="margin-top:1rem;">
+&lt;<span class="ty">ItemGroup</span>&gt;
+  &lt;<span class="ty">PackageReference</span> <span class="at">Include</span>=<span class="str">"Microsoft.Agents.AI"</span>        <span class="at">Version</span>=<span class="str">"1.3.0"</span> /&gt;
+  &lt;<span class="ty">PackageReference</span> <span class="at">Include</span>=<span class="str">"Microsoft.Agents.AI.OpenAI"</span>   <span class="at">Version</span>=<span class="str">"1.3.0"</span> /&gt;
+  &lt;<span class="ty">PackageReference</span> <span class="at">Include</span>=<span class="str">"OpenAI"</span>                     <span class="at">Version</span>=<span class="str">"2.10.0"</span> /&gt;
+  <span class="hi">&lt;<span class="ty">PackageReference</span> <span class="at">Include</span>=<span class="str">"Microsoft.Extensions.VectorData.Abstractions"</span> <span class="at">Version</span>=<span class="str">"10.1.0"</span> /&gt;</span>
+  <span class="hi">&lt;<span class="ty">PackageReference</span> <span class="at">Include</span>=<span class="str">"Microsoft.SemanticKernel.Connectors.InMemory"</span>  <span class="at">Version</span>=<span class="str">"1.74.0-preview"</span> /&gt;</span>
+&lt;/<span class="ty">ItemGroup</span>&gt;</div>
+
+      <div class="callout why">
+        <strong>Why these two?</strong>
+        <code>Microsoft.Extensions.VectorData.Abstractions</code> gives you the <code>IVectorStore</code> interface and the record attributes (<code>[VectorStoreKey]</code>, etc.). <code>Microsoft.SemanticKernel.Connectors.InMemory</code> provides the in-memory implementation — same behaviour as Lab 3's list, but going through the standard interface.
+      </div>
+
+      <p>Also add <code>SKEXP0001;SKEXP0020</code> to the <code>&lt;NoWarn&gt;</code> element, since the Semantic Kernel connectors are still marked experimental:</p>
+
+      <div class="code-block" data-lang="xml">
+&lt;<span class="ty">NoWarn</span>&gt;$(NoWarn);MEAI001;OPENAI001;<span class="hi">SKEXP0001;SKEXP0020</span>&lt;/<span class="ty">NoWarn</span>&gt;</div>
+
+      <div class="callout warn">
+        <strong>Version compatibility is strict</strong>
+        These three packages must be used together at exactly these versions. <code>Microsoft.Agents.AI 1.3.0</code> requires <code>OpenAI ≥ 2.10.0</code>. <code>Microsoft.SemanticKernel.Connectors.InMemory 1.74.0-preview</code> was compiled against <code>VectorData.Abstractions 10.1.0</code> — using a newer version of the abstractions package will cause a runtime <code>TypeLoadException</code>. Don't let NuGet silently upgrade <code>VectorData.Abstractions</code> beyond 10.1.0.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 2 ── -->
+  <div class="step" id="s2">
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <h2>Add using statements</h2>
+    </div>
+    <div class="step-body">
+      <p>At the top of <code>Program.cs</code>, add two new <code>using</code> directives alongside the existing ones:</p>
+
+      <div class="code-block" data-lang="C#">
+<span class="kw">using</span> System.ClientModel;
+<span class="kw">using</span> System.ComponentModel;
+<span class="kw">using</span> Microsoft.Agents.AI;
+<span class="kw">using</span> Microsoft.Extensions.AI;
+<span class="hi"><span class="kw">using</span> Microsoft.Extensions.VectorData;</span>
+<span class="hi"><span class="kw">using</span> Microsoft.SemanticKernel.Connectors.InMemory;</span>
+<span class="kw">using</span> OpenAI;
+<span class="hi"><span class="kw">using</span> OpenAI.Chat;</span>      <span class="cm">// required by .AsAIAgent() in v1.3.0</span></div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 3 ── -->
+  <div class="step" id="s3">
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <h2>Remodel the Chunk type</h2>
+    </div>
+    <div class="step-body">
+      <p>Lab 3 used a simple positional record. Vector store connectors need a class with property attributes so they know which field is the key, which fields are payload, and which field is the vector.</p>
+
+      <div class="diff">
+        <div>
+          <div class="diff-label before">Lab 3 — before</div>
+          <div class="code-block sm">
+<span class="kw">record</span> <span class="ty">Chunk</span>(
+    <span class="ty">float</span>[] Vector,
+    <span class="ty">string</span>  Text,
+    <span class="ty">string</span>  Source
+);</div>
+        </div>
+        <div>
+          <div class="diff-label after">Lab 4 — after</div>
+          <div class="code-block sm">
+<span class="kw">class</span> <span class="ty">Chunk</span>
+{
+    [<span class="at">VectorStoreKey</span>]
+    <span class="kw">public</span> <span class="ty">Guid</span> Id { <span class="kw">get</span>; <span class="kw">set</span>; }
+        = <span class="ty">Guid</span>.<span class="fn">NewGuid</span>();
+
+    [<span class="at">VectorStoreData</span>]
+    <span class="kw">public</span> <span class="ty">string</span> Text { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+
+    [<span class="at">VectorStoreData</span>]
+    <span class="kw">public</span> <span class="ty">string</span> Source { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+
+    [<span class="at">VectorStoreData</span>(IsIndexed = <span class="kw">true</span>)]
+    <span class="kw">public</span> <span class="ty">string</span> Category { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+
+    [<span class="at">VectorStoreVector</span>(Dimensions: <span class="nu">1536</span>,
+        DistanceFunction =
+          <span class="ty">DistanceFunction</span>.CosineSimilarity)]
+    <span class="kw">public</span> <span class="ty">ReadOnlyMemory</span>&lt;<span class="kw">float</span>&gt; Vector
+        { <span class="kw">get</span>; <span class="kw">set</span>; }
+}</div>
+        </div>
+      </div>
+
+      <p>Three things worth noting:</p>
+      <ul>
+        <li><strong>Key:</strong> Every record needs a unique key. <code>Guid.NewGuid()</code> generates one automatically on creation.</li>
+        <li><strong>IsIndexed = true:</strong> Only fields marked with this can be used in filter expressions. We'll use <code>Category</code> for filtering in step 9.</li>
+        <li><strong>Vector type:</strong> Changed from <code>float[]</code> to <code>ReadOnlyMemory&lt;float&gt;</code> — this is what the connector expects.</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 4 ── -->
+  <div class="step" id="s4">
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <h2>Create the vector store and collection</h2>
+    </div>
+    <div class="step-body">
+      <p>In the config section at the top of <code>Program.cs</code>, replace the <code>List&lt;Chunk&gt;</code> with an <code>IVectorStore</code> and get a typed collection from it.</p>
+
+      <div class="diff">
+        <div>
+          <div class="diff-label before">Lab 3 — before</div>
+          <div class="code-block sm">
+<span class="kw">var</span> store = <span class="kw">new</span> <span class="ty">List</span>&lt;<span class="ty">Chunk</span>&gt;();
+<span class="kw">var</span> kb    = <span class="kw">new</span> <span class="ty">KnowledgeBase</span>(
+    store, embeddingClient);</div>
+        </div>
+        <div>
+          <div class="diff-label after">Lab 4 — after</div>
+          <div class="code-block sm">
+<span class="ty">IVectorStore</span> vectorStore =
+    <span class="kw">new</span> <span class="ty">InMemoryVectorStore</span>();
+
+<span class="kw">var</span> collection = vectorStore
+    .<span class="fn">GetCollection</span>&lt;<span class="ty">Guid</span>, <span class="ty">Chunk</span>&gt;(
+        <span class="str">"company-docs"</span>);
+
+<span class="kw">await</span> collection
+    .<span class="fn">EnsureCollectionExistsAsync</span>();</div>
+        </div>
+      </div>
+
+      <div class="callout why">
+        <strong>Why declare IVectorStore instead of InMemoryVectorStore?</strong>
+        When we swap to Qdrant in step 12, only this one line changes. The rest of the code talks to <code>IVectorStore</code> and doesn't care what's behind it.
+      </div>
+
+      <div class="callout warn">
+        <strong>Don't forget EnsureCollectionExistsAsync</strong>
+        Without this call, the first <code>UpsertAsync</code> will fail. It's a no-op if the collection already exists, so it's safe to call every startup. Note: this method was renamed from <code>CreateCollectionIfNotExistsAsync</code> in v1.74.0-preview — don't use the old name.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 5 ── -->
+  <div class="step" id="s5">
+    <div class="step-header">
+      <div class="step-num">05</div>
+      <h2>Add the InferCategory helper</h2>
+    </div>
+    <div class="step-body">
+      <p>Add this static helper function at the bottom of <code>Program.cs</code>, alongside the existing <code>Chunker</code> class. It maps each document filename to a category tag that we'll store with every chunk.</p>
+
+      <div class="code-block" data-lang="C#">
+<span class="kw">static string</span> <span class="fn">InferCategory</span>(<span class="ty">string</span> filename) => filename <span class="kw">switch</span>
+{
+    <span class="kw">var</span> f <span class="kw">when</span> f.<span class="fn">StartsWith</span>(<span class="str">"leave"</span>)
+           || f.<span class="fn">StartsWith</span>(<span class="str">"benefit"</span>)
+           || f.<span class="fn">StartsWith</span>(<span class="str">"onboarding"</span>) => <span class="str">"HR"</span>,
+    <span class="kw">var</span> f <span class="kw">when</span> f.<span class="fn">StartsWith</span>(<span class="str">"it-"</span>)        => <span class="str">"IT"</span>,
+    <span class="kw">var</span> f <span class="kw">when</span> f.<span class="fn">StartsWith</span>(<span class="str">"expense"</span>)    => <span class="str">"Finance"</span>,
+    <span class="kw">var</span> f <span class="kw">when</span> f.<span class="fn">StartsWith</span>(<span class="str">"product"</span>)    => <span class="str">"Product"</span>,
+    _                                        => <span class="str">"General"</span>,
+};</div>
+
+      <p style="margin-top:.8rem;">We'll call this in the next step during ingestion to tag each chunk before storing it.</p>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 6 ── -->
+  <div class="step" id="s6">
+    <div class="step-header">
+      <div class="step-num">06</div>
+      <h2>Update the ingestion loop</h2>
+    </div>
+    <div class="step-body">
+      <p>Replace the inner loop in the ingestion section. Instead of calling <code>kb.EmbedAsync()</code> and adding to a list, we now embed directly and upsert into the collection.</p>
+
+      <div class="diff">
+        <div>
+          <div class="diff-label before">Lab 3 — before</div>
+          <div class="code-block sm">
+<span class="kw">foreach</span> (<span class="kw">var</span> file <span class="kw">in</span>
+    <span class="ty">Directory</span>.<span class="fn">GetFiles</span>(docsPath, <span class="str">"*.md"</span>))
+{
+    <span class="kw">var</span> text   = <span class="kw">await</span> <span class="ty">File</span>
+        .<span class="fn">ReadAllTextAsync</span>(file);
+    <span class="kw">var</span> chunks  = <span class="ty">Chunker</span>.<span class="fn">Split</span>(
+        text, <span class="nu">1500</span>, <span class="nu">200</span>);
+    <span class="kw">var</span> count  = <span class="nu">0</span>;
+
+    <span class="kw">foreach</span> (<span class="kw">var</span> chunk <span class="kw">in</span> chunks)
+    {
+        <span class="kw">var</span> vector = <span class="kw">await</span> kb
+            .<span class="fn">EmbedAsync</span>(chunk);
+        store.<span class="fn">Add</span>(<span class="kw">new</span> <span class="ty">Chunk</span>(
+            vector, chunk,
+            <span class="ty">Path</span>.<span class="fn">GetFileName</span>(file)));
+        count++;
+    }
+    <span class="cm">// ...</span>
+}</div>
+        </div>
+        <div>
+          <div class="diff-label after">Lab 4 — after</div>
+          <div class="code-block sm">
+<span class="kw">foreach</span> (<span class="kw">var</span> file <span class="kw">in</span>
+    <span class="ty">Directory</span>.<span class="fn">GetFiles</span>(docsPath, <span class="str">"*.md"</span>))
+{
+    <span class="kw">var</span> text     = <span class="kw">await</span> <span class="ty">File</span>
+        .<span class="fn">ReadAllTextAsync</span>(file);
+    <span class="hi"><span class="kw">var</span> category = <span class="fn">InferCategory</span>(
+        <span class="ty">Path</span>.<span class="fn">GetFileName</span>(file));</span>
+    <span class="kw">var</span> chunks   = <span class="ty">Chunker</span>.<span class="fn">Split</span>(
+        text, <span class="nu">1500</span>, <span class="nu">200</span>);
+    <span class="kw">var</span> count    = <span class="nu">0</span>;
+
+    <span class="kw">foreach</span> (<span class="kw">var</span> chunk <span class="kw">in</span> chunks)
+    {
+        <span class="hi"><span class="kw">var</span> result = <span class="kw">await</span> embeddingClient
+            .<span class="fn">GenerateEmbeddingAsync</span>(chunk, embeddingOptions);
+        <span class="kw">var</span> vector = <span class="kw">new</span> <span class="ty">ReadOnlyMemory</span>&lt;<span class="kw">float</span>&gt;(
+            result.Value.<span class="fn">ToFloats</span>().<span class="fn">ToArray</span>());
+        <span class="kw">await</span> collection.<span class="fn">UpsertAsync</span>(<span class="kw">new</span> <span class="ty">Chunk</span>
+        {
+            Text     = chunk,
+            Source   = <span class="ty">Path</span>.<span class="fn">GetFileName</span>(file),
+            Category = category,
+            Vector   = vector,
+        });</span>
+        count++;
+    }
+    <span class="cm">// ...</span>
+}</div>
+        </div>
+      </div>
+
+      <p style="margin-top:.8rem;">Also update the <code>Console.WriteLine</code> at the end of the outer loop to print the category alongside the chunk count:</p>
+
+      <div class="code-block" data-lang="C#">
+<span class="ty">Console</span>.<span class="fn">WriteLine</span>(<span class="str">$"  {Path.GetFileName(file),30}  →  {count} chunk(s)  [{category}]"</span>);</div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 7 ── -->
+  <div class="step" id="s7">
+    <div class="step-header">
+      <div class="step-num">07</div>
+      <h2>Update the KnowledgeBase constructor</h2>
+    </div>
+    <div class="step-body">
+      <p>The <code>KnowledgeBase</code> class no longer needs the <code>List&lt;Chunk&gt;</code> — it now works through the collection. Update its primary constructor parameter.</p>
+
+      <div class="diff">
+        <div>
+          <div class="diff-label before">Lab 3 — before</div>
+          <div class="code-block sm">
+<span class="kw">class</span> <span class="ty">KnowledgeBase</span>(
+    <span class="ty">List</span>&lt;<span class="ty">Chunk</span>&gt; store,
+    <span class="ty">EmbeddingClient</span> embeddingClient)</div>
+        </div>
+        <div>
+          <div class="diff-label after">Lab 4 — after</div>
+          <div class="code-block sm">
+<span class="kw">class</span> <span class="ty">KnowledgeBase</span>(
+    <span class="hi"><span class="ty">VectorStoreCollection</span>&lt;<span class="ty">Guid</span>, <span class="ty">Chunk</span>&gt; collection,</span>
+    <span class="ty">OpenAI.Embeddings.EmbeddingClient</span> embeddingClient,
+    <span class="ty">OpenAI.Embeddings.EmbeddingGenerationOptions</span> embeddingOptions)</div>
+        </div>
+      </div>
+
+      <p style="margin-top:.8rem;">You'll also need to declare <code>embeddingOptions</code> near the top of the config section and pass it through. Add this right after you create the <code>embeddingClient</code>:</p>
+
+      <div class="code-block" data-lang="C#">
+<span class="kw">var</span> embeddingClient  = openAIClient.<span class="fn">GetEmbeddingClient</span>(embeddingModelId);
+<span class="hi"><span class="kw">var</span> embeddingOptions = <span class="kw">new</span> <span class="ty">OpenAI.Embeddings.EmbeddingGenerationOptions</span> { Dimensions = <span class="nu">1536</span> };</span></div>
+
+      <p style="margin-top:.8rem;">Then update the <code>KnowledgeBase</code> instantiation in the agent setup section:</p>
+
+      <div class="code-block" data-lang="C#">
+<span class="kw">var</span> kb = <span class="kw">new</span> <span class="ty">KnowledgeBase</span>(collection, embeddingClient, embeddingOptions);</div>
+
+      <div class="callout why">
+        <strong>Why set Dimensions explicitly?</strong>
+        Pinning <code>Dimensions = 1536</code> makes the code resilient to model swaps — if you override <code>GITHUB_EMBED_MODEL</code> to <code>text-embedding-3-large</code> (which defaults to 3072 dims), the output is still clipped to 1536 so it matches the vector store schema. It also serves as documentation: the reader can see the dimension without needing to look up the model.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 8 ── -->
+  <div class="step" id="s8">
+    <div class="step-header">
+      <div class="step-num">08</div>
+      <h2>Replace the cosine search with SearchAsync</h2>
+    </div>
+    <div class="step-body">
+      <p>This is the biggest change. The manual cosine similarity loop inside <code>SearchAsync</code> is replaced by a call to the collection's built-in <code>SearchAsync</code> method.</p>
+
+      <div class="diff">
+        <div>
+          <div class="diff-label before">Lab 3 — before</div>
+          <div class="code-block sm">
+<span class="kw">var</span> queryVector = <span class="kw">await</span> <span class="fn">EmbedAsync</span>(query);
+
+<span class="kw">var</span> results = store
+    .<span class="fn">Select</span>(c => (
+        Chunk: c,
+        Score: <span class="fn">CosineSimilarity</span>(
+            queryVector, c.Vector)))
+    .<span class="fn">OrderByDescending</span>(x => x.Score)
+    .<span class="fn">Take</span>(topK)
+    .<span class="fn">Where</span>(x => x.Score > <span class="nu">0.4f</span>)
+    .<span class="fn">ToList</span>();
+
+<span class="kw">if</span> (results.Count == <span class="nu">0</span>)
+    <span class="kw">return</span> <span class="str">"No relevant info found."</span>;
+
+<span class="kw">return</span> <span class="ty">string</span>.<span class="fn">Join</span>(<span class="str">"\n\n---\n\n"</span>,
+    results.<span class="fn">Select</span>(r =>
+        <span class="str">$"[Source: {r.Chunk.Source}]\n"</span> +
+        r.Chunk.Text));</div>
+        </div>
+        <div>
+          <div class="diff-label after">Lab 4 — after</div>
+          <div class="code-block sm">
+<span class="hi"><span class="kw">var</span> result = <span class="kw">await</span> embeddingClient
+    .<span class="fn">GenerateEmbeddingAsync</span>(query, embeddingOptions);
+<span class="kw">var</span> queryVector = <span class="kw">new</span> <span class="ty">ReadOnlyMemory</span>&lt;<span class="kw">float</span>&gt;(
+    result.Value.<span class="fn">ToFloats</span>().<span class="fn">ToArray</span>());
+
+<span class="kw">var</span> options = <span class="kw">new</span> <span class="ty">VectorSearchOptions</span>&lt;<span class="ty">Chunk</span>&gt;();
+
+<span class="kw">var</span> results = <span class="kw">new</span> <span class="ty">List</span>&lt;<span class="ty">string</span>&gt;();
+<span class="kw">await foreach</span> (<span class="kw">var</span> hit <span class="kw">in</span>
+    collection.<span class="fn">SearchAsync</span>(queryVector, topK, options))
+{
+    results.<span class="fn">Add</span>(
+        <span class="str">$"[Source: {hit.Record.Source}"</span> +
+        <span class="str">$" | Score: {hit.Score:P0}]\n"</span> +
+        hit.Record.Text);
+}
+
+<span class="kw">if</span> (results.Count == <span class="nu">0</span>)
+    <span class="kw">return</span> <span class="str">"No relevant info found."</span>;
+
+<span class="kw">return</span> <span class="ty">string</span>.<span class="fn">Join</span>(<span class="str">"\n\n---\n\n"</span>, results);</span></div>
+        </div>
+      </div>
+
+      <div class="callout why">
+        <strong>Why await foreach instead of ToList?</strong>
+        <code>SearchAsync</code> returns <code>IAsyncEnumerable&lt;VectorSearchResult&lt;Chunk&gt;&gt;</code> — results stream back one at a time, which matters when the collection is large or remote. You must use <code>await foreach</code> to iterate it. You can't call <code>.ToList()</code> directly on an <code>IAsyncEnumerable</code>.
+      </div>
+
+      <div class="callout warn">
+        <strong>top is the second positional argument, not a property</strong>
+        In <code>VectorData.Abstractions 10.1.0</code> the <code>Top</code> property was removed from <code>VectorSearchOptions</code>. The result count is now the second argument to <code>SearchAsync</code>: <code>collection.SearchAsync(vector, topK, options)</code>. If you put <code>Top = topK</code> inside the options initialiser the code won't compile.
+      </div>
+
+      <p>Also remove the <code>EmbedAsync</code> helper method from <code>KnowledgeBase</code> — embedding is now done inline in both ingestion and search using <code>embeddingClient</code> directly.</p>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 9 ── -->
+  <div class="step" id="s9">
+    <div class="step-header">
+      <div class="step-num">09</div>
+      <h2>Add a category filter parameter</h2>
+    </div>
+    <div class="step-body">
+      <p>Now that chunks have a <code>Category</code> field, we can expose it as an optional filter. The agent will use it to narrow searches when the topic is obvious.</p>
+
+      <p>Update the <code>SearchAsync</code> signature to accept an optional category, and pass it as a filter to <code>VectorSearchOptions</code>:</p>
+
+      <div class="code-block" data-lang="C#">
+[<span class="at">Description</span>(<span class="str">"Search the company knowledge base..."</span>)]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">string</span>&gt; <span class="fn">SearchAsync</span>(
+    [<span class="at">Description</span>(<span class="str">"The user's question, rephrased as a search query"</span>)]
+    <span class="ty">string</span> query,
+    <span class="hi">[<span class="at">Description</span>(<span class="str">"Optional category filter: HR, IT, Finance, Product. Leave empty to search all."</span>)]
+    <span class="ty">string</span>? category = <span class="kw">null</span>,</span>
+    [<span class="at">Description</span>(<span class="str">"Number of results to return. Default is 3."</span>)]
+    <span class="ty">int</span> topK = <span class="nu">3</span>)
+{
+    <span class="cm">// ... embedding code from step 8 ...</span>
+
+    <span class="kw">var</span> options = <span class="kw">new</span> <span class="ty">VectorSearchOptions</span>&lt;<span class="ty">Chunk</span>&gt;
+    {
+        <span class="hi">Filter = !<span class="ty">string</span>.<span class="fn">IsNullOrEmpty</span>(category)
+            ? r => r.Category == category
+            : <span class="kw">null</span>,</span>
+    };
+
+    <span class="cm">// pass topK as second positional arg (not a property of options)</span>
+    <span class="kw">await foreach</span> (<span class="kw">var</span> hit <span class="kw">in</span> collection.<span class="fn">SearchAsync</span>(queryVector, topK, options))
+        <span class="cm">// ... build results list ...</span>
+}</div>
+
+      <div class="callout why">
+        <strong>Why is the filter a lambda?</strong>
+        The <code>Filter</code> property takes a LINQ expression — <code>r => r.Category == category</code> — which the connector translates into whatever the backing store supports (an in-memory predicate, a Qdrant filter payload, etc.). Only fields marked <code>IsIndexed = true</code> can be used here.
+      </div>
+
+      <div class="callout warn">
+        <strong>Use IsNullOrEmpty, not != null</strong>
+        When the LLM decides no category filter is needed it passes an empty string <code>""</code>, not <code>null</code>. If you guard the filter with <code>category != null</code>, an empty string slips through and your search returns zero results (no chunk has <code>Category == ""</code>). Always use <code>!string.IsNullOrEmpty(category)</code>.
+      </div>
+
+      <p>Update the agent's system prompt to mention the filter:</p>
+
+      <div class="code-block" data-lang="C#">
+instructions:
+    <span class="str">"You are a helpful company assistant for Acme Software Ltd. "</span> +
+    <span class="str">"For any question about internal topics, always call search_knowledge_base first. "</span> +
+    <span class="hi"><span class="str">"You may pass a category filter (HR, IT, Finance, Product) when the topic is clear. "</span> +</span>
+    <span class="str">"Cite the source document when you use retrieved information."</span></div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 10 ── -->
+  <div class="step" id="s10">
+    <div class="step-header">
+      <div class="step-num done">10</div>
+      <h2>Delete CosineSimilarity</h2>
+    </div>
+    <div class="step-body">
+      <p>The <code>CosineSimilarity</code> static method inside <code>KnowledgeBase</code> is no longer needed — the vector store handles similarity calculation internally. Delete it.</p>
+
+      <div class="code-block" data-lang="C#">
+<span class="cm">// ← delete this entire method</span>
+<span class="kw">static float</span> <span class="fn">CosineSimilarity</span>(<span class="ty">float</span>[] a, <span class="ty">float</span>[] b)
+{
+    <span class="kw">float</span> dot = <span class="nu">0</span>, magA = <span class="nu">0</span>, magB = <span class="nu">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="nu">0</span>; i &lt; a.Length; i++)
+    {
+        dot  += a[i] * b[i];
+        magA += a[i] * a[i];
+        magB += b[i] * b[i];
+    }
+    <span class="kw">return</span> dot / (<span class="ty">MathF</span>.<span class="fn">Sqrt</span>(magA) * <span class="ty">MathF</span>.<span class="fn">Sqrt</span>(magB));
+}</div>
+
+      <div class="callout check">
+        <strong>Checkpoint</strong>
+        The project should compile cleanly at this point. If you see any CS errors, check that all references to <code>store</code> (the old list) have been replaced with <code>collection</code>, and that any remaining calls to <code>EmbedAsync</code> on the knowledge base have been replaced with direct <code>embeddingClient.GenerateEmbeddingAsync()</code> calls.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 11 ── -->
+  <div class="step" id="s11">
+    <div class="step-header">
+      <div class="step-num">11</div>
+      <h2>Run and verify with InMemory</h2>
+    </div>
+    <div class="step-body">
+      <p>Run the project. The output should look almost identical to Lab 3 — all documents indexed, same questions answered the same way. The only visible difference is the category tag printed next to each file:</p>
+
+      <div class="code-block" data-lang="console">
+Ingesting documents from .../Docs...
+            benefits-handbook.md  →  1 chunk(s)  [HR]
+              expense-policy.md   →  1 chunk(s)  [Finance]
+             it-helpdesk-faq.md   →  1 chunk(s)  [IT]
+               leave-policy.md    →  1 chunk(s)  [HR]
+             onboarding-guide.md  →  1 chunk(s)  [HR]
+                 product-faq.md   →  1 chunk(s)  [Product]
+
+Ready — chunks indexed.
+
+Company assistant ready (model: openai/gpt-4o-mini).
+You: </div>
+
+      <div class="callout warn">
+        <strong>GitHub Models daily embedding quota</strong>
+        The free tier of GitHub Models enforces a per-model daily quota on embedding API calls. If ingestion hangs indefinitely at the first document, you've likely hit the <code>text-embedding-3-small</code> daily limit — the SDK silently respects the <code>Retry-After</code> header which can be 22+ hours. To work around it, set <code>GITHUB_EMBED_MODEL=openai/text-embedding-3-large</code> before running — it has a separate daily quota. The code's <code>Dimensions = 1536</code> option clips the output so the vector schema stays identical.
+      </div>
+
+      <p style="margin-top:.8rem;">Try a few test questions to confirm the behaviour is correct:</p>
+      <ul>
+        <li><em>"How many days of annual leave do I get?"</em> — should cite <code>leave-policy.md</code></li>
+        <li><em>"How do I reset my VPN?"</em> — should cite <code>it-helpdesk-faq.md</code></li>
+        <li><em>"What is the capital of France?"</em> — should say no relevant information found</li>
+      </ul>
+
+      <div class="callout check">
+        <strong>What's the same, what's different</strong>
+        Behaviour is identical to Lab 3. The code is structurally different — but from the outside you can't tell. That's the point: the abstraction layer gave us a clean swap without changing observable behaviour.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 12 ── -->
+  <div class="step" id="s12">
+    <div class="step-header">
+      <div class="step-num">12</div>
+      <h2>Swap to Qdrant</h2>
+    </div>
+    <div class="step-body">
+      <p>Now for the payoff. Start Qdrant in Docker, then change one line of code.</p>
+
+      <p><strong>1. Start Qdrant:</strong></p>
+      <div class="code-block" data-lang="shell">
+docker run -d \
+  -p <span class="nu">6333</span>:<span class="nu">6333</span> \
+  -v qdrant_storage:/qdrant/storage \
+  qdrant/qdrant</div>
+
+      <p style="margin-top:.8rem;">The <code>-v</code> flag mounts a named Docker volume so the data survives container restarts. Browse to <strong>localhost:6333/dashboard</strong> to confirm Qdrant is running.</p>
+
+      <p style="margin-top:.8rem;"><strong>2. Add the Qdrant NuGet package</strong> to <code>Lab4.csproj</code>:</p>
+      <div class="code-block" data-lang="xml">
+&lt;<span class="ty">PackageReference</span> <span class="at">Include</span>=<span class="str">"Microsoft.SemanticKernel.Connectors.Qdrant"</span>
+                  <span class="at">Version</span>=<span class="str">"1.74.0-preview"</span> /&gt;</div>
+
+      <p style="margin-top:.8rem;"><strong>3. Add the using</strong> at the top of <code>Program.cs</code>:</p>
+      <div class="code-block" data-lang="C#">
+<span class="hi"><span class="kw">using</span> Microsoft.SemanticKernel.Connectors.Qdrant;
+<span class="kw">using</span> Qdrant.Client;</span></div>
+
+      <p style="margin-top:.8rem;"><strong>4. Comment out InMemory, uncomment Qdrant</strong> — this is the only change to the logic:</p>
+      <div class="code-block" data-lang="C#">
+<span class="cm">// IVectorStore vectorStore = new InMemoryVectorStore();</span>
+
+<span class="hi"><span class="kw">var</span> qdrantClient  = <span class="kw">new</span> <span class="ty">QdrantClient</span>(<span class="str">"localhost"</span>);
+<span class="ty">IVectorStore</span> vectorStore = <span class="kw">new</span> <span class="ty">QdrantVectorStore</span>(qdrantClient);</span></div>
+
+      <div class="callout warn">
+        <strong>Qdrant must be running before the program starts</strong>
+        The connection is made on the first API call. If Docker isn't running you'll get a connection refused error. Check <code>docker ps</code> to confirm the container is up.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 13 ── -->
+  <div class="step" id="s13">
+    <div class="step-header">
+      <div class="step-num">13</div>
+      <h2>Verify persistence — add the warm-start skip</h2>
+    </div>
+    <div class="step-body">
+      <p>With Qdrant running, the collection survives process restarts. We can check for it at startup and skip ingestion when the data is already there.</p>
+
+      <p>Wrap the entire ingestion block in a <code>CollectionExistsAsync</code> check:</p>
+
+      <div class="code-block" data-lang="C#">
+<span class="hi"><span class="kw">var</span> collectionExists = <span class="kw">await</span> collection.<span class="fn">CollectionExistsAsync</span>();
+
+<span class="kw">if</span> (!collectionExists)
+{</span>
+    <span class="kw">var</span> docsPath = <span class="ty">Path</span>.<span class="fn">Combine</span>(<span class="ty">AppContext</span>.BaseDirectory, <span class="str">"Docs"</span>);
+    <span class="ty">Console</span>.<span class="fn">WriteLine</span>(<span class="str">$"Ingesting documents from {docsPath}..."</span>);
+
+    <span class="kw">foreach</span> (<span class="kw">var</span> file <span class="kw">in</span> <span class="ty">Directory</span>.<span class="fn">GetFiles</span>(docsPath, <span class="str">"*.md"</span>))
+    {
+        <span class="cm">// ... your ingestion loop ...</span>
+    }
+
+    <span class="ty">Console</span>.<span class="fn">WriteLine</span>(<span class="str">$"\nReady — chunks indexed.\n"</span>);
+<span class="hi">}
+<span class="kw">else</span>
+{
+    <span class="ty">Console</span>.<span class="fn">WriteLine</span>(<span class="str">"Collection already exists — skipping ingestion.\n"</span>);
+}</span></div>
+
+      <p style="margin-top:.8rem;"><strong>Now run the program twice:</strong></p>
+
+      <p><strong>First run</strong> — ingestion happens, all 6 documents are embedded and stored in Qdrant. Note how long it takes.</p>
+
+      <div class="code-block" data-lang="console">
+Ingesting documents from .../Docs...
+            benefits-handbook.md  →  2 chunk(s)  [HR]
+              expense-policy.md   →  2 chunk(s)  [Finance]
+             it-helpdesk-faq.md   →  3 chunk(s)  [IT]
+...
+Company assistant ready.</div>
+
+      <p style="margin-top:.8rem;"><strong>Second run</strong> — ingestion is skipped entirely. The program is ready almost instantly.</p>
+
+      <div class="code-block" data-lang="console">
+<span class="hi">Collection already exists — skipping ingestion.</span>
+
+Company assistant ready.</div>
+
+      <div class="callout check">
+        <strong>Explore the Qdrant dashboard</strong>
+        Open <strong>localhost:6333/dashboard</strong>. Click on the <code>company-docs</code> collection. You'll see all your chunks stored as points — each one with its 1536-dimensional vector and payload fields (Text, Source, Category). This is what you'd previously only have had in RAM.
+      </div>
+
+      <div class="callout warn">
+        <strong>Resetting the index</strong>
+        If you change a document or want to force a full re-index, delete the collection and restart:
+        <div class="code-block sm" style="margin-top:.6rem; white-space:pre-wrap;">await collection.DeleteCollectionAsync();</div>
+        The next run will recreate it from scratch.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── FINAL ── -->
+  <div class="final">
+    <h2>You're done 🎉</h2>
+    <p style="margin-top:.5rem;">You've migrated a hand-rolled in-memory RAG system to a proper vector database abstraction — and proven that the entire storage layer can be swapped with a single line of code.</p>
+    <p style="margin-top:.8rem; font-size:.9rem;">The completed <code>Program.cs</code> is in the <code>Code/</code> folder alongside this guide if you need a reference.</p>
+  </div>
+
+</div><!-- /page -->
+</body>
+</html>

@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 4 — Vector Databases</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.25);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --border: #e5e7eb;
+    --border-2: #d1d5db;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: radial-gradient(circle, #c7d2e8 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.45;
+  }
+
+  .deck { position: relative; width: 100vw; height: 100vh; }
+
+  .slide {
+    position: absolute; inset: 0;
+    padding: 5vh 7vw;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+    animation: slideIn .3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .slide.active { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin-bottom: 0.4em;
+  }
+  h2 {
+    font-size: clamp(1.7rem, 3.2vw, 2.7rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6em;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 1em;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  p, li {
+    font-size: clamp(.95rem, 1.4vw, 1.22rem);
+    line-height: 1.6;
+    color: #374151;
+    font-family: var(--sans);
+    font-weight: 400;
+  }
+  ul { padding-left: 0; list-style: none; }
+  li {
+    padding: .45em 0 .45em 1.4em;
+    position: relative;
+  }
+  li::before {
+    content: '›';
+    position: absolute; left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  strong { color: var(--fg); font-weight: 700; }
+
+  .accent   { color: var(--accent); }
+  .green    { color: var(--green); }
+  .orange   { color: var(--orange); }
+  .muted    { color: var(--muted-2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8vw; }
+
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    padding: 1.3em 1.4em;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: .5;
+  }
+  .card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: .5em;
+    font-family: var(--sans);
+  }
+  .card.green-card::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .card.green-card h4 { color: var(--green); }
+  .card.orange-card::before { background: linear-gradient(90deg, var(--orange), transparent); }
+  .card.orange-card h4 { color: var(--orange); }
+  .card p, .card li { font-size: .97rem; }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.2em 1.4em;
+    font-family: var(--mono);
+    font-size: clamp(.82rem, 1.15vw, .97rem);
+    line-height: 1.85;
+    overflow: auto;
+    position: relative;
+    white-space: pre;
+    color: #cdd5e0;
+  }
+  .code-block::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: 1em;
+    font-size: .68rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+
+  .flow {
+    display: flex; align-items: stretch;
+    gap: 0; margin-top: .8em;
+    flex-wrap: nowrap;
+  }
+  .flow-node {
+    flex: 1;
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: .9em .8em;
+    text-align: center;
+    position: relative;
+  }
+  .flow-node strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--accent);
+    margin-bottom: .3em;
+  }
+  .flow-node.green-node { border-color: rgba(0,255,157,0.25); background: rgba(0,255,157,0.04); }
+  .flow-node.green-node strong { color: var(--green); }
+  .flow-node span { font-size: .78rem; color: var(--muted-2); }
+  .flow-arrow {
+    display: flex; align-items: center;
+    color: var(--muted);
+    font-size: 1.1rem;
+    padding: 0 .3em;
+    flex-shrink: 0;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: .22em .75em;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    font-family: var(--mono);
+    font-size: .78rem;
+    margin: .2em .2em .2em 0;
+  }
+  .tag.green-tag {
+    background: var(--green-dim);
+    color: var(--green);
+    border-color: rgba(0,255,157,0.25);
+  }
+  .tag.orange-tag {
+    background: var(--orange-dim);
+    color: var(--orange);
+    border-color: rgba(255,123,44,0.25);
+  }
+
+  .title-slide {
+    justify-content: flex-end;
+    padding-bottom: 10vh;
+  }
+  .title-slide h1 {
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    background: linear-gradient(135deg, #0f1117 20%, var(--accent) 60%, var(--green));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    max-width: 14ch;
+  }
+  .title-glow {
+    position: absolute;
+    top: 10%; left: -5%;
+    width: 60vw; height: 60vh;
+    background: radial-gradient(ellipse, rgba(37,99,235,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .title-glow-2 {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 50vw; height: 50vh;
+    background: radial-gradient(ellipse, rgba(5,150,105,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .lab-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .8rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: .4em .9em;
+    margin-bottom: 2em;
+  }
+  .lab-badge span { color: var(--accent); font-weight: 700; }
+
+  .steps { list-style: none; padding: 0; counter-reset: steps; }
+  .steps li {
+    counter-increment: steps;
+    padding: .6em 0 .6em 2.8em;
+  }
+  .steps li::before {
+    content: counter(steps, decimal-leading-zero);
+    position: absolute; left: 0;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 2em; height: 1.7em;
+    display: flex; align-items: center; justify-content: center;
+    top: .65em;
+  }
+
+  .timeline {
+    display: flex; gap: 0;
+    margin-top: 1.5em;
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .tl-item {
+    flex: 1;
+    padding: 1em 1.1em;
+    border-right: 1px solid var(--border-2);
+    position: relative;
+  }
+  .tl-item:last-child { border-right: none; }
+  .tl-item .tl-time {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: .35em;
+    letter-spacing: .05em;
+  }
+  .tl-item .tl-title {
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--fg);
+    margin-bottom: .2em;
+  }
+  .tl-item .tl-desc {
+    font-size: .82rem;
+    color: var(--muted-2);
+    line-height: 1.45;
+  }
+  .tl-item.highlight { background: var(--accent-dim); }
+  .tl-item.highlight .tl-time { color: var(--green); }
+
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    transition: width .3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    box-shadow: 0 0 8px rgba(37,99,235,0.4);
+  }
+  .footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .65em 1.4em;
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: rgba(248,249,252,0.92);
+    backdrop-filter: blur(8px);
+    z-index: 50;
+  }
+  .footer .slide-num { color: var(--muted-2); }
+  .footer .slide-num em { color: var(--accent); font-style: normal; }
+  kbd {
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    color: var(--muted-2);
+    padding: 1px 5px; border-radius: 4px;
+    font-size: .78em; font-family: var(--mono);
+  }
+
+  .warn-li::before { color: var(--orange) !important; content: '!' !important; }
+
+  /* inline code chips in body text */
+  p code, li code {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: .88em;
+  }
+
+  .phase-row {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    margin-bottom: .6em;
+  }
+  .phase-label {
+    font-family: var(--mono);
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    min-width: 4.5em;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .phase-label.ingest { color: var(--green); }
+  .phase-label.query  { color: var(--accent); }
+
+  /* layer diagram */
+  .layer-stack {
+    display: flex;
+    flex-direction: column;
+    gap: .5em;
+  }
+  .layer {
+    border-radius: 10px;
+    padding: .85em 1.2em;
+    font-family: var(--mono);
+    font-size: .88rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .layer-app    { background: var(--accent-dim);  border: 1px solid var(--accent-border); color: var(--accent); }
+  .layer-abs    { background: rgba(124,58,237,0.07); border: 1px solid rgba(124,58,237,0.25); color: #7c3aed; }
+  .layer-impl   { background: var(--green-dim);   border: 1px solid rgba(5,150,105,0.25); color: var(--green); }
+  .layer-arrow  { text-align: center; color: var(--muted); font-size: .8rem; padding: .1em 0; font-family: var(--sans); font-weight: 400; }
+  .layer .pkg   { font-size: .72rem; color: var(--muted-2); font-weight: 400; }
+</style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="deck" id="deck">
+
+    <!-- 1 · TITLE -->
+    <section class="slide title-slide active">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 04</span></div>
+      <h1>Vector Databases</h1>
+      <p class="muted" style="max-width:55ch; margin-top:.8em; font-size:1.1rem;">
+        Moving from an in-memory list to a real vector store —
+        persistence, filtering, and a backend you can swap in one line.
+      </p>
+      <p class="muted" style="margin-top:2.5em; font-size:.88rem;">
+        <kbd>→</kbd> next &nbsp; <kbd>←</kbd> previous &nbsp; <kbd>F</kbd> fullscreen
+      </p>
+    </section>
+
+    <!-- 2 · AGENDA -->
+    <section class="slide">
+      <div class="eyebrow">Agenda</div>
+      <h2>What we'll cover today</h2>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-time">5 min</div>
+          <div class="tl-title">Recap</div>
+          <div class="tl-desc">What Lab 3 built and what's missing</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">20 min</div>
+          <div class="tl-title">Theory</div>
+          <div class="tl-desc">What vector DBs give you + the abstraction layer</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">10 min</div>
+          <div class="tl-title">Qdrant</div>
+          <div class="tl-desc">Setup, dashboard, how it stores vectors</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">10 min</div>
+          <div class="tl-title">Live Demo</div>
+          <div class="tl-desc">One-line swap, persistence in action</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">45 min</div>
+          <div class="tl-title">Hands-on</div>
+          <div class="tl-desc">Migrate to IVectorStore, then swap to Qdrant</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">5 min</div>
+          <div class="tl-title">Wrap-up</div>
+          <div class="tl-desc">Pitfalls + what's next</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · THE LAB 3 GAP -->
+    <section class="slide">
+      <div class="eyebrow">Recap</div>
+      <h2>What Lab 3 built — and what it can't do</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Lab 3's knowledge base is a <strong>plain C# list</strong>. It works, but every time you start the program:</p>
+          <ul style="margin-top:.6em;">
+            <li>All 6 documents are re-read from disk</li>
+            <li>Every chunk is re-embedded via the API</li>
+            <li>The list is rebuilt from scratch</li>
+          </ul>
+          <p style="margin-top:1em;">That costs time and money on every cold start. And you own all the plumbing — cosine similarity, top-k selection, filtering.</p>
+          <div class="card orange-card" style="margin-top:1.2em;">
+            <h4>The hidden cost</h4>
+            <p>6 documents is fine. At 600 documents, re-indexing on startup takes minutes and burns thousands of embedding API calls.</p>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card green-card">
+            <h4>What we had in Lab 3</h4>
+            <div class="code-block" data-lang="C#" style="font-size:.82rem; line-height:1.8; margin-top:.5em;">
+<span class="kw">var</span> store = <span class="kw">new</span> <span class="ty">List</span>&lt;<span class="ty">Chunk</span>&gt;();
+
+<span class="cm">// manual cosine similarity</span>
+<span class="cm">// manual top-k selection</span>
+<span class="cm">// manual threshold filtering</span>
+<span class="cm">// lost on every restart</span></div>
+          </div>
+          <div class="card">
+            <h4>What we want</h4>
+            <ul style="margin-top:.3em;">
+              <li><strong>Persistent storage</strong> — index once, query forever</li>
+              <li><strong>Built-in ANN search</strong> — no manual cosine loop</li>
+              <li><strong>Field filtering</strong> — built into the query</li>
+              <li><strong>Swappable backend</strong> — in-memory in dev, Qdrant in prod</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · WHAT VECTOR DBS GIVE YOU -->
+    <section class="slide">
+      <div class="eyebrow">Theory</div>
+      <h2>What a vector database actually does</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>A vector database stores <strong>(key, vector, metadata)</strong> tuples and exposes fast <strong>approximate nearest-neighbour search</strong> — the same thing we implemented by hand in Lab 3, but built on a proper index.</p>
+          <p style="margin-top:.9em;">The dominant index is <span class="tag">HNSW</span> — a graph structure that narrows down candidates in logarithmic time instead of scanning every vector. You never write this code yourself.</p>
+          <p style="margin-top:.9em;">You also get <strong>metadata filtering</strong> applied during the search, not after — which means the top-k you get back are already category-correct.</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card green-card">
+            <h4>Persistence</h4>
+            <p>Vectors survive process restarts. Index once when documents change, not on every startup. Critical once your corpus grows past a few dozen files.</p>
+          </div>
+          <div class="card green-card">
+            <h4>Purpose-built ANN index</h4>
+            <p>HNSW finds the nearest k vectors in milliseconds across millions of entries. Our Lab 3 linear scan would take seconds at that scale.</p>
+          </div>
+          <div class="card green-card">
+            <h4>Pre-filter + search</h4>
+            <p>Pass a filter expression alongside the query vector. The DB applies it during traversal — you only pay for the candidates that match.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · MICROSOFT.EXTENSIONS.VECTORDATA -->
+    <section class="slide">
+      <div class="eyebrow">Abstraction Layer</div>
+      <h2>Microsoft.Extensions.VectorData</h2>
+      <div class="grid-2" style="gap:3vw; align-items:center;">
+        <div>
+          <p>Rather than coding directly against a specific database, we code against a <strong>standard interface</strong>. The backing store becomes a configuration choice, not an architectural one.</p>
+          <div class="layer-stack" style="margin-top:1.2em;">
+            <div class="layer layer-app">
+              Your application code
+              <span class="pkg">IVectorStore, VectorStoreCollection&lt;K,T&gt;</span>
+            </div>
+            <div class="layer-arrow">↕ abstraction boundary</div>
+            <div class="layer layer-abs">
+              Microsoft.Extensions.VectorData
+              <span class="pkg">Microsoft.Extensions.VectorData.Abstractions</span>
+            </div>
+            <div class="layer-arrow">↕ plug in any connector</div>
+            <div class="layer layer-impl">
+              InMemoryVectorStore &nbsp;·&nbsp; QdrantVectorStore &nbsp;·&nbsp; AzureAISearch…
+              <span class="pkg">SemanticKernel.Connectors.*</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card">
+            <h4>The swap is one line</h4>
+            <div class="code-block" data-lang="C#" style="font-size:.8rem; line-height:1.9; margin-top:.5em;">
+<span class="cm">// Exercise 01 — in-memory</span>
+<span class="ty">IVectorStore</span> store =
+    <span class="kw">new</span> <span class="ty">InMemoryVectorStore</span>();
+
+<span class="cm">// Exercise 02 — Qdrant (persistent)</span>
+<span class="ty">IVectorStore</span> store =
+    <span class="kw">new</span> <span class="ty">QdrantVectorStore</span>(
+        <span class="kw">new</span> <span class="ty">QdrantClient</span>(<span class="str">"localhost"</span>));</div>
+          </div>
+          <div class="card green-card">
+            <h4>Available connectors</h4>
+            <ul style="margin-top:.3em;">
+              <li>InMemory — zero setup, great for tests</li>
+              <li>Qdrant — Docker, local or cloud</li>
+              <li>Azure AI Search — managed, hybrid search</li>
+              <li>pgvector — Postgres extension</li>
+              <li>Redis, MongoDB, Weaviate, and more</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · THE RECORD MODEL -->
+    <section class="slide">
+      <div class="eyebrow">API</div>
+      <h2>Defining your record with attributes</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>You describe the shape of your data with attributes. The connector uses these to map your C# class to the underlying store — no schema files, no migrations.</p>
+          <div class="code-block" data-lang="C#" style="margin-top:1em; font-size:.82rem; line-height:1.85;">
+<span class="kw">class</span> <span class="ty">Chunk</span>
+{
+    [<span class="at">VectorStoreKey</span>]
+    <span class="kw">public</span> <span class="ty">Guid</span>   Id       { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="ty">Guid</span>.<span class="fn">NewGuid</span>();
+
+    [<span class="at">VectorStoreData</span>]
+    <span class="kw">public</span> <span class="ty">string</span> Text     { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+
+    [<span class="at">VectorStoreData</span>]
+    <span class="kw">public</span> <span class="ty">string</span> Source   { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+
+    [<span class="at">VectorStoreData</span>(IsIndexed = <span class="kw">true</span>)]
+    <span class="kw">public</span> <span class="ty">string</span> Category { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+
+    [<span class="at">VectorStoreVector</span>(Dimensions: <span class="nu">1536</span>,
+        DistanceFunction = <span class="ty">DistanceFunction</span>.CosineSimilarity)]
+    <span class="kw">public</span> <span class="ty">ReadOnlyMemory</span>&lt;<span class="kw">float</span>&gt; Vector { <span class="kw">get</span>; <span class="kw">set</span>; }
+}
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card">
+            <h4>[VectorStoreKey]</h4>
+            <p>The unique identifier for each record. Must be a type the connector supports — <code style="font-family:var(--mono); font-size:.88em;">Guid</code> works for both InMemory and Qdrant.</p>
+          </div>
+          <div class="card">
+            <h4>[VectorStoreData]</h4>
+            <p>A regular payload field. Add <code style="font-family:var(--mono); font-size:.88em;">IsIndexed = true</code> on fields you'll filter on — this tells the connector to build an index for efficient pre-filtering.</p>
+          </div>
+          <div class="card green-card">
+            <h4>[VectorStoreVector]</h4>
+            <p><code style="font-family:var(--mono); font-size:.88em;">Dimensions</code> is required — it must match your embedding model (1536 for text-embedding-3-small). The connector uses it to validate and configure the index.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · THE COLLECTION API -->
+    <section class="slide">
+      <div class="eyebrow">API</div>
+      <h2>The collection API — upsert and search</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>A <strong>collection</strong> is the equivalent of a table or index — a named set of records, all the same type. You get one via the store and interact with it through a typed API.</p>
+          <div class="code-block" data-lang="C#" style="margin-top:1em; font-size:.8rem; line-height:1.85;">
+<span class="cm">// get (or create) the collection</span>
+<span class="kw">var</span> col = store.<span class="fn">GetCollection</span>&lt;<span class="ty">Guid</span>, <span class="ty">Chunk</span>&gt;(<span class="str">"company-docs"</span>);
+<span class="kw">await</span> col.<span class="fn">CreateCollectionIfNotExistsAsync</span>();
+
+<span class="cm">// upsert a chunk (insert or update by key)</span>
+<span class="kw">await</span> col.<span class="fn">UpsertAsync</span>(<span class="kw">new</span> <span class="ty">Chunk</span> {
+    Text     = chunk,
+    Source   = filename,
+    Category = category,
+    Vector   = <span class="kw">new</span> <span class="ty">ReadOnlyMemory</span>&lt;<span class="kw">float</span>&gt;(embedding),
+});
+
+<span class="cm">// search — returns IAsyncEnumerable</span>
+<span class="cm">// top is the 2nd positional arg (not a property of options)</span>
+<span class="kw">var</span> options = <span class="kw">new</span> <span class="ty">VectorSearchOptions</span>&lt;<span class="ty">Chunk</span>&gt;
+{
+    Filter = r => r.Category == <span class="str">"IT"</span>,
+};
+
+<span class="kw">await foreach</span> (<span class="kw">var</span> hit <span class="kw">in</span> col.<span class="fn">SearchAsync</span>(queryVector, <span class="nu">3</span>, options))
+    <span class="fn">Console</span>.<span class="fn">WriteLine</span>(<span class="str">$"</span>{hit.Record.Source}<span class="str"> — </span>{hit.Score:P0}<span class="str">"</span>);
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card green-card">
+            <h4>UpsertAsync</h4>
+            <p>Insert-or-update by key. Calling it twice with the same <code style="font-family:var(--mono); font-size:.88em;">Id</code> replaces the record — useful for re-indexing updated documents without clearing the whole collection.</p>
+          </div>
+          <div class="card">
+            <h4>SearchAsync → VectorSearchResult</h4>
+            <p>Each result carries <code style="font-family:var(--mono); font-size:.88em;">result.Record</code> (your <code style="font-family:var(--mono); font-size:.88em;">Chunk</code>) and <code style="font-family:var(--mono); font-size:.88em;">result.Score</code> (similarity score). The filter is evaluated <em>inside</em> the index — not as a post-hoc LINQ where clause.</p>
+          </div>
+          <div class="card">
+            <h4>Filter syntax</h4>
+            <p>A LINQ lambda expression: <code style="font-family:var(--mono); font-size:.88em; white-space:nowrap;">r => r.Category == "IT"</code>. Only fields marked <code style="font-family:var(--mono); font-size:.88em;">IsIndexed = true</code> can be filtered — the connector enforces this at collection creation time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · QDRANT -->
+    <section class="slide">
+      <div class="eyebrow">The Store</div>
+      <h2>Qdrant — the simplest production vector DB</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Qdrant is a purpose-built vector database. One Docker command and it's running — no auth, no schema setup, no config files for local dev.</p>
+          <div class="code-block" data-lang="shell" style="margin-top:1em; font-size:.88rem; line-height:1.9;">
+<span class="cm"># start Qdrant (data survives container restarts)</span>
+docker run -d \
+  -p <span class="nu">6333</span>:<span class="nu">6333</span> \
+  -v qdrant_storage:/qdrant/storage \
+  qdrant/qdrant
+          </div>
+          <p class="muted" style="margin-top:.9em; font-size:.92rem;">Then browse to <span class="accent">localhost:6333/dashboard</span> — you can see your collections, browse records, and run test queries from the UI.</p>
+          <div style="margin-top:1em;">
+            <span class="tag">REST + gRPC</span>
+            <span class="tag green-tag">HNSW index</span>
+            <span class="tag green-tag">free &amp; open source</span>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card green-card">
+            <h4>What the .NET connector needs</h4>
+            <div class="code-block" data-lang="shell" style="font-size:.82rem; line-height:1.9; margin-top:.5em;">
+dotnet add package \
+  Microsoft.SemanticKernel.Connectors.Qdrant</div>
+          </div>
+          <div class="card">
+            <h4>Collections in Qdrant</h4>
+            <p>Each call to <code style="font-family:var(--mono); font-size:.88em;">store.GetCollection&lt;Guid, Chunk&gt;("company-docs")</code> maps to a Qdrant collection named <code style="font-family:var(--mono); font-size:.88em;">company-docs</code>. Qdrant stores the vector + payload fields side by side in its HNSW graph.</p>
+          </div>
+          <div class="card">
+            <h4>Persistence model</h4>
+            <p>Qdrant writes to disk by default (WAL + snapshots). Stop the container, restart it — your vectors are still there. The <code style="font-family:var(--mono); font-size:.88em;">-v qdrant_storage</code> flag maps the data directory to a Docker volume so it survives container rebuilds too.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 · SKIP RE-INDEXING -->
+    <section class="slide">
+      <div class="eyebrow">Persistence</div>
+      <h2>Skipping re-indexing on warm starts</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>The moment you switch to Qdrant, you can check whether the collection already exists before running ingestion. On the first run you index. On every subsequent run you skip straight to the agent.</p>
+          <div class="code-block" data-lang="C#" style="margin-top:1em; font-size:.82rem; line-height:1.85;">
+<span class="kw">var</span> exists =
+    <span class="kw">await</span> collection.<span class="fn">CollectionExistsAsync</span>();
+
+<span class="kw">if</span> (!exists)
+{
+    <span class="cm">// first run — chunk, embed, upsert</span>
+    <span class="fn">Console</span>.<span class="fn">WriteLine</span>(<span class="str">"Ingesting documents..."</span>);
+    <span class="kw">foreach</span> (<span class="kw">var</span> file <span class="kw">in</span> Directory.<span class="fn">GetFiles</span>(docsPath))
+    {
+        <span class="cm">// ... as before</span>
+    }
+}
+<span class="kw">else</span>
+{
+    <span class="fn">Console</span>.<span class="fn">WriteLine</span>(
+        <span class="str">"Collection already indexed — skipping."</span>);
+}
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card orange-card">
+            <h4>InMemoryVectorStore — always re-indexes</h4>
+            <p><code style="font-family:var(--mono); font-size:.88em;">CollectionExistsAsync()</code> returns <code style="font-family:var(--mono); font-size:.88em;">false</code> on every startup because the data lives in RAM. The skip logic has no effect — which is fine for development.</p>
+          </div>
+          <div class="card green-card">
+            <h4>QdrantVectorStore — skips on warm start</h4>
+            <p>After the first run, <code style="font-family:var(--mono); font-size:.88em;">CollectionExistsAsync()</code> returns <code style="font-family:var(--mono); font-size:.88em;">true</code> and the program goes straight to the agent — zero embedding API calls, instant startup.</p>
+          </div>
+          <div class="card">
+            <h4>Handling document updates</h4>
+            <p>In production you'd check document modification dates and only re-upsert changed chunks. For the lab, re-index by deleting the collection: <code style="font-family:var(--mono); font-size:.88em;">await collection.DeleteCollectionAsync()</code>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 · ARCHITECTURE -->
+    <section class="slide">
+      <div class="eyebrow">Architecture</div>
+      <h2>The updated pipeline</h2>
+
+      <div style="margin-top:1em;">
+        <div class="phase-row">
+          <span class="phase-label ingest">INGEST</span>
+          <div class="flow" style="flex:1; margin-top:0;">
+            <div class="flow-node green-node">
+              <strong>Documents</strong>
+              <span>Markdown files on disk</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node green-node">
+              <strong>Chunk</strong>
+              <span>Fixed-size with overlap</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node green-node">
+              <strong>Embed</strong>
+              <span>text-embedding-3-small</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node green-node">
+              <strong>UpsertAsync</strong>
+              <span>IVectorStoreRecordCollection</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px dashed var(--border-2); margin:.6em 0 .6em 5.5em;"></div>
+
+        <div class="phase-row">
+          <span class="phase-label query">QUERY</span>
+          <div class="flow" style="flex:1; margin-top:0;">
+            <div class="flow-node">
+              <strong>User Query</strong>
+              <span>+ optional category</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">
+              <strong>Embed Query</strong>
+              <span>Same model</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">
+              <strong>SearchAsync</strong>
+              <span>top-k + filter</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="border-color:var(--accent-border); background:var(--accent-dim);">
+              <strong style="color:var(--fg);">LLM → Answer</strong>
+              <span>grounded in results</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:1.4em; gap:2vw;">
+        <div class="card" style="padding:.9em 1.1em;">
+          <h4>What changed from Lab 3</h4>
+          <p style="font-size:.9rem;">The <code style="font-family:var(--mono); font-size:.87em;">List&lt;Chunk&gt;</code> and manual cosine loop are gone. <code style="font-family:var(--mono); font-size:.87em;">UpsertAsync</code> and <code style="font-family:var(--mono); font-size:.87em;">SearchAsync</code> replace them, routing through the <code style="font-family:var(--mono); font-size:.87em;">IVectorStore</code> abstraction.</p>
+        </div>
+        <div class="card green-card" style="padding:.9em 1.1em;">
+          <h4>What didn't change</h4>
+          <p style="font-size:.9rem;">The agent, the embedding call, the chunking logic, and the tool wiring are identical to Lab 3. The storage layer is the only thing that changed.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 · SETUP -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on Setup</div>
+      <h2>What we're building</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Start from the Lab 3 solution. We'll migrate it to <code style="font-family:var(--mono); background:var(--bg-3); padding:1px 6px; border-radius:4px; font-size:.9em;">IVectorStore</code> in two exercises.</p>
+          <ol class="steps" style="margin-top:1em;">
+            <li><strong>Exercise 01</strong> — Replace <code style="font-family:var(--mono); font-size:.87em;">List&lt;Chunk&gt;</code> with <code style="font-family:var(--mono); font-size:.87em;">InMemoryVectorStore</code>. Behaviour identical to Lab 3, but code is now DB-abstracted.</li>
+            <li><strong>Exercise 02</strong> — Comment out <code style="font-family:var(--mono); font-size:.87em;">InMemoryVectorStore</code>, uncomment <code style="font-family:var(--mono); font-size:.87em;">QdrantVectorStore</code>. Run twice — observe that the second run skips ingestion entirely.</li>
+            <li><strong>Exercise 03 (Bonus)</strong> — Open the Qdrant dashboard. Browse your collection, inspect a stored vector, run a query from the UI.</li>
+          </ol>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card green-card">
+            <h4>New NuGet packages</h4>
+            <div class="code-block" data-lang="shell" style="font-size:.82rem; line-height:1.9; margin-top:.5em;">
+dotnet add package Microsoft.Extensions.VectorData.Abstractions --version 10.1.0
+dotnet add package Microsoft.SemanticKernel.Connectors.InMemory --version 1.74.0-preview
+<span class="cm"># Exercise 02 only:</span>
+dotnet add package Microsoft.SemanticKernel.Connectors.Qdrant --version 1.74.0-preview</div>
+          </div>
+          <div class="card">
+            <h4>Exercise 02 prerequisite</h4>
+            <p>Docker must be running. Start Qdrant before the exercise:</p>
+            <div class="code-block" data-lang="shell" style="font-size:.82rem; line-height:1.9; margin-top:.5em;">
+docker run -d -p <span class="nu">6333</span>:<span class="nu">6333</span> \
+  -v qdrant_storage:/qdrant/storage \
+  qdrant/qdrant</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 · EXERCISE 01 -->
+    <section class="slide">
+      <div class="eyebrow">Exercise 01 · 20 min</div>
+      <h2>Migrate to IVectorStore (InMemory)</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Replace the <code style="font-family:var(--mono); background:var(--bg-3); padding:1px 6px; border-radius:4px; font-size:.9em;">List&lt;Chunk&gt;</code> and manual cosine search with the <code style="font-family:var(--mono); background:var(--bg-3); padding:1px 6px; border-radius:4px; font-size:.9em;">IVectorStore</code> abstraction backed by <code style="font-family:var(--mono); background:var(--bg-3); padding:1px 6px; border-radius:4px; font-size:.9em;">InMemoryVectorStore</code>.</p>
+          <ol class="steps" style="margin-top:1em;">
+            <li>Convert the <code style="font-family:var(--mono); font-size:.87em;">record Chunk</code> to a <code style="font-family:var(--mono); font-size:.87em;">class</code>. Add <code style="font-family:var(--mono); font-size:.87em;">[VectorStoreKey]</code>, <code style="font-family:var(--mono); font-size:.87em;">[VectorStoreData]</code>, and <code style="font-family:var(--mono); font-size:.87em;">[VectorStoreVector(Dimensions: 1536)]</code> attributes</li>
+            <li>Change <code style="font-family:var(--mono); font-size:.87em;">Vector</code>'s type from <code style="font-family:var(--mono); font-size:.87em;">float[]</code> to <code style="font-family:var(--mono); font-size:.87em;">ReadOnlyMemory&lt;float&gt;</code></li>
+            <li>Create <code style="font-family:var(--mono); font-size:.87em;">IVectorStore vectorStore = new InMemoryVectorStore()</code> and get a typed collection from it</li>
+            <li>In ingestion, replace <code style="font-family:var(--mono); font-size:.87em;">store.Add()</code> with <code style="font-family:var(--mono); font-size:.87em;">await collection.UpsertAsync()</code></li>
+            <li>In <code style="font-family:var(--mono); font-size:.87em;">SearchAsync</code>, replace the LINQ cosine loop with a <code style="font-family:var(--mono); font-size:.87em;">VectorSearchOptions</code> + <code style="font-family:var(--mono); font-size:.87em;">collection.SearchAsync()</code> call</li>
+            <li>Delete the <code style="font-family:var(--mono); font-size:.87em;">CosineSimilarity</code> method — the DB handles it now</li>
+          </ol>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card green-card">
+            <h4>Expected result</h4>
+            <p>Behaviour is identical to Lab 3. Same answers, same latency. The difference is entirely structural — the storage layer is now abstracted and swappable.</p>
+          </div>
+          <div class="card">
+            <h4>Iterating results</h4>
+            <div class="code-block" data-lang="C#" style="font-size:.8rem; line-height:1.85; margin-top:.4em; white-space: pre-wrap;">
+<span class="kw">await foreach</span> (<span class="kw">var</span> hit <span class="kw">in</span>
+    collection.<span class="fn">SearchAsync</span>(queryVec, options))
+{
+    <span class="cm">// hit.Record  → your Chunk</span>
+    <span class="cm">// hit.Score   → similarity (0–1)</span>
+}</div>
+          </div>
+          <div class="card orange-card">
+            <h4>Watch out</h4>
+            <p><code style="font-family:var(--mono); font-size:.87em;">SearchAsync</code> returns <code style="font-family:var(--mono); font-size:.87em;">IAsyncEnumerable</code> — you must <code style="font-family:var(--mono); font-size:.87em;">await foreach</code> it, not <code style="font-family:var(--mono); font-size:.87em;">.ToList()</code> it directly. Use <code style="font-family:var(--mono); font-size:.87em;">ToListAsync()</code> from <code style="font-family:var(--mono); font-size:.87em;">System.Linq.Async</code> if you need a list.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 · EXERCISE 02 -->
+    <section class="slide">
+      <div class="eyebrow">Exercise 02 · 20 min</div>
+      <h2>Swap to Qdrant</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>With the abstraction in place, switching to Qdrant is three small changes. The rest of the code is untouched.</p>
+          <ol class="steps" style="margin-top:1em;">
+            <li>Add <code style="font-family:var(--mono); font-size:.87em;">Microsoft.SemanticKernel.Connectors.Qdrant</code> to the project</li>
+            <li>Comment out <code style="font-family:var(--mono); font-size:.87em;">new InMemoryVectorStore()</code> — uncomment <code style="font-family:var(--mono); font-size:.87em;">new QdrantVectorStore(new QdrantClient("localhost"))</code></li>
+            <li>Add the <code style="font-family:var(--mono); font-size:.87em;">CollectionExistsAsync()</code> guard around your ingestion loop</li>
+            <li>Run the program. Watch it index. Note how long it takes.</li>
+            <li>Stop the program. Run it again. It should say "Collection already indexed" and skip straight to the agent.</li>
+            <li>Ask the same questions as in Exercise 01 — results should be identical</li>
+          </ol>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card green-card">
+            <h4>The "wow" moment</h4>
+            <p>Second run: zero embedding API calls, instant startup. The index you built in run 1 is still sitting in Qdrant — no rebuild needed.</p>
+          </div>
+          <div class="card">
+            <h4>If you need to re-index</h4>
+            <p>Delete the collection and let it rebuild on the next run:</p>
+            <div class="code-block" data-lang="C#" style="font-size:.8rem; line-height:1.9; margin-top:.4em;">
+<span class="kw">await</span> collection.<span class="fn">DeleteCollectionAsync</span>();</div>
+          </div>
+          <div class="card orange-card">
+            <h4>Qdrant not running?</h4>
+            <p>You'll get a connection refused error on the first API call. Make sure Docker is running and the container is up before starting the program.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 · EXERCISE 03 BONUS -->
+    <section class="slide">
+      <div class="eyebrow">Exercise 03 · Bonus · 10 min</div>
+      <h2>Explore the Qdrant dashboard</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Open <strong class="accent">localhost:6333/dashboard</strong> after Exercise 02. This is the Qdrant web UI — you can inspect exactly what's stored.</p>
+          <ol class="steps" style="margin-top:1em;">
+            <li>Open the <strong>company-docs</strong> collection. Note the number of vectors, the dimension count, and the distance function.</li>
+            <li>Click into a few records. Find the <code style="font-family:var(--mono); font-size:.87em;">Category</code>, <code style="font-family:var(--mono); font-size:.87em;">Source</code>, and <code style="font-family:var(--mono); font-size:.87em;">Text</code> payload fields alongside the vector.</li>
+            <li>Use the <strong>Search</strong> tab. Grab a vector from one of your records and paste it in. Adjust the limit and observe the scored results.</li>
+            <li>Back in the code, change the category filter in <code style="font-family:var(--mono); font-size:.87em;">SearchAsync</code> to <code style="font-family:var(--mono); font-size:.87em;">"IT"</code> and ask an HR question — confirm you get no results.</li>
+          </ol>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card">
+            <h4>What you'll see</h4>
+            <ul style="margin-top:.3em;">
+              <li>Each chunk stored as a point with an auto-generated <code style="font-family:var(--mono); font-size:.87em;">Guid</code></li>
+              <li>1536-dimensional vectors (too many to display — shown as a count)</li>
+              <li>Payload fields as a JSON sidebar</li>
+              <li>Scored nearest-neighbour results when you run a search</li>
+            </ul>
+          </div>
+          <div class="card green-card">
+            <h4>Stretch goal</h4>
+            <p>Add a new document to the <code style="font-family:var(--mono); font-size:.87em;">Docs/</code> folder. Delete the collection, re-run the program, and verify the new document is searchable. This is your manual "document update" workflow.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15 · PITFALLS -->
+    <section class="slide">
+      <div class="eyebrow">Pitfalls</div>
+      <h2>What can go wrong</h2>
+      <ul>
+        <li class="warn-li"><strong>Dimension mismatch.</strong> <code style="font-family:var(--mono); font-size:.87em;">[VectorStoreVector(Dimensions: 1536)]</code> must match the embedding model. Swap models and the existing collection is invalid. Always delete and re-index when changing models.</li>
+        <li class="warn-li"><strong>Filtering on un-indexed fields.</strong> Only fields with <code style="font-family:var(--mono); font-size:.87em;">IsIndexed = true</code> can be used in a filter. Qdrant will throw at search time if you try. Add the attribute and re-create the collection.</li>
+        <li class="warn-li"><strong>Stale collection after document changes.</strong> <code style="font-family:var(--mono); font-size:.87em;">CollectionExistsAsync()</code> only checks if the collection exists — not if it's up to date. Track document modification times or maintain a version hash if freshness matters.</li>
+        <li class="warn-li"><strong>Forgetting <code style="font-family:var(--mono); font-size:.87em;">CreateCollectionIfNotExistsAsync()</code>.</strong> Without this, the first upsert on a new collection will fail. Always call it during startup.</li>
+        <li class="warn-li"><strong>IAsyncEnumerable not awaited.</strong> <code style="font-family:var(--mono); font-size:.87em;">SearchAsync</code> returns <code style="font-family:var(--mono); font-size:.87em;">IAsyncEnumerable</code>. Assigning it to a variable doesn't execute it — you must <code style="font-family:var(--mono); font-size:.87em;">await foreach</code> to get results.</li>
+        <li class="warn-li"><strong>Top is not a VectorSearchOptions property.</strong> In <code style="font-family:var(--mono); font-size:.87em;">VectorData.Abstractions 10.1.0</code>, <code style="font-family:var(--mono); font-size:.87em;">Top</code> was removed from <code style="font-family:var(--mono); font-size:.87em;">VectorSearchOptions</code>. Pass the count as the second positional argument: <code style="font-family:var(--mono); font-size:.87em;">SearchAsync(vector, topK, options)</code>.</li>
+        <li class="warn-li"><strong>Empty-string category filter returns zero results.</strong> The LLM passes <code style="font-family:var(--mono); font-size:.87em;">""</code> (not <code style="font-family:var(--mono); font-size:.87em;">null</code>) when no filter is intended. Guard with <code style="font-family:var(--mono); font-size:.87em;">!string.IsNullOrEmpty(category)</code>, not <code style="font-family:var(--mono); font-size:.87em;">category != null</code>.</li>
+        <li class="warn-li"><strong>GitHub Models daily embedding quota.</strong> <code style="font-family:var(--mono); font-size:.87em;">text-embedding-3-small</code> has a separate daily cap. If ingestion hangs, you've likely hit it. Override <code style="font-family:var(--mono); font-size:.87em;">GITHUB_EMBED_MODEL=openai/text-embedding-3-large</code> to use a different quota pool.</li>
+        <li class="warn-li"><strong>Docker volume not mounted.</strong> Omitting <code style="font-family:var(--mono); font-size:.87em;">-v qdrant_storage:/qdrant/storage</code> means data is lost when the container is removed. Always mount the volume in dev so you don't re-index unexpectedly.</li>
+      </ul>
+    </section>
+
+    <!-- 16 · CLOSING -->
+    <section class="slide title-slide">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 04</span></div>
+      <h1>Questions?</h1>
+      <p class="muted" style="max-width:58ch; margin-top:.8em; font-size:1.1rem;">
+        The abstraction is the lesson. Code to <code style="font-family:var(--mono); font-size:.9em; color: var(--accent);">IVectorStore</code> and your storage choice
+        becomes a one-line config decision — not an architectural commitment.
+      </p>
+      <p class="muted" style="margin-top:1.8em; font-size:.9rem;">
+        Skeleton code: <span class="accent">github.com/aclabs/lab4-start</span>
+      </p>
+      <p class="muted" style="margin-top:.6em; font-size:.9rem;">
+        Next up — <span class="accent">Lab 05:</span> MCP &amp; multi-agent coordination
+      </p>
+    </section>
+
+  </div><!-- /deck -->
+
+  <div class="footer">
+    <span>AC Labs 2026 · Lab 04 — Vector Databases</span>
+    <span class="slide-num"><em id="cur">1</em> / <span id="total">16</span></span>
+    <span><kbd>→</kbd> <kbd>←</kbd> <kbd>F</kbd></span>
+  </div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  let i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    document.getElementById('cur').textContent = i + 1;
+    document.getElementById('progress').style.width = ((i + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight','PageDown',' '].includes(e.key)) { show(i+1); e.preventDefault(); }
+    else if (['ArrowLeft','PageUp'].includes(e.key)) { show(i-1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(total - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.footer')) return;
+    show(i + 1);
+  });
+
+  show(0);
+</script>
+</body>
+</html>
