@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 2 — Tool Calling & Microsoft Agent Framework</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #080a0f;
+    --bg-2: #0d1018;
+    --bg-3: #111520;
+    --fg: #e8edf5;
+    --muted: #5a6478;
+    --muted-2: #8892a4;
+    --accent: #00e5ff;
+    --accent-dim: rgba(0,229,255,0.12);
+    --accent-border: rgba(0,229,255,0.25);
+    --green: #00ff9d;
+    --green-dim: rgba(0,255,157,0.1);
+    --orange: #ff7b2c;
+    --orange-dim: rgba(255,123,44,0.1);
+    --border: #1a1f2e;
+    --border-2: #232838;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  /* ── background grid ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .deck { position: relative; width: 100vw; height: 100vh; }
+
+  .slide {
+    position: absolute; inset: 0;
+    padding: 5vh 7vw;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+    animation: slideIn .3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .slide.active { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── typography ── */
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin-bottom: 0.4em;
+  }
+  h2 {
+    font-size: clamp(1.7rem, 3.2vw, 2.7rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6em;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 1em;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  p, li {
+    font-size: clamp(.95rem, 1.4vw, 1.22rem);
+    line-height: 1.6;
+    color: #c4cad8;
+    font-family: var(--sans);
+    font-weight: 400;
+  }
+  ul { padding-left: 0; list-style: none; }
+  li {
+    padding: .45em 0 .45em 1.4em;
+    position: relative;
+  }
+  li::before {
+    content: '›';
+    position: absolute; left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  strong { color: var(--fg); font-weight: 700; }
+
+  .accent   { color: var(--accent); }
+  .green    { color: var(--green); }
+  .orange   { color: var(--orange); }
+  .muted    { color: var(--muted-2); }
+
+  /* ── layout helpers ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8vw; }
+
+  /* ── card ── */
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    padding: 1.3em 1.4em;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: .5;
+  }
+  .card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: .5em;
+    font-family: var(--sans);
+  }
+  .card.green-card::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .card.green-card h4 { color: var(--green); }
+  .card.orange-card::before { background: linear-gradient(90deg, var(--orange), transparent); }
+  .card.orange-card h4 { color: var(--orange); }
+  .card p, .card li { font-size: .97rem; }
+
+  /* ── code block ── */
+  .code-block {
+    background: #070910;
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: 1.2em 1.4em;
+    font-family: var(--mono);
+    font-size: clamp(.78rem, 1.1vw, .92rem);
+    line-height: 1.75;
+    overflow: auto;
+    position: relative;
+    white-space: pre;
+  }
+  .code-block::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: 1em;
+    font-size: .68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .kw  { color: #7c9cff; }
+  .ty  { color: var(--accent); }
+  .str { color: var(--green); }
+  .cm  { color: var(--muted); font-style: italic; }
+  .fn  { color: #ffb648; }
+  .nu  { color: #ff7b9c; }
+
+  /* ── flow diagram ── */
+  .flow {
+    display: flex; align-items: stretch;
+    gap: 0; margin-top: 1.5em;
+    flex-wrap: nowrap;
+  }
+  .flow-node {
+    flex: 1;
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: .9em .8em;
+    text-align: center;
+    position: relative;
+  }
+  .flow-node strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--accent);
+    margin-bottom: .3em;
+  }
+  .flow-node span { font-size: .82rem; color: var(--muted-2); }
+  .flow-arrow {
+    display: flex; align-items: center;
+    color: var(--muted);
+    font-size: 1.1rem;
+    padding: 0 .3em;
+    flex-shrink: 0;
+  }
+
+  /* ── tag / pill ── */
+  .tag {
+    display: inline-block;
+    padding: .22em .75em;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    font-family: var(--mono);
+    font-size: .78rem;
+    margin: .2em .2em .2em 0;
+  }
+  .tag.green-tag {
+    background: var(--green-dim);
+    color: var(--green);
+    border-color: rgba(0,255,157,0.25);
+  }
+  .tag.orange-tag {
+    background: var(--orange-dim);
+    color: var(--orange);
+    border-color: rgba(255,123,44,0.25);
+  }
+
+  /* ── title slide ── */
+  .title-slide {
+    justify-content: flex-end;
+    padding-bottom: 10vh;
+  }
+  .title-slide h1 {
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    background: linear-gradient(135deg, #fff 30%, var(--accent) 70%, var(--green));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    max-width: 14ch;
+  }
+  .title-glow {
+    position: absolute;
+    top: 10%; left: -5%;
+    width: 60vw; height: 60vh;
+    background: radial-gradient(ellipse, rgba(0,229,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .title-glow-2 {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 50vw; height: 50vh;
+    background: radial-gradient(ellipse, rgba(0,255,157,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── lab number badge ── */
+  .lab-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .8rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: .4em .9em;
+    margin-bottom: 2em;
+  }
+  .lab-badge span { color: var(--accent); font-weight: 700; }
+
+  /* ── step list (numbered) ── */
+  .steps { list-style: none; padding: 0; counter-reset: steps; }
+  .steps li {
+    counter-increment: steps;
+    padding: .6em 0 .6em 2.8em;
+  }
+  .steps li::before {
+    content: counter(steps, decimal-leading-zero);
+    position: absolute; left: 0;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 2em; height: 1.7em;
+    display: flex; align-items: center; justify-content: center;
+    top: .65em;
+  }
+
+  /* ── timeline ── */
+  .timeline {
+    display: flex; gap: 0;
+    margin-top: 1.5em;
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .tl-item {
+    flex: 1;
+    padding: 1em 1.1em;
+    border-right: 1px solid var(--border-2);
+    position: relative;
+  }
+  .tl-item:last-child { border-right: none; }
+  .tl-item .tl-time {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: .35em;
+    letter-spacing: .05em;
+  }
+  .tl-item .tl-title {
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--fg);
+    margin-bottom: .2em;
+  }
+  .tl-item .tl-desc {
+    font-size: .82rem;
+    color: var(--muted-2);
+    line-height: 1.45;
+  }
+  .tl-item.highlight { background: var(--accent-dim); }
+  .tl-item.highlight .tl-time { color: var(--green); }
+
+  /* ── footer & progress ── */
+  .progress {
+    position: fixed; top: 0; left: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    transition: width .3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    box-shadow: 0 0 12px rgba(0,229,255,0.6);
+  }
+  .footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .65em 1.4em;
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: rgba(8,10,15,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 50;
+  }
+  .footer .slide-num { color: var(--muted-2); }
+  .footer .slide-num em { color: var(--accent); font-style: normal; }
+  kbd {
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    padding: 1px 5px; border-radius: 4px;
+    font-size: .78em; font-family: var(--mono);
+  }
+
+  /* ── big number highlight ── */
+  .big-stat {
+    font-family: var(--mono);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  /* ── warn list ── */
+  .warn-li::before { color: var(--orange) !important; content: '!' !important; }
+</style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="deck" id="deck">
+
+    <!-- 1 · TITLE -->
+    <section class="slide title-slide active">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 02</span></div>
+      <h1>Tool Calling &amp; Agent Framework</h1>
+      <p class="muted" style="max-width:55ch; margin-top:.8em; font-size:1.1rem;">
+        How to turn an LLM from a token predictor
+        into an agent that executes code, calls APIs, and makes decisions.
+      </p>
+      <p class="muted" style="margin-top:2.5em; font-size:.88rem;">
+        <kbd>→</kbd> next &nbsp; <kbd>←</kbd> previous &nbsp; <kbd>F</kbd> fullscreen
+      </p>
+    </section>
+
+    <!-- 2 · AGENDA -->
+    <section class="slide">
+      <div class="eyebrow">Agenda</div>
+      <h2>What we'll cover today</h2>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-time">10 min</div>
+          <div class="tl-title">Recap + Motivation</div>
+          <div class="tl-desc">Why a bare model can't "do" anything</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">15 min</div>
+          <div class="tl-title">Theory</div>
+          <div class="tl-desc">How tool calling works under the hood</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">10 min</div>
+          <div class="tl-title">Setup</div>
+          <div class="tl-desc">Microsoft Agent Framework 1.0 in .NET</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">15 min</div>
+          <div class="tl-title">Live Demo</div>
+          <div class="tl-desc">Agent with 3 tools, step by step</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">45 min</div>
+          <div class="tl-title">Hands-on</div>
+          <div class="tl-desc">Progressive exercises, real code</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">5 min</div>
+          <div class="tl-title">Wrap-up</div>
+          <div class="tl-desc">Common errors + Lab 3 preview</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · MICROSOFT AGENT FRAMEWORK INTRO -->
+    <section class="slide">
+      <div class="eyebrow">Microsoft Agent Framework 1.0</div>
+      <h2>The framework we'll use today</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>
+            MAF is an open-source SDK and runtime for building AI agents in <strong>.NET and Python</strong>.
+            GA since <strong class="accent">April 3, 2026</strong> — stable APIs, long-term support.
+          </p>
+          <p style="margin-top:.9em;">The unified successor of two earlier Microsoft projects:</p>
+          <div style="margin-top:.9em; display:flex; flex-direction:column; gap:.6em;">
+            <div class="card" style="padding:.85em 1.1em; display:flex; align-items:center; gap:1em;">
+              <span style="font-family:var(--mono); font-size:.83rem; color:var(--accent); min-width:7em;">Semantic Kernel</span>
+              <span style="font-size:.88rem; color:#c4cad8;">Enterprise foundations — session state, middleware, telemetry, type safety</span>
+            </div>
+            <div class="card" style="padding:.85em 1.1em; display:flex; align-items:center; gap:1em;">
+              <span style="font-family:var(--mono); font-size:.83rem; color:var(--accent); min-width:7em;">AutoGen</span>
+              <span style="font-size:.88rem; color:#c4cad8;">Simple agent abstractions and multi-agent orchestration patterns</span>
+            </div>
+            <div class="card" style="padding:.85em 1.1em; display:flex; align-items:center; gap:1em; border-color:var(--accent-border); background:var(--accent-dim);">
+              <span style="font-family:var(--mono); font-size:.83rem; color:var(--fg); min-width:7em; font-weight:700;">MAF 1.0 →</span>
+              <span style="font-size:.88rem; color:var(--fg);">Both merged into one framework. Same team, one foundation, production-ready.</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:.93rem; color:#c4cad8; margin-bottom:.9em;">What it gives us in this lab:</p>
+          <div style="display:flex; flex-direction:column; gap:.6em;">
+            <div class="card green-card" style="padding:.8em 1.1em;">
+              <h4 style="margin-bottom:.2em;">Tool registration</h4>
+              <p style="font-size:.88rem;">Annotate a C# method → MAF generates the JSON schema and routes calls automatically.</p>
+            </div>
+            <div class="card green-card" style="padding:.8em 1.1em;">
+              <h4 style="margin-bottom:.2em;">Model-agnostic</h4>
+              <p style="font-size:.88rem;">Same code works with OpenAI, Azure OpenAI, Claude, Gemini, Ollama and more.</p>
+            </div>
+            <div class="card green-card" style="padding:.8em 1.1em;">
+              <h4 style="margin-bottom:.2em;">Session &amp; memory</h4>
+              <p style="font-size:.88rem;">Built-in multi-turn state so the agent remembers previous steps in the conversation.</p>
+            </div>
+            <div class="card orange-card" style="padding:.8em 1.1em;">
+              <h4 style="margin-bottom:.2em;">MCP + A2A (Lab 3+)</h4>
+              <p style="font-size:.88rem;">Plug into external tool servers and coordinate with other agents across runtimes.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · PROBLEMA -->
+    <section class="slide">
+      <div class="eyebrow">Motivation</div>
+      <h2>The problem with a bare LLM</h2>
+      <div class="grid-2" style="align-items:center; gap:3vw;">
+        <div>
+          <p>An LLM knows how to <strong>predict tokens</strong>. That's it.</p>
+          <p style="margin-top:.8em;">It cannot:</p>
+          <ul style="margin-top:.5em;">
+            <li>Execute code</li>
+            <li>Access an external API</li>
+            <li>Read a file from disk</li>
+            <li>Check the current time or an exchange rate</li>
+            <li>Write to databases</li>
+          </ul>
+          <p style="margin-top:1em;">
+            <strong class="accent">Tool calling</strong> is the bridge between
+            <em>knowing</em> and <em>doing</em>.
+          </p>
+        </div>
+        <div class="card" style="padding:1.6em;">
+          <h4>Without tool calling</h4>
+          <div class="code-block" data-lang="output" style="margin-top:.6em; font-size:.85rem;">
+<span class="cm">User:</span> What's the EUR/USD rate right now?
+
+<span class="cm">Model:</span> Based on my training data from
+[cutoff date], the rate was around 1.08.
+<span class="orange">// ← could be completely wrong</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · HOW TOOL CALLING WORKS -->
+    <section class="slide">
+      <div class="eyebrow">Theory</div>
+      <h2>How tool calling works</h2>
+
+      <svg viewBox="0 0 1020 330" xmlns="http://www.w3.org/2000/svg"
+           style="width:100%; max-height:58vh; margin-top:.6em;">
+        <defs>
+          <marker id="arr"        markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L8,3.5 Z" fill="#5a6478"/></marker>
+          <marker id="arr-accent" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L8,3.5 Z" fill="#00e5ff"/></marker>
+          <marker id="arr-purple" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L8,3.5 Z" fill="#b48eff"/></marker>
+          <marker id="arr-green"  markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L8,3.5 Z" fill="#00ff9d"/></marker>
+          <marker id="arr-orange" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto"><path d="M0,0 L0,7 L8,3.5 Z" fill="#ffb648"/></marker>
+        </defs>
+
+        <!-- ── participant positions: x = 80, 240, 420, 620, 820 ── -->
+
+        <!-- labels -->
+        <text x="80"  y="20" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#e8edf5"  font-weight="700">User</text>
+        <text x="260" y="20" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#00e5ff"  font-weight="700">LLM Host</text>
+        <text x="450" y="20" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#b48eff"  font-weight="700">LLM</text>
+        <text x="650" y="20" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#00ff9d"  font-weight="700">Your C# Code</text>
+        <text x="860" y="20" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#ffb648"  font-weight="700">External API</text>
+
+        <!-- boxes -->
+        <rect x="34"  y="26" width="92" height="24" rx="5" fill="#0d1018" stroke="#232838"  stroke-width="1"/>
+        <rect x="214" y="26" width="92" height="24" rx="5" fill="#0d1018" stroke="#00e5ff"  stroke-width="1" fill-opacity=".25"/>
+        <rect x="404" y="26" width="92" height="24" rx="5" fill="#0d1018" stroke="#b48eff"  stroke-width="1" fill-opacity=".25"/>
+        <rect x="604" y="26" width="92" height="24" rx="5" fill="#0d1018" stroke="#00ff9d"  stroke-width="1" fill-opacity=".25"/>
+        <rect x="814" y="26" width="92" height="24" rx="5" fill="#0d1018" stroke="#ffb648"  stroke-width="1" fill-opacity=".25"/>
+
+        <!-- lifelines -->
+        <line x1="80"  y1="50" x2="80"  y2="322" stroke="#1a1f2e" stroke-width="1.5" stroke-dasharray="4,4"/>
+        <line x1="260" y1="50" x2="260" y2="322" stroke="#00e5ff" stroke-width="1.5" stroke-dasharray="4,4" opacity=".3"/>
+        <line x1="450" y1="50" x2="450" y2="322" stroke="#b48eff" stroke-width="1.5" stroke-dasharray="4,4" opacity=".3"/>
+        <line x1="650" y1="50" x2="650" y2="322" stroke="#00ff9d" stroke-width="1.5" stroke-dasharray="4,4" opacity=".3"/>
+        <line x1="860" y1="50" x2="860" y2="322" stroke="#ffb648" stroke-width="1.5" stroke-dasharray="4,4" opacity=".3"/>
+
+        <!-- ── step 1: User → LLM Host ── -->
+        <line x1="86"  y1="78" x2="252" y2="78" stroke="#5a6478" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="168" y="72" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#8892a4">"What's the EUR/USD rate?"</text>
+
+        <!-- ── step 2: LLM Host → LLM (forward prompt) ── -->
+        <line x1="266" y1="104" x2="442" y2="104" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arr-accent)"/>
+        <text x="353" y="98" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#00e5ff">prompt + tools schema</text>
+
+        <!-- ── LLM thinks box ── -->
+        <rect x="410" y="114" width="80" height="20" rx="4" fill="#b48eff" fill-opacity=".08" stroke="#b48eff" stroke-width=".8" stroke-opacity=".4"/>
+        <text x="450" y="128" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9.5" fill="#b48eff">needs a tool</text>
+
+        <!-- ── step 3: LLM → LLM Host (tool call JSON) ── -->
+        <line x1="442" y1="148" x2="266" y2="148" stroke="#b48eff" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-purple)"/>
+        <text x="353" y="142" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#b48eff">tool_call { GetRate, "EUR","USD" }</text>
+
+        <!-- ── step 4: LLM Host → C# (dispatch) ── -->
+        <line x1="266" y1="174" x2="642" y2="174" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arr-accent)"/>
+        <text x="453" y="168" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#00e5ff">dispatch GetRate("EUR","USD")</text>
+
+        <!-- ── step 5: C# → External API ── -->
+        <line x1="656" y1="200" x2="852" y2="200" stroke="#5a6478" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="753" y="194" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#8892a4">HTTP GET /rates</text>
+
+        <!-- ── step 6: External API → C# (response) ── -->
+        <line x1="852" y1="222" x2="656" y2="222" stroke="#ffb648" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-orange)"/>
+        <text x="753" y="216" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#ffb648">{ "rate": 1.0842 }</text>
+
+        <!-- ── step 7: C# → LLM Host (tool result) ── -->
+        <line x1="642" y1="248" x2="266" y2="248" stroke="#00ff9d" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-green)"/>
+        <text x="453" y="242" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#00ff9d">tool_result: "1.0842"</text>
+
+        <!-- ── step 8: LLM Host → LLM (result in context) ── -->
+        <line x1="266" y1="270" x2="442" y2="270" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#arr-accent)"/>
+        <text x="353" y="264" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#00e5ff">context + tool_result</text>
+
+        <!-- ── step 9: LLM → LLM Host → User (final answer) ── -->
+        <line x1="442" y1="296" x2="86"  y2="296" stroke="#5a6478" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+        <text x="263" y="290" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#8892a4">"The current rate is 1.0842 USD per EUR"</text>
+
+        <!-- ── step number badges ── -->
+        <circle cx="130" cy="78"  r="8" fill="#111520"/><text x="130" y="82"  text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5a6478">1</text>
+        <circle cx="310" cy="104" r="8" fill="#111520"/><text x="310" y="108" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#00e5ff">2</text>
+        <circle cx="395" cy="148" r="8" fill="#111520"/><text x="395" y="152" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#b48eff">3</text>
+        <circle cx="400" cy="174" r="8" fill="#111520"/><text x="400" y="178" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#00e5ff">4</text>
+        <circle cx="710" cy="200" r="8" fill="#111520"/><text x="710" y="204" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#8892a4">5</text>
+        <circle cx="710" cy="222" r="8" fill="#111520"/><text x="710" y="226" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#ffb648">6</text>
+        <circle cx="510" cy="248" r="8" fill="#111520"/><text x="510" y="252" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#00ff9d">7</text>
+        <circle cx="310" cy="270" r="8" fill="#111520"/><text x="310" y="274" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#00e5ff">8</text>
+        <circle cx="220" cy="296" r="8" fill="#111520"/><text x="220" y="300" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="#5a6478">9</text>
+      </svg>
+
+      <p class="muted" style="margin-top:.8em; font-size:.92rem;">
+        The model does <strong>not execute</strong> the code — it returns a structured JSON.
+        <em>You</em> run the function and send the result back.
+      </p>
+    </section>
+
+    <!-- 5 · FUNCTION SCHEMA -->
+    <section class="slide">
+      <div class="eyebrow">Theory</div>
+      <h2>Anatomy of a function schema</h2>
+      <div class="grid-2" style="gap:2.5vw;">
+        <div class="code-block" data-lang="C#" style="font-size:.82rem; line-height:1.8;">
+[<span class="ty">Description</span>(<span class="str">"Get the current weather for a city"</span>)]
+<span class="kw">public static</span> <span class="ty">WeatherResult</span> <span class="fn">GetWeather</span>(
+    [<span class="ty">Description</span>(<span class="str">"City name, e.g. Bucharest"</span>)]
+    <span class="ty">string</span> city,
+    [<span class="ty">Description</span>(<span class="str">"Unit: 'celsius' or 'fahrenheit'"</span>)]
+    <span class="ty">string</span> unit = <span class="str">"celsius"</span>)
+{
+    <span class="cm">// mock — replace with real API call</span>
+    <span class="kw">return new</span> <span class="ty">WeatherResult</span>(city, <span class="nu">22</span>, unit, <span class="str">"Sunny"</span>);
+}
+        </div>
+        <div>
+          <p>The model sees the <strong>description</strong>, not the implementation.</p>
+          <ul style="margin-top:.8em;">
+            <li>The function description tells it <em>when</em> to call it</li>
+            <li>Parameter descriptions tell it <em>what to send</em></li>
+            <li>C# types → JSON schema automatically</li>
+          </ul>
+          <div style="margin-top:1.2em;">
+            <span class="tag">Description attribute</span>
+            <span class="tag">Type inference</span>
+            <span class="tag green-tag">Auto-schema</span>
+          </div>
+          <p class="muted" style="margin-top:1em; font-size:.92rem;">
+            Describe <strong>behaviour</strong>, not implementation.
+            The model is a documentation reader.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · SETUP -->
+    <section class="slide">
+      <div class="eyebrow">Setup</div>
+      <h2>First steps in .NET</h2>
+      <div class="grid-2" style="gap:2.5vw; align-items:start;">
+        <div>
+          <div class="code-block" data-lang="bash" style="font-size:.85rem; line-height:1.9;">
+<span class="cm"># create the project</span>
+dotnet new console -n Lab2ToolCalling
+<span class="kw">cd</span> Lab2ToolCalling
+
+<span class="cm"># required packages</span>
+dotnet add package Microsoft.Agents.AI
+dotnet add package Azure.AI.Projects
+dotnet add package Azure.Identity
+          </div>
+          <div class="code-block" data-lang="C#" style="margin-top:1em; font-size:.82rem; line-height:1.8;">
+<span class="ty">AIAgent</span> agent = <span class="kw">new</span> <span class="ty">OpenAIClient</span>(apiKey)
+    .GetResponsesClient(<span class="str">"gpt-4o"</span>)
+    .AsAIAgent(
+        name: <span class="str">"Lab2Agent"</span>,
+        instructions: <span class="str">"You are a helpful assistant."</span>);
+          </div>
+        </div>
+        <div>
+          <p>A working agent in <strong class="accent">~5 lines of code</strong>.</p>
+          <ul style="margin-top:.8em;">
+            <li>Configuration in <code style="font-family:var(--mono); background:#111520; padding:1px 6px; border-radius:4px; font-size:.9em;">appsettings.json</code></li>
+            <li>Supports Azure OpenAI or OpenAI directly</li>
+            <li>Same code for any supported model</li>
+          </ul>
+          <p class="muted" style="margin-top:1.2em; font-size:.9rem;">
+            The lab repo has the skeleton ready —
+            no time wasted on boilerplate.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · DEMO PREVIEW -->
+    <section class="slide">
+      <div class="eyebrow">Live Demo</div>
+      <h2>The demo agent</h2>
+      <div class="grid-3">
+        <div class="card green-card">
+          <h4>GetWeather(city)</h4>
+          <p>Returns weather for a city. Simple mock — demonstrates the tool call cycle without an external dependency.</p>
+          <div style="margin-top:.8em;"><span class="tag green-tag">string → WeatherResult</span></div>
+        </div>
+        <div class="card green-card">
+          <h4>Calculate(expression)</h4>
+          <p>Evaluates a math expression. Shows how the model knows it should <em>not</em> calculate on its own.</p>
+          <div style="margin-top:.8em;"><span class="tag green-tag">string → decimal</span></div>
+        </div>
+        <div class="card green-card">
+          <h4>GetCurrentTime(timezone)</h4>
+          <p>Exact time in any timezone. <code style="font-family:var(--mono); font-size:.85em;">DateTime.UtcNow</code> — demonstrates real-time data.</p>
+          <div style="margin-top:.8em;"><span class="tag green-tag">string → DateTimeOffset</span></div>
+        </div>
+      </div>
+      <p style="margin-top:1.5em;">
+        In the console you'll see <strong>exactly</strong> what JSON the model sends, what you execute, and what comes back.
+        <span class="muted">No hidden magic.</span>
+      </p>
+    </section>
+
+    <!-- 9 · ADDING A TOOL -->
+    <section class="slide">
+      <div class="eyebrow">Code</div>
+      <h2>How to add a tool to an agent</h2>
+      <div class="grid-2" style="gap:2.5vw; align-items:start;">
+        <div class="code-block" data-lang="C#" style="font-size:.8rem; line-height:1.85;">
+<span class="cm">// 1. Define the function with Description</span>
+[<span class="ty">Description</span>(<span class="str">"Get the current weather for a city"</span>)]
+<span class="kw">public static</span> <span class="ty">WeatherResult</span> <span class="fn">GetWeather</span>(
+    [<span class="ty">Description</span>(<span class="str">"City name, e.g. Bucharest"</span>)]
+    <span class="ty">string</span> city,
+    [<span class="ty">Description</span>(<span class="str">"Unit: 'celsius' or 'fahrenheit'"</span>)]
+    <span class="ty">string</span> unit = <span class="str">"celsius"</span>)
+{
+    <span class="kw">return new</span> <span class="ty">WeatherResult</span>(city, <span class="nu">22</span>, unit, <span class="str">"Sunny"</span>);
+}
+
+<span class="cm">// 2. Register it with the agent</span>
+agent.AddFunction(<span class="fn">GetWeather</span>);
+
+<span class="cm">// 3. Run — the model decides when to call it</span>
+<span class="kw">await</span> agent.<span class="fn">RunAsync</span>(<span class="str">"What's the weather like in Paris?"</span>);
+        </div>
+        <div>
+          <p>The model reads <code style="font-family:var(--mono); background:#111520; padding:1px 6px; border-radius:4px; font-size:.9em;">[Description]</code> and decides on its own:</p>
+          <ul style="margin-top:.8em;">
+            <li><em>When</em> to call the tool</li>
+            <li><em>What arguments</em> to send</li>
+            <li><em>How to interpret</em> the result</li>
+          </ul>
+          <p style="margin-top:1em; font-size:.95rem;">
+            You write a <strong class="accent">normal C# function</strong>.
+            The framework generates the schema, routes the call, and injects the result into context.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 · EXERCIȚIU 1 -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · Exercise 01 — 15 min</div>
+      <h2>ConvertCurrency tool</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Starting from the demo agent, add a new tool:</p>
+          <ol class="steps" style="margin-top:1em;">
+            <li>Define the function <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">ConvertCurrency(decimal, string, string)</code> with <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">[Description]</code> attributes</li>
+            <li>Register it with the agent using <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">AddFunction</code></li>
+            <li>Test with questions phrased in different ways</li>
+            <li>Observe in the log what JSON the model generated</li>
+          </ol>
+        </div>
+        <div>
+          <div class="card orange-card">
+            <h4>Key insight</h4>
+            <p>Why do parameter descriptions matter? Change the text in <code style="font-family:var(--mono); font-size:.85em;">[Description]</code> and observe how the model's behaviour changes.</p>
+          </div>
+          <div class="card" style="margin-top:1em;">
+            <h4>Mock rates are fine</h4>
+            <p>No real API needed. A hardcoded <code style="font-family:var(--mono); font-size:.85em;">Dictionary&lt;string, decimal&gt;</code> is enough.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 · EXERCIȚIU 2 -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · Exercise 02 — 20 min</div>
+      <h2>The travel assistant agent</h2>
+      <p>Build an agent that answers the question:</p>
+      <p style="margin-top:.5em; font-size:1.3rem; color:var(--accent);">
+        <em>"I want to go to Paris next week. What should I know?"</em>
+      </p>
+      <div class="grid-3" style="margin-top:1.5em;">
+        <div class="card">
+          <h4>Tool 1 · GetWeather</h4>
+          <p>Weather at the destination. From the demo or extended with more fields.</p>
+        </div>
+        <div class="card">
+          <h4>Tool 2 · ConvertCurrency</h4>
+          <p>From exercise 1. The model must decide on its own which currencies are relevant.</p>
+        </div>
+        <div class="card">
+          <h4>Tool 3 · SearchFlights</h4>
+          <p>Mock with a few hardcoded flights. Parameters: <code style="font-family:var(--mono); font-size:.85em;">origin, destination, date</code>.</p>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1.2em; font-size:.92rem;">
+        Goal: the model calls the tools <strong>in logical order</strong>, combines the results, and responds coherently. You don't tell it the order.
+      </p>
+    </section>
+
+    <!-- 12 · EXERCIȚIU 3 BONUS -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · Exercise 03 bonus — 10 min</div>
+      <h2>Tool approval workflow</h2>
+      <div class="grid-2" style="gap:3vw; align-items:center;">
+        <div>
+          <p>Some tools are dangerous to run without confirmation:</p>
+          <ul style="margin-top:.8em;">
+            <li>Database writes</li>
+            <li>Sending emails / notifications</li>
+            <li>Financial transactions</li>
+            <li>Any irreversible action</li>
+          </ul>
+          <p style="margin-top:1em;">
+            MAF has <span class="tag orange-tag">FunctionApprovalRequestContent</span> built-in:
+            the agent <em>proposes</em> the call and <strong>waits</strong> for your confirmation before executing.
+          </p>
+        </div>
+        <div class="code-block" data-lang="C#" style="font-size:.8rem; line-height:1.85;">
+<span class="cm">// agent proposes a tool call</span>
+<span class="kw">var</span> result = <span class="kw">await</span> agent.<span class="fn">RunAsync</span>(msg);
+
+<span class="kw">if</span> (result <span class="kw">is</span> <span class="ty">FunctionApprovalRequestContent</span> req)
+{
+    Console.<span class="fn">WriteLine</span>(<span class="str">$"Approve: {req.FunctionName}?"</span>);
+    <span class="kw">var</span> ok = Console.<span class="fn">ReadLine</span>() == <span class="str">"y"</span>;
+
+    <span class="kw">await</span> agent.<span class="fn">ResumeAsync</span>(
+        <span class="kw">new</span> <span class="ty">FunctionApprovalResponseContent</span>(
+            req, approved: ok));
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 · ERORI COMUNE -->
+    <section class="slide">
+      <div class="eyebrow">Pitfalls</div>
+      <h2>What can go wrong</h2>
+      <ul>
+        <li class="warn-li"><strong>Vague description → wrong tool called.</strong> "Do something with currency" isn't enough. Be specific: what does the function do, when does it make sense to call it.</li>
+        <li class="warn-li"><strong>Parameters without Description.</strong> The model will guess what to send — and will guess wrong. Every parameter needs context.</li>
+        <li class="warn-li"><strong>Tool that throws an uncaught exception.</strong> The agent stalls. Catch exceptions and return a structured error message — the model will adapt.</li>
+        <li class="warn-li"><strong>Too many tools.</strong> Giving the model 30 functions increases the chance it picks the wrong one. Group or filter contextually.</li>
+        <li class="warn-li"><strong>Uncontrolled loops.</strong> An agent can call a tool, misinterpret the result, and loop. Add a <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">maxTurns</code> limit.</li>
+      </ul>
+    </section>
+
+    <!-- 15 · RESURSE -->
+    <section class="slide">
+      <div class="eyebrow">Resources</div>
+      <h2>Where to go next</h2>
+      <div class="grid-2" style="gap:2.5vw; align-items:start;">
+        <ul>
+          <li><strong>Official docs</strong> — learn.microsoft.com/agent-framework</li>
+          <li><strong>GitHub</strong> — github.com/microsoft/agent-framework</li>
+          <li><strong>.NET samples</strong> — <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">dotnet/samples</code> folder in repo</li>
+          <li><strong>NuGet</strong> — <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">Microsoft.Agents.AI</code></li>
+        </ul>
+        <ul>
+          <li><strong>Migration guide</strong> — if coming from Semantic Kernel or AutoGen</li>
+          <li><strong>DevUI</strong> — browser debugger for visualising agent flow</li>
+          <li><strong>MAF Discord</strong> — official Microsoft community</li>
+          <li><strong>Skeleton code</strong> — in the lab repo, branch <code style="font-family:var(--mono); font-size:.9em; background:#111520; padding:1px 5px; border-radius:4px;">lab2-start</code></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 17 · CLOSING -->
+    <section class="slide title-slide">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 02</span></div>
+      <h1>Questions?</h1>
+      <p class="muted" style="max-width:55ch; margin-top:.8em; font-size:1.1rem;">
+        Tool calling isn't a feature — it's the interface between
+        a model that <em>knows</em> and a system that <em>does</em>.
+      </p>
+      <p class="muted" style="margin-top:2em; font-size:.9rem;">
+        Skeleton code: <span class="accent">github.com/aclabs/lab2-start</span>
+      </p>
+    </section>
+
+  </div><!-- /deck -->
+
+  <div class="footer">
+    <span>AC Labs 2026 · Lab 02 — Tool Calling &amp; Microsoft Agent Framework</span>
+    <span class="slide-num"><em id="cur">1</em> / <span id="total">17</span></span>
+    <span><kbd>→</kbd> <kbd>←</kbd> <kbd>F</kbd></span>
+  </div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  let i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    document.getElementById('cur').textContent = i + 1;
+    document.getElementById('progress').style.width = ((i + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight','PageDown',' '].includes(e.key)) { show(i+1); e.preventDefault(); }
+    else if (['ArrowLeft','PageUp'].includes(e.key)) { show(i-1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(total - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.footer')) return;
+    show(i + 1);
+  });
+
+  show(0);
+</script>
+</body>
+</html>
