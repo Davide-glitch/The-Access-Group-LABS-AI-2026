@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 5 — Step-by-step guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.2);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --green-border: rgba(5,150,105,0.2);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --orange-border: rgba(217,119,6,0.2);
+    --border: #e5e7eb;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --display: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  .hero {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .3em .8em;
+    margin-bottom: 1.5rem;
+  }
+  .hero-badge span { color: var(--accent); font-weight: 700; }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: .8rem;
+    color: var(--fg);
+  }
+  .hero p {
+    font-size: 1.1rem;
+    color: var(--muted-2);
+    max-width: 62ch;
+  }
+
+  .overview {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 3rem;
+  }
+  .overview h3 {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--fg);
+  }
+  .step-index {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .4rem;
+  }
+  .step-index a {
+    display: flex; align-items: center; gap: .6em;
+    font-size: .88rem;
+    color: var(--muted-2);
+    text-decoration: none;
+    padding: .3em .5em;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+  }
+  .step-index a:hover { background: var(--bg-3); color: var(--accent); }
+  .step-index a .num {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 1.9em; height: 1.6em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .step {
+    margin-bottom: 3.5rem;
+    scroll-margin-top: 2rem;
+  }
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  .step-num {
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 8px;
+    min-width: 2.4em; height: 2.4em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: .15em;
+  }
+  .step h2 {
+    font-family: var(--display);
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--fg);
+  }
+  .step p, .step li {
+    font-size: .97rem;
+    line-height: 1.7;
+    color: #374151;
+  }
+  .step ul, .step ol {
+    padding-left: 1.4rem;
+    margin: .6rem 0;
+  }
+  .step li { margin-bottom: .3em; }
+  .step p + p { margin-top: .7em; }
+  .step-body { padding-left: 3.4rem; }
+
+  .callout {
+    border-radius: 10px;
+    padding: 1em 1.2em;
+    margin: 1.1em 0;
+    font-size: .93rem;
+    line-height: 1.6;
+    border-left: 3px solid;
+  }
+  .callout strong { display: block; margin-bottom: .2em; font-size: .88rem; text-transform: uppercase; letter-spacing: .06em; }
+  .callout.why   { background: var(--accent-dim); border-color: var(--accent); color: #1e3a8a; }
+  .callout.why strong { color: var(--accent); }
+  .callout.check { background: var(--green-dim); border-color: var(--green); color: #065f46; }
+  .callout.check strong { color: var(--green); }
+  .callout.warn  { background: var(--orange-dim); border-color: var(--orange); color: #78350f; }
+  .callout.warn strong { color: var(--orange); }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.1em 1.3em;
+    font-family: var(--mono);
+    font-size: .84rem;
+    line-height: 1.85;
+    overflow-x: auto;
+    white-space: pre;
+    color: #cdd5e0;
+    position: relative;
+  }
+  .code-block[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: .9em;
+    font-size: .65rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .code-block.sm { font-size: .78rem; }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+  .hi  { background: rgba(37,99,235,0.25); border-radius: 3px; padding: 0 2px; }
+  .hi-green { background: rgba(5,150,105,0.2); border-radius: 3px; padding: 0 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .87em;
+    background: var(--bg-3);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .step-divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 3rem 0;
+  }
+
+  .final {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 2rem;
+    margin-top: 4rem;
+    text-align: center;
+  }
+  .final h2 {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: .5rem;
+  }
+  .final p { color: var(--muted-2); font-size: .97rem; }
+
+  .file-path {
+    font-family: var(--mono);
+    font-size: .78rem;
+    background: var(--bg-3);
+    border: 1px dashed var(--border);
+    color: var(--muted-2);
+    padding: .3em .7em;
+    border-radius: 6px;
+    display: inline-block;
+    margin: .3em 0 .8em;
+  }
+  .file-path strong { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 05</span> &nbsp;·&nbsp; Self-paced guide</div>
+    <h1>Build a Quizzes Web API from scratch</h1>
+    <p>Start from absolutely nothing — generate the project yourself with <code>dotnet new</code>, then build every layer one piece at a time: model, repository, DI, DTOs, controller. By the end you'll have a working CRUD API and you'll understand why each piece is there.</p>
+  </div>
+
+  <div class="overview">
+    <h3>Steps in this guide</h3>
+    <div class="step-index">
+      <a href="#s1"><span class="num">01</span> Create the project</a>
+      <a href="#s2"><span class="num">02</span> Swap to Swagger UI</a>
+      <a href="#s3"><span class="num">03</span> Run the empty shell</a>
+      <a href="#s4"><span class="num">04</span> Domain model</a>
+      <a href="#s5"><span class="num">05</span> Repository interface</a>
+      <a href="#s6"><span class="num">06</span> In-memory repo</a>
+      <a href="#s7"><span class="num">07</span> Register in DI</a>
+      <a href="#s8"><span class="num">08</span> Empty controller</a>
+      <a href="#s9"><span class="num">09</span> GET /quizzes</a>
+      <a href="#s10"><span class="num">10</span> GET /quizzes/{id}</a>
+      <a href="#s11"><span class="num">11</span> Input DTOs</a>
+      <a href="#s12"><span class="num">12</span> POST /quizzes</a>
+      <a href="#s13"><span class="num">13</span> PUT /quizzes/{id}</a>
+      <a href="#s14"><span class="num">14</span> DELETE /quizzes/{id}</a>
+      <a href="#s15"><span class="num">15</span> Test end-to-end</a>
+      <a href="#s16"><span class="num">16</span> Homework — Questions</a>
+    </div>
+  </div>
+
+  <!-- ── STEP 1 ── -->
+  <div class="step" id="s1">
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <h2>Create the project with <code>dotnet new</code></h2>
+    </div>
+    <div class="step-body">
+      <p>Open a terminal inside the <code>Sessions/Lab5/Code</code> folder. It should contain only a <code>README.md</code> right now — that's intentional.</p>
+      <p>Generate the project:</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># scaffold a Web API project with controllers (not minimal APIs)</span>
+dotnet new webapi -controllers -n Lab5 -o .</div>
+      <p>Flags explained:</p>
+      <ul>
+        <li><code>webapi</code> — the template name. There are dozens of templates (<code>console</code>, <code>classlib</code>, <code>blazor</code>, …); <code>dotnet new list</code> shows them all.</li>
+        <li><code>-controllers</code> — use the controller-based pattern, not minimal APIs. (Without this flag, .NET 9+ defaults to minimal APIs.)</li>
+        <li><code>-n Lab5</code> — assembly / root namespace name.</li>
+        <li><code>-o .</code> — output into the current folder instead of a subfolder.</li>
+      </ul>
+
+      <p>You'll now have:</p>
+      <div class="code-block" data-lang="text">
+Lab5.csproj
+Program.cs
+appsettings.json
+appsettings.Development.json
+Lab5.http
+Controllers/WeatherForecastController.cs
+WeatherForecast.cs
+Properties/launchSettings.json</div>
+
+      <div class="callout why">
+        <strong>WeatherForecast?</strong>
+        Every <code>dotnet new webapi</code> template ships with a <code>WeatherForecastController</code> example. It's a teaching stub — we'll delete it in the next step before we forget.
+      </div>
+
+      <p>Delete the sample files now:</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># Linux / macOS / Git Bash</span>
+rm Controllers/WeatherForecastController.cs WeatherForecast.cs Lab5.http
+
+<span class="cm"># PowerShell</span>
+Remove-Item Controllers/WeatherForecastController.cs, WeatherForecast.cs, Lab5.http</div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 2 ── -->
+  <div class="step" id="s2">
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <h2>Swap the default OpenAPI for Swagger UI</h2>
+    </div>
+    <div class="step-body">
+      <p>The .NET 10 template ships with <code>Microsoft.AspNetCore.OpenApi</code> — which generates the OpenAPI <em>JSON spec</em> at <code>/openapi/v1.json</code> but doesn't include a browsable UI. For this lab we want the familiar Swagger UI page you can poke at with your mouse. That means swapping packages.</p>
+
+      <p>Open <code>Lab5.csproj</code>. Replace the existing <code>&lt;ItemGroup&gt;</code> so it references <code>Swashbuckle.AspNetCore</code> instead of <code>Microsoft.AspNetCore.OpenApi</code>:</p>
+
+      <div class="code-block" data-lang="xml">
+&lt;<span class="ty">ItemGroup</span>&gt;
+  <span class="hi">&lt;<span class="ty">PackageReference</span> <span class="at">Include</span>=<span class="str">"Swashbuckle.AspNetCore"</span> <span class="at">Version</span>=<span class="str">"6.8.1"</span> /&gt;</span>
+&lt;/<span class="ty">ItemGroup</span>&gt;</div>
+
+      <p>Now open <code>Program.cs</code>. The default looks like this:</p>
+      <div class="code-block" data-lang="C#">
+<span class="kw">var</span> builder = <span class="ty">WebApplication</span>.<span class="fn">CreateBuilder</span>(args);
+
+builder.Services.<span class="fn">AddControllers</span>();
+builder.Services.<span class="fn">AddOpenApi</span>();           <span class="cm">// ← spec only, no UI</span>
+
+<span class="kw">var</span> app = builder.<span class="fn">Build</span>();
+
+<span class="kw">if</span> (app.Environment.<span class="fn">IsDevelopment</span>())
+{
+    app.<span class="fn">MapOpenApi</span>();              <span class="cm">// ← spec only, no UI</span>
+}
+
+app.<span class="fn">UseHttpsRedirection</span>();
+app.<span class="fn">UseAuthorization</span>();
+app.<span class="fn">MapControllers</span>();
+
+app.<span class="fn">Run</span>();</div>
+
+      <p>Replace it with this:</p>
+      <div class="code-block" data-lang="C#">
+<span class="kw">var</span> builder = <span class="ty">WebApplication</span>.<span class="fn">CreateBuilder</span>(args);
+
+<span class="cm">// 1. Register services into the DI container</span>
+builder.Services.<span class="fn">AddControllers</span>();
+<span class="hi">builder.Services.<span class="fn">AddEndpointsApiExplorer</span>();
+builder.Services.<span class="fn">AddSwaggerGen</span>();</span>
+
+<span class="cm">// TODO — register your IQuizRepository here once you've built it.</span>
+
+<span class="kw">var</span> app = builder.<span class="fn">Build</span>();
+
+<span class="cm">// 2. Configure the HTTP request pipeline</span>
+<span class="kw">if</span> (app.Environment.<span class="fn">IsDevelopment</span>())
+{
+    <span class="hi">app.<span class="fn">UseSwagger</span>();
+    app.<span class="fn">UseSwaggerUI</span>();</span>
+}
+
+app.<span class="fn">MapControllers</span>();
+
+app.<span class="fn">Run</span>();</div>
+
+      <div class="callout why">
+        <strong>What changed and why</strong>
+        <ul style="padding-left:1.2rem; margin-top:.4rem;">
+          <li><code>AddOpenApi</code> / <code>MapOpenApi</code> → <code>AddSwaggerGen</code> / <code>UseSwagger</code> / <code>UseSwaggerUI</code>. Same idea (read your controllers, produce an OpenAPI spec) but Swashbuckle adds the interactive HTML page at <code>/swagger</code>.</li>
+          <li><code>AddEndpointsApiExplorer</code> — Swashbuckle needs this service to discover controller actions.</li>
+          <li>Removed <code>UseHttpsRedirection</code> — convenient for local dev but adds a layer of confusion (every <code>http://</code> call becomes a 307 redirect). Real apps put HTTPS at the load balancer.</li>
+          <li>Removed <code>UseAuthorization</code> — we have no auth in this lab; this middleware is dead weight here.</li>
+        </ul>
+      </div>
+
+      <p>Last tweak: open <code>Properties/launchSettings.json</code>. Tell it to open Swagger UI in your browser on launch. Replace the file with this minimal version:</p>
+      <div class="code-block" data-lang="json">
+{
+  <span class="at">"$schema"</span>: <span class="str">"https://json.schemastore.org/launchsettings.json"</span>,
+  <span class="at">"profiles"</span>: {
+    <span class="at">"http"</span>: {
+      <span class="at">"commandName"</span>: <span class="str">"Project"</span>,
+      <span class="at">"dotnetRunMessages"</span>: <span class="kw">true</span>,
+      <span class="hi"><span class="at">"launchBrowser"</span>: <span class="kw">true</span>,
+      <span class="at">"launchUrl"</span>: <span class="str">"swagger"</span>,</span>
+      <span class="at">"applicationUrl"</span>: <span class="str">"http://localhost:5023"</span>,
+      <span class="at">"environmentVariables"</span>: {
+        <span class="at">"ASPNETCORE_ENVIRONMENT"</span>: <span class="str">"Development"</span>
+      }
+    }
+  }
+}</div>
+
+      <div class="callout warn">
+        <strong>Optional but recommended in real projects</strong>
+        For new APIs in .NET 9+, Microsoft now recommends the built-in <code>Microsoft.AspNetCore.OpenApi</code> + a UI of your choice (Scalar, Redoc, Swagger UI). We're using Swashbuckle here because it's the most-Googled, best-documented option, and matches what you'll see in older codebases. The concepts transfer 1:1.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 3 ── -->
+  <div class="step" id="s3">
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <h2>Run the empty shell</h2>
+    </div>
+    <div class="step-body">
+      <p>From the <code>Code</code> folder:</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># builds and runs; auto-reloads when you save a .cs file</span>
+dotnet watch run</div>
+      <p>The launch settings open your browser at <code>http://localhost:5023/swagger</code>. You'll see Swagger UI with <strong>zero endpoints</strong> — just a title bar. That's expected: there are no controllers yet (we deleted the sample one).</p>
+
+      <div class="callout check">
+        <strong>Sanity check</strong>
+        Terminal shows "Now listening on http://localhost:5023". Swagger page loads but is empty. If you can't reach Swagger, the app isn't running — stop and check the previous two steps before continuing.
+      </div>
+
+      <div class="callout why">
+        <strong>The two phases of <code>Program.cs</code></strong>
+        Before <code>builder.Build()</code> you <em>register services</em> into the DI container (<code>AddControllers</code>, <code>AddSwaggerGen</code>). After <code>Build()</code>, you wire up the <em>middleware pipeline</em> (<code>UseSwagger</code>, <code>MapControllers</code>). Mixing the two phases is the #1 day-one mistake — you can't <code>AddX</code> after Build, and you can't <code>UseX</code> before it.
+      </div>
+
+      <p>Leave <code>dotnet watch</code> running in this terminal. Every time you save a file, it rebuilds and restarts in a few seconds. Open a second terminal (or your editor) for the rest of the work.</p>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 4 ── -->
+  <div class="step" id="s4">
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <h2>Create the domain model</h2>
+    </div>
+    <div class="step-body">
+      <p>Create a new folder <code>Models</code>, and inside it a file <code>Quiz.cs</code>:</p>
+      <div class="file-path"><strong>Models/Quiz.cs</strong></div>
+      <div class="code-block" data-lang="C#">
+<span class="kw">namespace</span> Lab5.Models;
+
+<span class="kw">public class</span> <span class="ty">Quiz</span>
+{
+    <span class="kw">public</span> <span class="ty">Guid</span>     Id          { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="ty">Guid</span>.<span class="fn">NewGuid</span>();
+    <span class="kw">public</span> <span class="ty">string</span>   Title       { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+    <span class="kw">public</span> <span class="ty">string</span>?  Description { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public</span> <span class="ty">DateTime</span> CreatedAt   { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="ty">DateTime</span>.UtcNow;
+}</div>
+
+      <div class="callout why">
+        <strong>Why <code>Guid</code> and not <code>int</code>?</strong>
+        Integer IDs are great inside a single database, but they leak information ("how many quizzes do you have?") and they collide if you ever shard or merge stores. GUIDs are random, never collide, and can be generated client-side or server-side. For an API ID, default to GUID unless you have a reason not to.
+      </div>
+
+      <div class="callout why">
+        <strong>Why <code>= DateTime.UtcNow</code> as a default?</strong>
+        We want <code>CreatedAt</code> set automatically when the object is constructed — the client should never supply it. Putting it in the property initialiser keeps that invariant in the model itself, not buried in the repository.
+      </div>
+
+      <p>Save the file. <code>dotnet watch</code> will rebuild; Swagger is still empty (no controllers yet) but the project compiles.</p>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 5 ── -->
+  <div class="step" id="s5">
+    <div class="step-header">
+      <div class="step-num">05</div>
+      <h2>Define the repository interface</h2>
+    </div>
+    <div class="step-body">
+      <p>The controller shouldn't know how data is stored. It should ask an abstraction: "give me all quizzes", "find this one", "add a new one". That abstraction is the <strong>repository interface</strong>.</p>
+      <p>Create a folder <code>Repositories</code> and inside it:</p>
+      <div class="file-path"><strong>Repositories/IQuizRepository.cs</strong></div>
+      <div class="code-block" data-lang="C#">
+<span class="kw">using</span> Lab5.Models;
+
+<span class="kw">namespace</span> Lab5.Repositories;
+
+<span class="kw">public interface</span> <span class="ty">IQuizRepository</span>
+{
+    <span class="ty">IEnumerable</span>&lt;<span class="ty">Quiz</span>&gt; <span class="fn">All</span>();
+    <span class="ty">Quiz</span>? <span class="fn">Find</span>(<span class="ty">Guid</span> id);
+    <span class="ty">Quiz</span>  <span class="fn">Add</span>(<span class="ty">string</span> title, <span class="ty">string</span>? description);
+    <span class="ty">bool</span>  <span class="fn">Update</span>(<span class="ty">Guid</span> id, <span class="ty">string</span> title, <span class="ty">string</span>? description);
+    <span class="ty">bool</span>  <span class="fn">Remove</span>(<span class="ty">Guid</span> id);
+}</div>
+
+      <div class="callout why">
+        <strong>Why return <code>bool</code> from Update / Remove?</strong>
+        Both can fail for one reason: the ID didn't exist. Returning <code>bool</code> lets the controller turn "not found" into a <code>404</code> without throwing an exception. Throwing for control flow is slow and noisy — return a status the caller can act on.
+      </div>
+
+      <div class="callout why">
+        <strong>Why does Add take loose parameters instead of a <code>Quiz</code>?</strong>
+        Because the repository, not the caller, is responsible for assigning <code>Id</code> and <code>CreatedAt</code>. If we accepted a full <code>Quiz</code>, a careless controller could overwrite those server-owned fields. The signature <em>enforces</em> the boundary.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 6 ── -->
+  <div class="step" id="s6">
+    <div class="step-header">
+      <div class="step-num">06</div>
+      <h2>Implement the in-memory repository</h2>
+    </div>
+    <div class="step-body">
+      <p>Now the concrete class. Same folder:</p>
+      <div class="file-path"><strong>Repositories/InMemoryQuizRepository.cs</strong></div>
+      <div class="code-block" data-lang="C#">
+<span class="kw">using</span> System.Collections.Concurrent;
+<span class="kw">using</span> Lab5.Models;
+
+<span class="kw">namespace</span> Lab5.Repositories;
+
+<span class="kw">public class</span> <span class="ty">InMemoryQuizRepository</span> : <span class="ty">IQuizRepository</span>
+{
+    <span class="kw">private readonly</span> <span class="ty">ConcurrentDictionary</span>&lt;<span class="ty">Guid</span>, <span class="ty">Quiz</span>&gt; _store = <span class="kw">new</span>();
+
+    <span class="kw">public</span> <span class="ty">InMemoryQuizRepository</span>()
+    {
+        <span class="fn">Add</span>(<span class="str">"C# fundamentals"</span>, <span class="str">"Variables, types, control flow, methods."</span>);
+        <span class="fn">Add</span>(<span class="str">"HTTP basics"</span>,     <span class="str">"Verbs, status codes, headers."</span>);
+        <span class="fn">Add</span>(<span class="str">"REST principles"</span>, <span class="str">"Resources, idempotency, anti-patterns."</span>);
+    }
+
+    <span class="kw">public</span> <span class="ty">IEnumerable</span>&lt;<span class="ty">Quiz</span>&gt; <span class="fn">All</span>() =&gt; _store.Values.<span class="fn">OrderBy</span>(q =&gt; q.CreatedAt);
+
+    <span class="kw">public</span> <span class="ty">Quiz</span>? <span class="fn">Find</span>(<span class="ty">Guid</span> id) =&gt;
+        _store.<span class="fn">TryGetValue</span>(id, <span class="kw">out var</span> q) ? q : <span class="kw">null</span>;
+
+    <span class="kw">public</span> <span class="ty">Quiz</span> <span class="fn">Add</span>(<span class="ty">string</span> title, <span class="ty">string</span>? description)
+    {
+        <span class="kw">var</span> quiz = <span class="kw">new</span> <span class="ty">Quiz</span> { Title = title, Description = description };
+        _store[quiz.Id] = quiz;
+        <span class="kw">return</span> quiz;
+    }
+
+    <span class="kw">public</span> <span class="ty">bool</span> <span class="fn">Update</span>(<span class="ty">Guid</span> id, <span class="ty">string</span> title, <span class="ty">string</span>? description)
+    {
+        <span class="kw">if</span> (!_store.<span class="fn">TryGetValue</span>(id, <span class="kw">out var</span> existing)) <span class="kw">return false</span>;
+        existing.Title = title;
+        existing.Description = description;
+        <span class="kw">return true</span>;
+    }
+
+    <span class="kw">public</span> <span class="ty">bool</span> <span class="fn">Remove</span>(<span class="ty">Guid</span> id) =&gt; _store.<span class="fn">TryRemove</span>(id, <span class="kw">out</span> _);
+}</div>
+
+      <div class="callout warn">
+        <strong>Why <code>ConcurrentDictionary</code>, not <code>Dictionary</code>?</strong>
+        Our repo is a <strong>singleton</strong> (next step) — one instance shared by every request. ASP.NET happily serves requests in parallel, so two threads can call <code>Add</code> simultaneously. A plain <code>Dictionary</code> will corrupt or throw. <code>ConcurrentDictionary</code> handles that for you.
+      </div>
+
+      <div class="callout why">
+        <strong>Why seed data in the constructor?</strong>
+        Just so <code>GET /quizzes</code> doesn't return an empty array the first time you hit it. Real apps load seed data from migrations, fixtures, or a database — never hard-coded in the repo. For a lab, this is fine.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 7 ── -->
+  <div class="step" id="s7">
+    <div class="step-header">
+      <div class="step-num">07</div>
+      <h2>Register the repository in DI</h2>
+    </div>
+    <div class="step-body">
+      <p>Open <code>Program.cs</code>. Find the comment that says <code>// TODO — register your IQuizRepository here</code> and replace it with a real registration:</p>
+
+      <div class="code-block" data-lang="C#">
+<span class="kw">using</span> Lab5.Repositories;     <span class="cm">// at the top of the file</span>
+
+<span class="cm">// ...</span>
+
+builder.Services.<span class="fn">AddControllers</span>();
+builder.Services.<span class="fn">AddEndpointsApiExplorer</span>();
+builder.Services.<span class="fn">AddSwaggerGen</span>();
+
+<span class="hi">builder.Services.<span class="fn">AddSingleton</span>&lt;<span class="ty">IQuizRepository</span>, <span class="ty">InMemoryQuizRepository</span>&gt;();</span></div>
+
+      <div class="callout why">
+        <strong>Why <code>Singleton</code>?</strong>
+        Three lifetimes are available:
+        <ul style="padding-left:1.2rem; margin-top:.4rem;">
+          <li><code>Transient</code> — new instance every time it's asked for. Wrong here: we'd lose our dictionary on every request.</li>
+          <li><code>Scoped</code> — one per HTTP request. Same problem; we want shared state across requests.</li>
+          <li><code>Singleton</code> — one instance for the whole app lifetime. <span class="hi-green">Correct for our in-memory store.</span></li>
+        </ul>
+        Once you swap to a real database, the repo itself becomes scoped (it holds a per-request connection) — the lifetime is part of the design.
+      </div>
+
+      <div class="callout why">
+        <strong>What does <code>AddSingleton&lt;IQuizRepository, InMemoryQuizRepository&gt;()</code> actually do?</strong>
+        It tells the DI container: "whenever someone asks for an <code>IQuizRepository</code>, give them the same <code>InMemoryQuizRepository</code> instance". The controller will ask for the <em>interface</em>, never the concrete class — that's how you swap implementations later without touching the controller.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 8 ── -->
+  <div class="step" id="s8">
+    <div class="step-header">
+      <div class="step-num">08</div>
+      <h2>Create the empty controller</h2>
+    </div>
+    <div class="step-body">
+      <p>Now we need an endpoint. Create a folder <code>Controllers</code> and inside it:</p>
+      <div class="file-path"><strong>Controllers/QuizzesController.cs</strong></div>
+      <div class="code-block" data-lang="C#">
+<span class="kw">using</span> Lab5.Models;
+<span class="kw">using</span> Lab5.Repositories;
+<span class="kw">using</span> Microsoft.AspNetCore.Mvc;
+
+<span class="kw">namespace</span> Lab5.Controllers;
+
+[<span class="at">ApiController</span>]
+[<span class="at">Route</span>(<span class="str">"quizzes"</span>)]
+<span class="kw">public class</span> <span class="ty">QuizzesController</span> : <span class="ty">ControllerBase</span>
+{
+    <span class="kw">private readonly</span> <span class="ty">IQuizRepository</span> _repo;
+
+    <span class="kw">public</span> <span class="ty">QuizzesController</span>(<span class="ty">IQuizRepository</span> repo) =&gt; _repo = repo;
+}</div>
+
+      <div class="callout why">
+        <strong>What each piece does</strong>
+        <ul style="padding-left:1.2rem; margin-top:.4rem;">
+          <li><code>[ApiController]</code> — opt-in to API conventions: automatic 400 on invalid input, smart parameter binding, problem-details error format.</li>
+          <li><code>[Route("quizzes")]</code> — base path. Every action method's route is appended to this.</li>
+          <li><code>: ControllerBase</code> — base class with helpers like <code>Ok()</code>, <code>NotFound()</code>, <code>CreatedAtAction()</code>. (Use <code>Controller</code> instead if you also need views — we don't.)</li>
+          <li>The constructor — DI sees the <code>IQuizRepository</code> parameter, looks it up, and passes in the singleton we registered.</li>
+        </ul>
+      </div>
+
+      <p>Save. <code>dotnet watch</code> restarts. Refresh Swagger — you'll see "Quizzes" appear as a section, but there are still no endpoints in it. Time to add the first one.</p>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 9 ── -->
+  <div class="step" id="s9">
+    <div class="step-header">
+      <div class="step-num">09</div>
+      <h2>GET /quizzes — list everything</h2>
+    </div>
+    <div class="step-body">
+      <p>Add this method inside <code>QuizzesController</code>:</p>
+      <div class="code-block" data-lang="C#">
+[<span class="at">HttpGet</span>]
+<span class="kw">public</span> <span class="ty">ActionResult</span>&lt;<span class="ty">IEnumerable</span>&lt;<span class="ty">Quiz</span>&gt;&gt; <span class="fn">List</span>() =&gt; <span class="fn">Ok</span>(_repo.<span class="fn">All</span>());</div>
+
+      <div class="callout why">
+        <strong>Why <code>ActionResult&lt;T&gt;</code> and not just <code>T</code>?</strong>
+        Returning <code>IEnumerable&lt;Quiz&gt;</code> directly works, but you lose the ability to return a different status code (<code>NotFound()</code>, <code>BadRequest()</code>) from the same method. <code>ActionResult&lt;T&gt;</code> lets you do either — return the value (200 OK), or return a status helper. Use it by default.
+      </div>
+
+      <p><strong>Try it.</strong> Reload Swagger, expand <code>GET /quizzes</code>, click <em>Try it out</em> → <em>Execute</em>.</p>
+
+      <div class="callout check">
+        <strong>What you should see</strong>
+        <code>200 OK</code>. Body is a JSON array of three quizzes — the ones seeded in the repo's constructor. Each has an <code>id</code> (GUID), <code>title</code>, <code>description</code>, <code>createdAt</code>.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 10 ── -->
+  <div class="step" id="s10">
+    <div class="step-header">
+      <div class="step-num">10</div>
+      <h2>GET /quizzes/{id} — read one</h2>
+    </div>
+    <div class="step-body">
+      <p>Add a second action method below <code>List</code>:</p>
+      <div class="code-block" data-lang="C#">
+[<span class="at">HttpGet</span>(<span class="str">"{id:guid}"</span>, Name = <span class="kw">nameof</span>(GetById))]
+<span class="kw">public</span> <span class="ty">ActionResult</span>&lt;<span class="ty">Quiz</span>&gt; <span class="fn">GetById</span>(<span class="ty">Guid</span> id)
+{
+    <span class="kw">var</span> quiz = _repo.<span class="fn">Find</span>(id);
+    <span class="kw">return</span> quiz <span class="kw">is null</span> ? <span class="fn">NotFound</span>() : <span class="fn">Ok</span>(quiz);
+}</div>
+
+      <div class="callout why">
+        <strong>Why the <code>:guid</code> route constraint?</strong>
+        Without it, a URL like <code>/quizzes/not-a-guid</code> would reach your method and the model binder would have to deal with the bad input. With <code>{id:guid}</code>, ASP.NET refuses to match the route in the first place — the request gets a <code>404</code> before your code runs. Free input validation.
+      </div>
+
+      <div class="callout why">
+        <strong>Why <code>Name = nameof(GetById)</code>?</strong>
+        We're about to write <code>POST</code> which needs to produce a <code>Location</code> header pointing back here. Naming the route lets us reference it by string-safe identifier instead of hard-coding the URL.
+      </div>
+
+      <p><strong>Try it.</strong> Run <code>GET /quizzes</code>, copy one of the GUIDs, paste it into <code>GET /quizzes/{id}</code>, execute.</p>
+
+      <div class="callout check">
+        <strong>What you should see</strong>
+        Real ID → <code>200</code> + that quiz. Random GUID (e.g. <code>00000000-0000-0000-0000-000000000000</code>) → <code>404</code>. Non-GUID like <code>/quizzes/abc</code> → <code>404</code> (route didn't match — you'll see this in the network tab, not Swagger).
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 11 ── -->
+  <div class="step" id="s11">
+    <div class="step-header">
+      <div class="step-num">11</div>
+      <h2>Input DTOs and validation</h2>
+    </div>
+    <div class="step-body">
+      <p>Before we write <code>POST</code>, we need to decide what the client is allowed to send. Don't accept a <code>Quiz</code> directly — the client could set <code>Id</code> or <code>CreatedAt</code> and corrupt the model. We use a <strong>DTO</strong> (data transfer object) — a separate class with only the fields the client may supply.</p>
+      <p>Create a <code>Dtos</code> folder and add:</p>
+      <div class="file-path"><strong>Dtos/CreateQuizDto.cs</strong></div>
+      <div class="code-block" data-lang="C#">
+<span class="kw">using</span> System.ComponentModel.DataAnnotations;
+
+<span class="kw">namespace</span> Lab5.Dtos;
+
+<span class="kw">public class</span> <span class="ty">CreateQuizDto</span>
+{
+    [<span class="at">Required</span>]
+    [<span class="at">StringLength</span>(<span class="nu">200</span>, MinimumLength = <span class="nu">3</span>)]
+    <span class="kw">public</span> <span class="ty">string</span> Title { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+
+    [<span class="at">StringLength</span>(<span class="nu">2000</span>)]
+    <span class="kw">public</span> <span class="ty">string</span>? Description { <span class="kw">get</span>; <span class="kw">set</span>; }
+}</div>
+
+      <p>And a near-identical one for updates:</p>
+      <div class="file-path"><strong>Dtos/UpdateQuizDto.cs</strong></div>
+      <div class="code-block" data-lang="C#">
+<span class="kw">using</span> System.ComponentModel.DataAnnotations;
+
+<span class="kw">namespace</span> Lab5.Dtos;
+
+<span class="kw">public class</span> <span class="ty">UpdateQuizDto</span>
+{
+    [<span class="at">Required</span>]
+    [<span class="at">StringLength</span>(<span class="nu">200</span>, MinimumLength = <span class="nu">3</span>)]
+    <span class="kw">public</span> <span class="ty">string</span> Title { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+
+    [<span class="at">StringLength</span>(<span class="nu">2000</span>)]
+    <span class="kw">public</span> <span class="ty">string</span>? Description { <span class="kw">get</span>; <span class="kw">set</span>; }
+}</div>
+
+      <div class="callout why">
+        <strong>Why two near-identical DTOs?</strong>
+        They look the same today but they have different meanings. <code>CreateQuizDto</code> describes "what's required to make a new quiz"; <code>UpdateQuizDto</code> describes "what's required to replace an existing one". The day someone adds a field that only matters on create (e.g. <code>InitialAuthorId</code>) or only on update (e.g. <code>VersionToken</code> for optimistic concurrency), you'll be glad they're separate.
+      </div>
+
+      <div class="callout why">
+        <strong>The validation magic</strong>
+        <code>[Required]</code> + <code>[StringLength]</code> live in <code>System.ComponentModel.DataAnnotations</code>. Because the controller has <code>[ApiController]</code>, ASP.NET inspects these attributes before calling your action. If anything fails, it returns <code>400 Bad Request</code> with a structured error body — you never write the if-statements.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 12 ── -->
+  <div class="step" id="s12">
+    <div class="step-header">
+      <div class="step-num">12</div>
+      <h2>POST /quizzes — create</h2>
+    </div>
+    <div class="step-body">
+      <p>Add a using directive at the top of the controller and the new action:</p>
+      <div class="code-block" data-lang="C#">
+<span class="kw">using</span> Lab5.Dtos;     <span class="cm">// at the top</span></div>
+
+      <div class="code-block" data-lang="C#" style="margin-top:.8rem;">
+[<span class="at">HttpPost</span>]
+<span class="kw">public</span> <span class="ty">ActionResult</span>&lt;<span class="ty">Quiz</span>&gt; <span class="fn">Create</span>(<span class="ty">CreateQuizDto</span> dto)
+{
+    <span class="kw">var</span> quiz = _repo.<span class="fn">Add</span>(dto.Title, dto.Description);
+    <span class="kw">return</span> <span class="fn">CreatedAtAction</span>(
+        <span class="kw">nameof</span>(GetById),
+        <span class="kw">new</span> { id = quiz.Id },
+        quiz);
+}</div>
+
+      <div class="callout why">
+        <strong>Why <code>CreatedAtAction</code> instead of plain <code>Ok()</code>?</strong>
+        Three reasons:
+        <ul style="padding-left:1.2rem; margin-top:.4rem;">
+          <li>It returns status <code>201 Created</code>, not <code>200 OK</code> — semantically correct for "I just made a new thing".</li>
+          <li>It builds the URL of the new resource and puts it in the <code>Location</code> header — clients (and the spec) expect this on a 201.</li>
+          <li>It uses <code>nameof(GetById)</code> + a route values object, so if you ever rename the GET action, the compiler will tell you to update this too.</li>
+        </ul>
+      </div>
+
+      <p><strong>Try it.</strong> In Swagger, expand <code>POST /quizzes</code> → <em>Try it out</em>. Send:</p>
+      <div class="code-block" data-lang="json">
+{
+  <span class="at">"title"</span>: <span class="str">"REST in practice"</span>,
+  <span class="at">"description"</span>: <span class="str">"Verbs, status codes, idempotency"</span>
+}</div>
+
+      <p>Then send an invalid body — <code>{"title": ""}</code> or omit <code>title</code> entirely.</p>
+
+      <div class="callout check">
+        <strong>What you should see</strong>
+        <ul style="padding-left:1.2rem; margin-top:.4rem;">
+          <li>Valid body → <code>201 Created</code>, response body is the new quiz, response headers include <code>location: /quizzes/&lt;new-guid&gt;</code>.</li>
+          <li>Empty title → <code>400 Bad Request</code> with a <code>ProblemDetails</code> body listing the failed field.</li>
+          <li>Missing title field → <code>400</code>, same shape.</li>
+          <li>Title too short (1–2 chars) → <code>400</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 13 ── -->
+  <div class="step" id="s13">
+    <div class="step-header">
+      <div class="step-num">13</div>
+      <h2>PUT /quizzes/{id} — replace</h2>
+    </div>
+    <div class="step-body">
+      <p>PUT replaces an existing resource. Three outcomes: success, not found, invalid body.</p>
+      <div class="code-block" data-lang="C#">
+[<span class="at">HttpPut</span>(<span class="str">"{id:guid}"</span>)]
+<span class="kw">public</span> <span class="ty">IActionResult</span> <span class="fn">Replace</span>(<span class="ty">Guid</span> id, <span class="ty">UpdateQuizDto</span> dto)
+{
+    <span class="kw">var</span> updated = _repo.<span class="fn">Update</span>(id, dto.Title, dto.Description);
+    <span class="kw">return</span> updated ? <span class="fn">NoContent</span>() : <span class="fn">NotFound</span>();
+}</div>
+
+      <div class="callout why">
+        <strong>Why <code>IActionResult</code> here, not <code>ActionResult&lt;Quiz&gt;</code>?</strong>
+        We never return a quiz body — only a status code (204 or 404). <code>IActionResult</code> is the lighter return type when there's no <code>T</code> to talk about. Use <code>ActionResult&lt;T&gt;</code> only when the happy path returns a body of type <code>T</code>.
+      </div>
+
+      <div class="callout why">
+        <strong>Why <code>204 No Content</code>?</strong>
+        The client just sent us the new state of the resource. They already know what they sent. Returning the same data back would be pointless bytes. <code>204</code> is the canonical "it worked, nothing more to say" response.
+      </div>
+
+      <div class="callout warn">
+        <strong>PUT must be idempotent — verify with a quick experiment</strong>
+        Send the same PUT body to the same ID twice. The end state should be identical. Our implementation just overwrites fields, so it's fine — but watch for subtleties when you add audit fields. Don't, for example, append to a "change history" list on every PUT; that would make it non-idempotent.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 14 ── -->
+  <div class="step" id="s14">
+    <div class="step-header">
+      <div class="step-num">14</div>
+      <h2>DELETE /quizzes/{id}</h2>
+    </div>
+    <div class="step-body">
+      <p>The simplest endpoint. It either existed (now gone, <code>204</code>) or it didn't (<code>404</code>).</p>
+      <div class="code-block" data-lang="C#">
+[<span class="at">HttpDelete</span>(<span class="str">"{id:guid}"</span>)]
+<span class="kw">public</span> <span class="ty">IActionResult</span> <span class="fn">Delete</span>(<span class="ty">Guid</span> id) =&gt;
+    _repo.<span class="fn">Remove</span>(id) ? <span class="fn">NoContent</span>() : <span class="fn">NotFound</span>();</div>
+
+      <div class="callout warn">
+        <strong>Don't return 200 + a fake body</strong>
+        A common mistake on day one is <code>return Ok(new { deleted = true });</code>. That defeats the entire status-code system — a client now has to parse the body to know if the operation succeeded. The HTTP status code <em>is</em> the success signal. Use <code>NoContent()</code>.
+      </div>
+
+      <div class="callout warn">
+        <strong>Idempotent — but only the first call really did something</strong>
+        <code>DELETE</code> is idempotent: calling it twice on the same ID is safe. The first call returns 204, the second returns 404. Both are correct. Some APIs return 204 for both — that's defensible too, but 404 on a missing resource is more informative.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 15 ── -->
+  <div class="step" id="s15">
+    <div class="step-header">
+      <div class="step-num">15</div>
+      <h2>Test the full CRUD with curl</h2>
+    </div>
+    <div class="step-body">
+      <p>Swagger is great, but it hides the raw protocol. Walk the API once with curl so you see what's actually going over the wire.</p>
+
+      <div class="code-block" data-lang="shell">
+<span class="cm"># 1. list — three seeded quizzes</span>
+curl -s http://localhost:5023/quizzes | jq
+
+<span class="cm"># 2. create — capture the Location header (-i shows response headers)</span>
+curl -i -X POST http://localhost:5023/quizzes \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{"title":"HTTP deep dive","description":"All five verbs"}'</span>
+
+<span class="cm"># 3. read it back — copy the id from the previous response</span>
+curl -s http://localhost:5023/quizzes/&lt;ID&gt; | jq
+
+<span class="cm"># 4. replace</span>
+curl -i -X PUT http://localhost:5023/quizzes/&lt;ID&gt; \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{"title":"HTTP deep dive v2"}'</span>
+
+<span class="cm"># 5. delete</span>
+curl -i -X DELETE http://localhost:5023/quizzes/&lt;ID&gt;
+
+<span class="cm"># 6. confirm it's gone</span>
+curl -i http://localhost:5023/quizzes/&lt;ID&gt;</div>
+
+      <div class="callout check">
+        <strong>Errors to confirm</strong>
+        <ul style="padding-left:1.2rem; margin-top:.4rem;">
+          <li>POST with <code>{"title":""}</code> → <code>400</code> with a validation message.</li>
+          <li>GET / PUT / DELETE with an unknown GUID → <code>404</code>.</li>
+          <li>GET / PUT / DELETE with <code>/quizzes/foo</code> → <code>404</code> (route constraint blocked it).</li>
+          <li>POST without <code>Content-Type: application/json</code> header → <code>415 Unsupported Media Type</code>.</li>
+        </ul>
+      </div>
+
+      <div class="callout why">
+        <strong>If something looks wrong</strong>
+        Open browser DevTools (<kbd>F12</kbd>) on the Swagger page and watch the Network tab while clicking Execute. You'll see the exact request and response: method, URL, headers, body, status. That's the source of truth, not the rendered Swagger panel.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- ── STEP 16 — HOMEWORK ── -->
+  <div class="step" id="s16">
+    <div class="step-header">
+      <div class="step-num">16</div>
+      <h2>Homework — add Questions to a Quiz</h2>
+    </div>
+    <div class="step-body">
+      <p>A quiz with no questions is just a title. Extend the API so a quiz can own a collection of questions. Build it using the same five-layer recipe you just learned: model → repo interface → repo implementation → DI registration → controller with DTOs.</p>
+
+      <p>Some decisions are <strong>deliberately left to you</strong>. Make each one explicitly and write a short <code>README.md</code> next to your code explaining what you chose and why.</p>
+
+      <p><strong>Design decisions:</strong></p>
+      <ul>
+        <li>What does a question look like? (text, an answer, multiple-choice options?)</li>
+        <li>One question type, or several? (true/false, multiple-choice, free-text)</li>
+        <li>How do answers fit? On the question itself, or as a separate concept?</li>
+        <li>Nested URLs (<code>/quizzes/{id}/questions</code>) or a top-level resource with a filter (<code>/questions?quizId=…</code>)? Justify.</li>
+      </ul>
+
+      <p><strong>Hard requirements:</strong></p>
+      <ul>
+        <li>Full CRUD on questions.</li>
+        <li>Each question belongs to exactly one quiz — creating a question against a non-existent quiz returns <code>404</code>, not <code>400</code>.</li>
+        <li>Listing a quiz's questions returns them in a deterministic order.</li>
+        <li><strong>Cascade delete.</strong> Deleting a quiz removes its questions too.</li>
+        <li>Validation: question text required + length bounds. If you support multiple-choice, at least two options and exactly one correct answer.</li>
+        <li>Correct status codes on every path.</li>
+      </ul>
+
+      <div class="callout why">
+        <strong>Suggested file layout</strong>
+        Mirror what you built today:
+        <ul style="padding-left:1.2rem; margin-top:.4rem;">
+          <li><code>Models/Question.cs</code></li>
+          <li><code>Dtos/CreateQuestionDto.cs</code>, <code>UpdateQuestionDto.cs</code></li>
+          <li><code>Repositories/IQuestionRepository.cs</code>, <code>InMemoryQuestionRepository.cs</code></li>
+          <li><code>Controllers/QuestionsController.cs</code></li>
+          <li>Register the new repo in <code>Program.cs</code>.</li>
+        </ul>
+      </div>
+
+      <div class="callout warn">
+        <strong>Cascade-delete — two reasonable approaches</strong>
+        <ul style="padding-left:1.2rem; margin-top:.4rem;">
+          <li><strong>From the quiz repo:</strong> have <code>InMemoryQuizRepository.Remove</code> also call into the question repo. Simple, but couples the two repos.</li>
+          <li><strong>From the controller:</strong> in <code>QuizzesController.Delete</code>, call both repos. Cleaner separation, more code at the call site.</li>
+        </ul>
+        Either is fine — pick one and explain it in your README.
+      </div>
+
+      <div class="callout check">
+        <strong>Stretch goal</strong>
+        Add <code>POST /quizzes/{id}/attempts</code>: the client submits a set of answers; the server scores them and returns the result. Forces you to design a non-CRUD action endpoint — what shape is the request body, what does the response carry, what's the correct status code?
+      </div>
+    </div>
+  </div>
+
+  <div class="final">
+    <h2>That's the lab.</h2>
+    <p>You built every layer of a working CRUD API from a blank slate: model, repository, DI, DTOs, controller, five endpoints. Everything else in ASP.NET — auth, EF Core, background services, custom middleware — is more of these same patterns layered on top.</p>
+  </div>
+
+</div>
+</body>
+</html>
