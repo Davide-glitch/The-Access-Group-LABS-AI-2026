@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 6 &mdash; Step-by-step guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.2);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --green-border: rgba(5,150,105,0.2);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --orange-border: rgba(217,119,6,0.2);
+    --border: #e5e7eb;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --display: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  .hero {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .3em .8em;
+    margin-bottom: 1.5rem;
+  }
+  .hero-badge span { color: var(--accent); font-weight: 700; }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: .8rem;
+    color: var(--fg);
+  }
+  .hero p {
+    font-size: 1.1rem;
+    color: var(--muted-2);
+    max-width: 62ch;
+  }
+
+  .overview {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 3rem;
+  }
+  .overview h3 {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--fg);
+  }
+  .step-index {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .4rem;
+  }
+  .step-index a {
+    display: flex; align-items: center; gap: .6em;
+    font-size: .88rem;
+    color: var(--muted-2);
+    text-decoration: none;
+    padding: .3em .5em;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+  }
+  .step-index a:hover { background: var(--bg-3); color: var(--accent); }
+  .step-index a .num {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 1.9em; height: 1.6em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .step {
+    margin-bottom: 3.5rem;
+    scroll-margin-top: 2rem;
+  }
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  .step-num {
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 8px;
+    min-width: 2.4em; height: 2.4em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: .15em;
+  }
+  .step h2 {
+    font-family: var(--display);
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--fg);
+  }
+  .step p, .step li {
+    font-size: .97rem;
+    line-height: 1.7;
+    color: #374151;
+  }
+  .step ul, .step ol {
+    padding-left: 1.4rem;
+    margin: .6rem 0;
+  }
+  .step li { margin-bottom: .3em; }
+  .step p + p { margin-top: .7em; }
+  .step-body { padding-left: 3.4rem; }
+
+  .callout {
+    border-radius: 10px;
+    padding: 1em 1.2em;
+    margin: 1.1em 0;
+    font-size: .93rem;
+    line-height: 1.6;
+    border-left: 3px solid;
+  }
+  .callout strong { display: block; margin-bottom: .2em; font-size: .88rem; text-transform: uppercase; letter-spacing: .06em; }
+  .callout.why   { background: var(--accent-dim); border-color: var(--accent); color: #1e3a8a; }
+  .callout.why strong { color: var(--accent); }
+  .callout.check { background: var(--green-dim); border-color: var(--green); color: #065f46; }
+  .callout.check strong { color: var(--green); }
+  .callout.warn  { background: var(--orange-dim); border-color: var(--orange); color: #78350f; }
+  .callout.warn strong { color: var(--orange); }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.1em 1.3em;
+    font-family: var(--mono);
+    font-size: .84rem;
+    line-height: 1.85;
+    overflow-x: auto;
+    white-space: pre;
+    color: #cdd5e0;
+    position: relative;
+  }
+  .code-block[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: .9em;
+    font-size: .65rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .code-block.sm { font-size: .78rem; }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+  .hi  { background: rgba(37,99,235,0.25); border-radius: 3px; padding: 0 2px; }
+  .hi-green { background: rgba(5,150,105,0.2); border-radius: 3px; padding: 0 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .87em;
+    background: var(--bg-3);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .step-divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 3rem 0;
+  }
+
+  .final {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 2rem;
+    margin-top: 4rem;
+    text-align: center;
+  }
+  .final h2 {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: .5rem;
+  }
+  .final p { color: var(--muted-2); font-size: .97rem; }
+
+  .file-path {
+    font-family: var(--mono);
+    font-size: .78rem;
+    background: var(--bg-3);
+    border: 1px dashed var(--border);
+    color: var(--muted-2);
+    padding: .3em .7em;
+    border-radius: 6px;
+    display: inline-block;
+    margin: .3em 0 .8em;
+  }
+  .file-path strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 06</span> &nbsp;·&nbsp; Self-paced guide</div>
+    <h1>Give the Quizzes API a real memory</h1>
+    <p>The API you have forgets everything when it restarts. In this lab you'll back it with <strong>SQL Server</strong> through <strong>Entity Framework Core</strong> — a DbContext, migrations, an EF-backed repository — convert it to async, and model a one-to-many relationship. The controller barely changes, because Lab 5 hid storage behind an interface.</p>
+  </div>
+
+  <div class="overview">
+    <h3>Steps in this guide</h3>
+    <div class="step-index">
+      <a href="#s0"><span class="num">00</span> Open the baseline</a>
+      <a href="#s1"><span class="num">01</span> Add EF Core packages</a>
+      <a href="#s2"><span class="num">02</span> The DbContext + seed</a>
+      <a href="#s3"><span class="num">03</span> Register in DI</a>
+      <a href="#s4"><span class="num">04</span> First migration</a>
+      <a href="#s5"><span class="num">05</span> Inspect the database</a>
+      <a href="#s6"><span class="num">06</span> EF repository + the swap</a>
+      <a href="#s7"><span class="num">07</span> Prove persistence</a>
+      <a href="#s8"><span class="num">08</span> Go async</a>
+      <a href="#s9"><span class="num">09</span> Add Questions</a>
+      <a href="#s10"><span class="num">10</span> Second migration + test</a>
+      <a href="#s11"><span class="num">11</span> Homework</a>
+    </div>
+  </div>
+
+  <!-- STEP 0 -->
+  <div class="step" id="s0">
+    <div class="step-header">
+      <div class="step-num">00</div>
+      <h2>Open the baseline &mdash; and only the baseline</h2>
+    </div>
+    <div class="step-body">
+      <p>Open the project in <span class="file-path"><strong>Sessions/Lab6/</strong>Code</span> — the folder provided for this lab.</p>
+      <div class="callout warn">
+        <strong>Do not use your Lab 5 folder</strong>
+        Everyone starts from this exact baseline so we're all on identical, compiling code. It's the end-of-Lab-5 state: Quiz CRUD, in-memory, <em>no</em> Questions. If you didn't finish the Lab 5 homework, it doesn't matter — none of it is needed here.
+      </div>
+      <p>Run it and confirm the API works before we change anything:</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># from inside Sessions/Lab6/Code</span>
+dotnet run</div>
+      <p>Open <code>http://localhost:5023/swagger</code>. Expand <code>GET /quizzes</code> &rarr; <strong>Try it out</strong> &rarr; <strong>Execute</strong>. You should get three seeded quizzes. Stop the app with <kbd>Ctrl</kbd>+<kbd>C</kbd>.</p>
+      <div class="callout why">
+        <strong>Why a provided baseline this time?</strong>
+        Lab 5 was about building from nothing. Lab 6 is about <em>persistence</em> — so we hand you the starting point to keep 20 people in sync and spend the time on EF Core, not on reconciling drifted code.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 1 -->
+  <div class="step" id="s1">
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <h2>Add the EF Core packages and CLI</h2>
+    </div>
+    <div class="step-body">
+      <p>EF Core ships as NuGet packages, one per database provider. We need the SQL Server provider, the design-time package that powers migrations, and the <code>dotnet-ef</code> command-line tool.</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># once per machine — the migrations CLI</span>
+dotnet tool install --global dotnet-ef
+
+<span class="cm"># from inside Sessions/Lab6/Code — add to the project</span>
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add package Microsoft.EntityFrameworkCore.Design</div>
+      <ul>
+        <li><code>...SqlServer</code> — the provider that turns LINQ into T-SQL and talks to SQL Server.</li>
+        <li><code>...Design</code> — used by <code>dotnet ef</code> at design time to read your model and scaffold migrations.</li>
+        <li><code>dotnet-ef</code> — the CLI for <code>migrations add</code>, <code>database update</code>, and friends.</li>
+      </ul>
+      <div class="callout check">
+        <strong>Verify</strong>
+        <code>dotnet ef --version</code> prints a version (10.x). If "command not found", re-open your terminal so the global tools folder is on your <code>PATH</code>.
+      </div>
+      <div class="callout why">
+        <strong>What database am I connecting to?</strong>
+        The baseline's <code>appsettings.json</code> already contains a connection string named <code>QuizzesDb</code> pointing at <code>(localdb)\MSSQLLocalDB</code> — SQL Server LocalDB, which ships with Visual Studio. No server to install. On Mac/Linux or without LocalDB, use the Docker fallback in the project's <code>README.md</code> and swap the connection string.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 2 -->
+  <div class="step" id="s2">
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <h2>Create the DbContext and seed data</h2>
+    </div>
+    <div class="step-body">
+      <p>The <code>DbContext</code> is your session with the database. It exposes a <code>DbSet&lt;T&gt;</code> per table and is where we describe the model. Create a <code>Data</code> folder and add:</p>
+      <div class="file-path"><strong>Data/</strong>QuizzesDbContext.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">using</span> Lab6.Models;
+<span class="kw">using</span> Microsoft.EntityFrameworkCore;
+
+<span class="kw">namespace</span> Lab6.Data;
+
+<span class="kw">public class</span> <span class="ty">QuizzesDbContext</span> : <span class="ty">DbContext</span>
+{
+    <span class="kw">public</span> <span class="ty">QuizzesDbContext</span>(<span class="ty">DbContextOptions</span>&lt;<span class="ty">QuizzesDbContext</span>&gt; options)
+        : <span class="kw">base</span>(options) { }
+
+    <span class="kw">public</span> <span class="ty">DbSet</span>&lt;<span class="ty">Quiz</span>&gt; Quizzes =&gt; <span class="fn">Set</span>&lt;<span class="ty">Quiz</span>&gt;();
+
+    <span class="kw">protected override void</span> <span class="fn">OnModelCreating</span>(<span class="ty">ModelBuilder</span> modelBuilder)
+    {
+        <span class="cm">// Seed rows, applied by a migration. Fixed GUIDs + fixed timestamp so the</span>
+        <span class="cm">// seed is deterministic and migrations don't keep detecting "changes".</span>
+        <span class="kw">var</span> seededAt = <span class="kw">new</span> <span class="ty">DateTime</span>(<span class="nu">2026</span>, <span class="nu">1</span>, <span class="nu">1</span>, <span class="nu">0</span>, <span class="nu">0</span>, <span class="nu">0</span>, <span class="ty">DateTimeKind</span>.Utc);
+
+        modelBuilder.<span class="fn">Entity</span>&lt;<span class="ty">Quiz</span>&gt;().<span class="fn">HasData</span>(
+            <span class="kw">new</span> <span class="ty">Quiz</span>
+            {
+                Id = <span class="ty">Guid</span>.<span class="fn">Parse</span>(<span class="str">"11111111-1111-1111-1111-111111111111"</span>),
+                Title = <span class="str">"C# fundamentals"</span>,
+                Description = <span class="str">"Variables, types, control flow, methods."</span>,
+                CreatedAt = seededAt
+            },
+            <span class="kw">new</span> <span class="ty">Quiz</span>
+            {
+                Id = <span class="ty">Guid</span>.<span class="fn">Parse</span>(<span class="str">"22222222-2222-2222-2222-222222222222"</span>),
+                Title = <span class="str">"HTTP basics"</span>,
+                Description = <span class="str">"Verbs, status codes, headers."</span>,
+                CreatedAt = seededAt
+            },
+            <span class="kw">new</span> <span class="ty">Quiz</span>
+            {
+                Id = <span class="ty">Guid</span>.<span class="fn">Parse</span>(<span class="str">"33333333-3333-3333-3333-333333333333"</span>),
+                Title = <span class="str">"REST principles"</span>,
+                Description = <span class="str">"Resources, idempotency, anti-patterns."</span>,
+                CreatedAt = seededAt
+            });
+    }
+}</div>
+      <div class="callout why">
+        <strong>Why fixed GUIDs and a fixed timestamp in the seed?</strong>
+        <code>HasData</code> seed rows must be deterministic. If you used <code>Guid.NewGuid()</code> or <code>DateTime.UtcNow</code> here, every <code>dotnet ef migrations add</code> would see different values and try to re-seed. Hard-coded values keep the seed stable across migrations.
+      </div>
+      <div class="callout why">
+        <strong>Why <code>DbSet&lt;Quiz&gt; Quizzes =&gt; Set&lt;Quiz&gt;()</code> instead of a property with a setter?</strong>
+        It's the modern, null-safe way to declare a <code>DbSet</code>. <code>Set&lt;Quiz&gt;()</code> asks the context for the set; the expression-bodied property avoids a nullable warning you'd get from <code>public DbSet&lt;Quiz&gt; Quizzes { get; set; }</code>.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 3 -->
+  <div class="step" id="s3">
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <h2>Register the DbContext in DI</h2>
+    </div>
+    <div class="step-body">
+      <p>Open <code>Program.cs</code>. Add the EF usings, read the connection string, and register the context. The highlighted lines are new:</p>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">using</span> Lab6.Data;
+<span class="kw">using</span> Lab6.Repositories;
+<span class="kw">using</span> Microsoft.EntityFrameworkCore;
+
+<span class="kw">var</span> builder = <span class="ty">WebApplication</span>.<span class="fn">CreateBuilder</span>(args);
+
+builder.Services.<span class="fn">AddControllers</span>();
+builder.Services.<span class="fn">AddEndpointsApiExplorer</span>();
+builder.Services.<span class="fn">AddSwaggerGen</span>();
+
+<span class="hi-green"><span class="cm">// EF Core + SQL Server, reading the connection string from appsettings.json.</span>
+<span class="kw">var</span> connectionString = builder.Configuration.<span class="fn">GetConnectionString</span>(<span class="str">"QuizzesDb"</span>);
+builder.Services.<span class="fn">AddDbContext</span>&lt;<span class="ty">QuizzesDbContext</span>&gt;(options =&gt;
+    options.<span class="fn">UseSqlServer</span>(connectionString));</span>
+
+<span class="cm">// keep the in-memory registration for now — we'll swap it in step 06</span>
+builder.Services.<span class="fn">AddSingleton</span>&lt;<span class="ty">IQuizRepository</span>, <span class="ty">InMemoryQuizRepository</span>&gt;();</div>
+      <p>Leave the rest of <code>Program.cs</code> (the pipeline and <code>app.Run()</code>) unchanged.</p>
+      <div class="callout check">
+        <strong>Verify</strong>
+        <code>dotnet build</code> succeeds. The app still uses the in-memory store — we've only <em>registered</em> the context so the migration tooling can find it.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 4 -->
+  <div class="step" id="s4">
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <h2>Create and apply the first migration</h2>
+    </div>
+    <div class="step-body">
+      <p>A migration is the C# diff between your model and the database. The first one builds the whole schema from scratch.</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># generate the migration code</span>
+dotnet ef migrations add InitialCreate
+
+<span class="cm"># apply it: creates the QuizzesDb database, the Quizzes table, and the seed rows</span>
+dotnet ef database update</div>
+      <p>You now have a <code>Migrations/</code> folder with <code>&lt;timestamp&gt;_InitialCreate.cs</code>. Open it and read the <code>Up()</code> method.</p>
+      <div class="callout why">
+        <strong>Read the migration before you trust it</strong>
+        <code>Up()</code> is the exact set of operations applied to your database — a <code>CreateTable</code> for <code>Quizzes</code> and three <code>InsertData</code> calls for the seed. <code>Down()</code> reverses them. This file is checked into source control; it's how every environment gets the same schema.
+      </div>
+      <div class="callout check">
+        <strong>Verify</strong>
+        <code>database update</code> ends with <code>Done.</code> A new <code>__EFMigrationsHistory</code> table now records which migrations have run, so EF never applies the same one twice.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 5 -->
+  <div class="step" id="s5">
+    <div class="step-header">
+      <div class="step-num">05</div>
+      <h2>Look at the database with your own eyes</h2>
+    </div>
+    <div class="step-body">
+      <p>Open <strong>SQL Server Management Studio (SSMS)</strong> or <strong>Azure Data Studio</strong> and connect to the server:</p>
+      <div class="code-block" data-lang="text">
+Server name:  (localdb)\MSSQLLocalDB
+Auth:         Windows Authentication</div>
+      <p>Expand <strong>Databases &rarr; QuizzesDb &rarr; Tables</strong>. You'll see <code>dbo.Quizzes</code> and <code>dbo.__EFMigrationsHistory</code>. Right-click <code>dbo.Quizzes</code> &rarr; <em>Select Top 1000 Rows</em> and you'll see the three seeded quizzes sitting in a real table.</p>
+      <div class="callout why">
+        <strong>Why bother opening SSMS?</strong>
+        Because "it's in the database now" should be something you can <em>see</em>, not take on faith. This is also how you'll debug data problems for the rest of your career — go look at the actual rows.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 6 -->
+  <div class="step" id="s6">
+    <div class="step-header">
+      <div class="step-num">06</div>
+      <h2>Write the EF repository &mdash; and swap one line</h2>
+    </div>
+    <div class="step-body">
+      <p>Here's the payoff for Lab 5's interface. We write a new implementation of <code>IQuizRepository</code> backed by the context. Same five methods, real storage.</p>
+      <div class="file-path"><strong>Repositories/</strong>EfQuizRepository.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">using</span> Lab6.Data;
+<span class="kw">using</span> Lab6.Models;
+
+<span class="kw">namespace</span> Lab6.Repositories;
+
+<span class="kw">public class</span> <span class="ty">EfQuizRepository</span> : <span class="ty">IQuizRepository</span>
+{
+    <span class="kw">private readonly</span> <span class="ty">QuizzesDbContext</span> _db;
+
+    <span class="kw">public</span> <span class="ty">EfQuizRepository</span>(<span class="ty">QuizzesDbContext</span> db) =&gt; _db = db;
+
+    <span class="kw">public</span> <span class="ty">IEnumerable</span>&lt;<span class="ty">Quiz</span>&gt; <span class="fn">All</span>() =&gt;
+        _db.Quizzes.<span class="fn">OrderBy</span>(q =&gt; q.CreatedAt).<span class="fn">ToList</span>();
+
+    <span class="kw">public</span> <span class="ty">Quiz</span>? <span class="fn">Find</span>(<span class="ty">Guid</span> id) =&gt; _db.Quizzes.<span class="fn">Find</span>(id);
+
+    <span class="kw">public</span> <span class="ty">Quiz</span> <span class="fn">Add</span>(<span class="kw">string</span> title, <span class="kw">string</span>? description)
+    {
+        <span class="kw">var</span> quiz = <span class="kw">new</span> <span class="ty">Quiz</span> { Title = title, Description = description };
+        _db.Quizzes.<span class="fn">Add</span>(quiz);
+        _db.<span class="fn">SaveChanges</span>();
+        <span class="kw">return</span> quiz;
+    }
+
+    <span class="kw">public</span> <span class="kw">bool</span> <span class="fn">Update</span>(<span class="ty">Guid</span> id, <span class="kw">string</span> title, <span class="kw">string</span>? description)
+    {
+        <span class="kw">var</span> existing = _db.Quizzes.<span class="fn">Find</span>(id);
+        <span class="kw">if</span> (existing <span class="kw">is null</span>) <span class="kw">return false</span>;
+
+        existing.Title = title;
+        existing.Description = description;
+        _db.<span class="fn">SaveChanges</span>();
+        <span class="kw">return true</span>;
+    }
+
+    <span class="kw">public</span> <span class="kw">bool</span> <span class="fn">Remove</span>(<span class="ty">Guid</span> id)
+    {
+        <span class="kw">var</span> existing = _db.Quizzes.<span class="fn">Find</span>(id);
+        <span class="kw">if</span> (existing <span class="kw">is null</span>) <span class="kw">return false</span>;
+
+        _db.Quizzes.<span class="fn">Remove</span>(existing);
+        _db.<span class="fn">SaveChanges</span>();
+        <span class="kw">return true</span>;
+    }
+}</div>
+      <p>Now the swap. In <code>Program.cs</code>, change the registration:</p>
+      <div class="code-block" data-lang="csharp">
+<span class="cm">// before</span>
+builder.Services.<span class="fn">AddSingleton</span>&lt;<span class="ty">IQuizRepository</span>, <span class="ty">InMemoryQuizRepository</span>&gt;();
+
+<span class="cm">// after</span>
+builder.Services.<span class="fn">AddScoped</span>&lt;<span class="ty">IQuizRepository</span>, <span class="ty">EfQuizRepository</span>&gt;();</div>
+      <p>The in-memory class is now unused. Delete it:</p>
+      <div class="code-block" data-lang="shell">
+rm Repositories/InMemoryQuizRepository.cs</div>
+      <div class="callout why">
+        <strong>Why <code>Scoped</code>, not <code>Singleton</code>?</strong>
+        A <code>DbContext</code> is <em>not</em> thread-safe and is meant to be short-lived — one per HTTP request. <code>AddDbContext</code> already registers the context as Scoped, so the repository that depends on it must be Scoped too. A Singleton repository holding a Scoped context would blow up (or corrupt state) under concurrent requests.
+      </div>
+      <div class="callout check">
+        <strong>The point</strong>
+        Look at <code>QuizzesController.cs</code>. You did not touch it. The controller depends on <code>IQuizRepository</code>; swapping the implementation is invisible to it. That's what the interface bought you.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 7 -->
+  <div class="step" id="s7">
+    <div class="step-header">
+      <div class="step-num">07</div>
+      <h2>Run it &mdash; and prove the data persists</h2>
+    </div>
+    <div class="step-body">
+      <div class="code-block" data-lang="shell">
+dotnet run</div>
+      <p>In Swagger, create a quiz with <code>POST /quizzes</code>. Then run this experiment:</p>
+      <ol>
+        <li><code>GET /quizzes</code> — your new quiz is in the list (alongside the three seeded ones).</li>
+        <li>Stop the app entirely with <kbd>Ctrl</kbd>+<kbd>C</kbd>.</li>
+        <li><code>dotnet run</code> again.</li>
+        <li><code>GET /quizzes</code> — <strong>your quiz is still there.</strong></li>
+      </ol>
+      <div class="callout check">
+        <strong>That's persistence</strong>
+        With the in-memory repo, step 4 would have shown only the three seeded quizzes — your creation gone. Now the data lives in SQL Server, so it outlives the process. Restarts, deploys, crashes: the data stays.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 8 -->
+  <div class="step" id="s8">
+    <div class="step-header">
+      <div class="step-num">08</div>
+      <h2>Make the data access async</h2>
+    </div>
+    <div class="step-body">
+      <p>Database calls are I/O. Blocking a thread while SQL Server works wastes it. The web-API norm is <code>async</code>/<code>await</code> end to end, so the thread is freed to serve other requests. EF Core has async versions of every query.</p>
+      <p>We'll change three files: the interface, the repository, and the controller.</p>
+
+      <p><strong>1.</strong> The interface — every method returns a <code>Task</code>:</p>
+      <div class="file-path"><strong>Repositories/</strong>IQuizRepository.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">using</span> Lab6.Models;
+
+<span class="kw">namespace</span> Lab6.Repositories;
+
+<span class="kw">public interface</span> <span class="ty">IQuizRepository</span>
+{
+    <span class="ty">Task</span>&lt;<span class="ty">IEnumerable</span>&lt;<span class="ty">Quiz</span>&gt;&gt; <span class="fn">AllAsync</span>();
+    <span class="ty">Task</span>&lt;<span class="ty">Quiz</span>?&gt;             <span class="fn">FindAsync</span>(<span class="ty">Guid</span> id);
+    <span class="ty">Task</span>&lt;<span class="ty">Quiz</span>&gt;              <span class="fn">AddAsync</span>(<span class="kw">string</span> title, <span class="kw">string</span>? description);
+    <span class="ty">Task</span>&lt;<span class="kw">bool</span>&gt;             <span class="fn">UpdateAsync</span>(<span class="ty">Guid</span> id, <span class="kw">string</span> title, <span class="kw">string</span>? description);
+    <span class="ty">Task</span>&lt;<span class="kw">bool</span>&gt;             <span class="fn">RemoveAsync</span>(<span class="ty">Guid</span> id);
+}</div>
+
+      <p><strong>2.</strong> The repository — <code>await</code> the EF async methods:</p>
+      <div class="file-path"><strong>Repositories/</strong>EfQuizRepository.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">using</span> Lab6.Data;
+<span class="kw">using</span> Lab6.Models;
+<span class="kw">using</span> Microsoft.EntityFrameworkCore;
+
+<span class="kw">namespace</span> Lab6.Repositories;
+
+<span class="kw">public class</span> <span class="ty">EfQuizRepository</span> : <span class="ty">IQuizRepository</span>
+{
+    <span class="kw">private readonly</span> <span class="ty">QuizzesDbContext</span> _db;
+
+    <span class="kw">public</span> <span class="ty">EfQuizRepository</span>(<span class="ty">QuizzesDbContext</span> db) =&gt; _db = db;
+
+    <span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">IEnumerable</span>&lt;<span class="ty">Quiz</span>&gt;&gt; <span class="fn">AllAsync</span>() =&gt;
+        <span class="kw">await</span> _db.Quizzes.<span class="fn">OrderBy</span>(q =&gt; q.CreatedAt).<span class="fn">ToListAsync</span>();
+
+    <span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">Quiz</span>?&gt; <span class="fn">FindAsync</span>(<span class="ty">Guid</span> id) =&gt;
+        <span class="kw">await</span> _db.Quizzes.<span class="fn">FindAsync</span>(id);
+
+    <span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">Quiz</span>&gt; <span class="fn">AddAsync</span>(<span class="kw">string</span> title, <span class="kw">string</span>? description)
+    {
+        <span class="kw">var</span> quiz = <span class="kw">new</span> <span class="ty">Quiz</span> { Title = title, Description = description };
+        _db.Quizzes.<span class="fn">Add</span>(quiz);
+        <span class="kw">await</span> _db.<span class="fn">SaveChangesAsync</span>();
+        <span class="kw">return</span> quiz;
+    }
+
+    <span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="kw">bool</span>&gt; <span class="fn">UpdateAsync</span>(<span class="ty">Guid</span> id, <span class="kw">string</span> title, <span class="kw">string</span>? description)
+    {
+        <span class="kw">var</span> existing = <span class="kw">await</span> _db.Quizzes.<span class="fn">FindAsync</span>(id);
+        <span class="kw">if</span> (existing <span class="kw">is null</span>) <span class="kw">return false</span>;
+
+        existing.Title = title;
+        existing.Description = description;
+        <span class="kw">await</span> _db.<span class="fn">SaveChangesAsync</span>();
+        <span class="kw">return true</span>;
+    }
+
+    <span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="kw">bool</span>&gt; <span class="fn">RemoveAsync</span>(<span class="ty">Guid</span> id)
+    {
+        <span class="kw">var</span> existing = <span class="kw">await</span> _db.Quizzes.<span class="fn">FindAsync</span>(id);
+        <span class="kw">if</span> (existing <span class="kw">is null</span>) <span class="kw">return false</span>;
+
+        _db.Quizzes.<span class="fn">Remove</span>(existing);
+        <span class="kw">await</span> _db.<span class="fn">SaveChangesAsync</span>();
+        <span class="kw">return true</span>;
+    }
+}</div>
+
+      <p><strong>3.</strong> The controller — each action becomes <code>async Task&lt;...&gt;</code> and awaits the repo:</p>
+      <div class="file-path"><strong>Controllers/</strong>QuizzesController.cs</div>
+      <div class="code-block" data-lang="csharp">
+[<span class="ty">HttpGet</span>]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">ActionResult</span>&lt;<span class="ty">IEnumerable</span>&lt;<span class="ty">Quiz</span>&gt;&gt;&gt; <span class="fn">List</span>() =&gt;
+    <span class="fn">Ok</span>(<span class="kw">await</span> _repo.<span class="fn">AllAsync</span>());
+
+[<span class="ty">HttpGet</span>(<span class="str">"{id:guid}"</span>, Name = <span class="kw">nameof</span>(GetById))]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">ActionResult</span>&lt;<span class="ty">Quiz</span>&gt;&gt; <span class="fn">GetById</span>(<span class="ty">Guid</span> id)
+{
+    <span class="kw">var</span> quiz = <span class="kw">await</span> _repo.<span class="fn">FindAsync</span>(id);
+    <span class="kw">return</span> quiz <span class="kw">is null</span> ? <span class="fn">NotFound</span>() : <span class="fn">Ok</span>(quiz);
+}
+
+[<span class="ty">HttpPost</span>]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">ActionResult</span>&lt;<span class="ty">Quiz</span>&gt;&gt; <span class="fn">Create</span>(<span class="ty">CreateQuizDto</span> dto)
+{
+    <span class="kw">var</span> quiz = <span class="kw">await</span> _repo.<span class="fn">AddAsync</span>(dto.Title, dto.Description);
+    <span class="kw">return</span> <span class="fn">CreatedAtAction</span>(<span class="kw">nameof</span>(GetById), <span class="kw">new</span> { id = quiz.Id }, quiz);
+}
+
+[<span class="ty">HttpPut</span>(<span class="str">"{id:guid}"</span>)]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; <span class="fn">Replace</span>(<span class="ty">Guid</span> id, <span class="ty">UpdateQuizDto</span> dto)
+{
+    <span class="kw">var</span> updated = <span class="kw">await</span> _repo.<span class="fn">UpdateAsync</span>(id, dto.Title, dto.Description);
+    <span class="kw">return</span> updated ? <span class="fn">NoContent</span>() : <span class="fn">NotFound</span>();
+}
+
+[<span class="ty">HttpDelete</span>(<span class="str">"{id:guid}"</span>)]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; <span class="fn">Delete</span>(<span class="ty">Guid</span> id) =&gt;
+    <span class="kw">await</span> _repo.<span class="fn">RemoveAsync</span>(id) ? <span class="fn">NoContent</span>() : <span class="fn">NotFound</span>();</div>
+      <div class="callout check">
+        <strong>Verify</strong>
+        <code>dotnet build</code> is clean, and the API behaves identically in Swagger. Nothing changed for the client — async is an internal efficiency, not a contract change.
+      </div>
+      <div class="callout why">
+        <strong>No migration needed here</strong>
+        Async changed <em>code</em>, not the <em>model</em>. The database schema is untouched, so there's nothing to migrate.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 9 -->
+  <div class="step" id="s9">
+    <div class="step-header">
+      <div class="step-num">09</div>
+      <h2>Add Questions &mdash; a one-to-many relationship</h2>
+    </div>
+    <div class="step-body">
+      <p>A quiz has many questions; a question belongs to one quiz. We model that with a new entity, a foreign key, and navigation properties on both sides.</p>
+
+      <p><strong>1.</strong> The new model:</p>
+      <div class="file-path"><strong>Models/</strong>Question.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">using</span> System.Text.Json.Serialization;
+
+<span class="kw">namespace</span> Lab6.Models;
+
+<span class="kw">public class</span> <span class="ty">Question</span>
+{
+    <span class="kw">public</span> <span class="ty">Guid</span>   Id   { <span class="kw">get; set;</span> } = <span class="ty">Guid</span>.<span class="fn">NewGuid</span>();
+    <span class="kw">public</span> <span class="kw">string</span> Text { <span class="kw">get; set;</span> } = <span class="str">""</span>;
+
+    <span class="cm">// foreign key + navigation back to the owning quiz</span>
+    <span class="kw">public</span> <span class="ty">Guid</span> QuizId { <span class="kw">get; set;</span> }
+
+    [<span class="ty">JsonIgnore</span>] <span class="cm">// break the Quiz -> Questions -> Quiz serialization cycle</span>
+    <span class="kw">public</span> <span class="ty">Quiz</span>? Quiz { <span class="kw">get; set;</span> }
+}</div>
+
+      <p><strong>2.</strong> The collection on <code>Quiz</code> (add the last line):</p>
+      <div class="file-path"><strong>Models/</strong>Quiz.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">public</span> <span class="ty">DateTime</span> CreatedAt { <span class="kw">get; set;</span> } = <span class="ty">DateTime</span>.UtcNow;
+
+<span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">Question</span>&gt; Questions { <span class="kw">get; set;</span> } = [];</div>
+
+      <p><strong>3.</strong> Expose the table on the context (add below the Quizzes set):</p>
+      <div class="file-path"><strong>Data/</strong>QuizzesDbContext.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">public</span> <span class="ty">DbSet</span>&lt;<span class="ty">Quiz</span>&gt; Quizzes =&gt; <span class="fn">Set</span>&lt;<span class="ty">Quiz</span>&gt;();
+<span class="kw">public</span> <span class="ty">DbSet</span>&lt;<span class="ty">Question</span>&gt; Questions =&gt; <span class="fn">Set</span>&lt;<span class="ty">Question</span>&gt;();</div>
+
+      <p><strong>4.</strong> A validated input DTO:</p>
+      <div class="file-path"><strong>Dtos/</strong>CreateQuestionDto.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">using</span> System.ComponentModel.DataAnnotations;
+
+<span class="kw">namespace</span> Lab6.Dtos;
+
+<span class="kw">public class</span> <span class="ty">CreateQuestionDto</span>
+{
+    [<span class="ty">Required</span>]
+    [<span class="ty">StringLength</span>(<span class="nu">500</span>, MinimumLength = <span class="nu">3</span>)]
+    <span class="kw">public</span> <span class="kw">string</span> Text { <span class="kw">get; set;</span> } = <span class="str">""</span>;
+}</div>
+
+      <p><strong>5.</strong> Add to the interface:</p>
+      <div class="code-block" data-lang="csharp">
+<span class="cm">// add to IQuizRepository</span>
+<span class="ty">Task</span>&lt;<span class="ty">Quiz</span>?&gt; <span class="fn">AddQuestionAsync</span>(<span class="ty">Guid</span> quizId, <span class="kw">string</span> text);</div>
+
+      <p><strong>6.</strong> Implement it, and pull questions in when reading a quiz. Add the method, add <code>.Include(...)</code> to <code>AllAsync</code>, and switch <code>FindAsync</code> to load the children:</p>
+      <div class="file-path"><strong>Repositories/</strong>EfQuizRepository.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">IEnumerable</span>&lt;<span class="ty">Quiz</span>&gt;&gt; <span class="fn">AllAsync</span>() =&gt;
+    <span class="kw">await</span> _db.Quizzes
+             <span class="hi">.<span class="fn">Include</span>(q =&gt; q.Questions)</span>
+             .<span class="fn">OrderBy</span>(q =&gt; q.CreatedAt).<span class="fn">ToListAsync</span>();
+
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">Quiz</span>?&gt; <span class="fn">FindAsync</span>(<span class="ty">Guid</span> id) =&gt;
+    <span class="kw">await</span> _db.Quizzes
+             .<span class="fn">Include</span>(q =&gt; q.Questions)
+             .<span class="fn">FirstOrDefaultAsync</span>(q =&gt; q.Id == id);
+
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">Quiz</span>?&gt; <span class="fn">AddQuestionAsync</span>(<span class="ty">Guid</span> quizId, <span class="kw">string</span> text)
+{
+    <span class="kw">var</span> quizExists = <span class="kw">await</span> _db.Quizzes.<span class="fn">AnyAsync</span>(q =&gt; q.Id == quizId);
+    <span class="kw">if</span> (!quizExists) <span class="kw">return null</span>;
+
+    _db.Questions.<span class="fn">Add</span>(<span class="kw">new</span> <span class="ty">Question</span> { Text = text, QuizId = quizId });
+    <span class="kw">await</span> _db.<span class="fn">SaveChangesAsync</span>();
+
+    <span class="kw">return await</span> _db.Quizzes
+                    .<span class="fn">Include</span>(q =&gt; q.Questions)
+                    .<span class="fn">FirstOrDefaultAsync</span>(q =&gt; q.Id == quizId);
+}</div>
+      <div class="callout warn">
+        <strong>The Guid-key trap — why we <code>Add</code> the question explicitly</strong>
+        Our <code>Question.Id</code> is set in C# (<code>= Guid.NewGuid()</code>), but EF's convention treats Guid keys as <em>store-generated</em>. If you add a new question through the parent's collection (<code>quiz.Questions.Add(...)</code>), EF can mistake the already-populated key for an existing row and emit an <code>UPDATE</code> — which matches zero rows and throws a <code>DbUpdateConcurrencyException</code>. Calling <code>_db.Questions.Add(...)</code> explicitly forces an <code>INSERT</code>. (Setting the key to <code>ValueGeneratedNever</code> in <code>OnModelCreating</code> is the other fix.)
+      </div>
+
+      <p><strong>7.</strong> The endpoint — a nested route under a quiz:</p>
+      <div class="file-path"><strong>Controllers/</strong>QuizzesController.cs</div>
+      <div class="code-block" data-lang="csharp">
+[<span class="ty">HttpPost</span>(<span class="str">"{id:guid}/questions"</span>)]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">ActionResult</span>&lt;<span class="ty">Quiz</span>&gt;&gt; <span class="fn">AddQuestion</span>(<span class="ty">Guid</span> id, <span class="ty">CreateQuestionDto</span> dto)
+{
+    <span class="kw">var</span> quiz = <span class="kw">await</span> _repo.<span class="fn">AddQuestionAsync</span>(id, dto.Text);
+    <span class="kw">return</span> quiz <span class="kw">is null</span> ? <span class="fn">NotFound</span>() : <span class="fn">Ok</span>(quiz);
+}</div>
+      <div class="callout why">
+        <strong>Why <code>[JsonIgnore]</code> on <code>Question.Quiz</code>?</strong>
+        Returning the EF entity directly, a <code>Quiz</code> serializes its <code>Questions</code>, and each <code>Question</code> would serialize its <code>Quiz</code> back — an infinite loop the JSON serializer rejects. Ignoring the back-reference breaks the cycle. (In a larger app you'd return a dedicated response DTO instead of the entity — the same lesson as Lab 5's input DTOs, applied to output.)
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 10 -->
+  <div class="step" id="s10">
+    <div class="step-header">
+      <div class="step-num">10</div>
+      <h2>Second migration, then test the relationship</h2>
+    </div>
+    <div class="step-body">
+      <p>The model changed, so add a migration. Watch how small it is — EF only emits the diff.</p>
+      <div class="code-block" data-lang="shell">
+dotnet ef migrations add AddQuestions
+dotnet ef database update</div>
+      <p>Open the generated <code>&lt;timestamp&gt;_AddQuestions.cs</code>. Its <code>Up()</code> contains a single <code>CreateTable("Questions")</code> with a foreign key to <code>Quizzes</code> — it does <em>not</em> recreate the Quizzes table. That's the power of migrations: each one is just the change since the last.</p>
+      <p>Now exercise it in Swagger:</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># 1. create a quiz, copy its id from the response</span>
+POST /quizzes      {"title":"HTTP deep dive","description":"verbs and codes"}
+
+<span class="cm"># 2. add a question to it (use the id in the path)</span>
+POST /quizzes/{id}/questions   {"text":"What makes PUT idempotent?"}
+
+<span class="cm"># 3. read the quiz back — it now carries its questions array</span>
+GET  /quizzes/{id}</div>
+      <div class="callout check">
+        <strong>Verify</strong>
+        Step 3 returns the quiz with a populated <code>questions</code> array and no serialization error. Posting a question to a non-existent quiz id returns <code>404</code>. Restart the app and the quiz <em>and</em> its question are still there.
+      </div>
+      <div class="callout why">
+        <strong>Cascade delete comes for free</strong>
+        Because <code>QuizId</code> is non-nullable, EF makes the relationship required and configures <strong>cascade delete</strong> by default — deleting a quiz removes its questions automatically. You can confirm the <code>onDelete: Cascade</code> in the migration's foreign-key definition.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 11 -->
+  <div class="step" id="s11">
+    <div class="step-header">
+      <div class="step-num">11</div>
+      <h2>Homework — take it further</h2>
+    </div>
+    <div class="step-body">
+      <p>You have a persisted, async API with a one-to-many relationship. Extend it. Make each decision deliberately and note your choices in a short <code>README.md</code> next to your code.</p>
+      <p><strong>Pick at least two:</strong></p>
+      <ul>
+        <li><strong>Full CRUD on questions.</strong> Add <code>GET</code>, <code>PUT</code>, and <code>DELETE</code> for individual questions. Decide the URL shape: nested (<code>/quizzes/{id}/questions/{qid}</code>) or top-level (<code>/questions/{qid}</code>) — and justify it.</li>
+        <li><strong>Response DTOs.</strong> Stop returning EF entities. Introduce <code>QuizResponse</code> / <code>QuestionResponse</code> DTOs and map to them, removing the need for <code>[JsonIgnore]</code>. This is the "proper" fix the guide hinted at.</li>
+        <li><strong>Tags — a many-to-many relationship.</strong> Add a <code>Tag</code> entity and let a quiz have many tags while a tag applies to many quizzes. Add skip navigations (<code>Quiz.Tags</code> and <code>Tag.Quizzes</code>) and let EF infer the join table, then add a migration. Expose <code>POST /quizzes/{id}/tags</code> to attach a tag (creating it if new) and <code>GET /quizzes?tag=…</code> to filter. A genuinely different relationship shape from Questions.</li>
+        <li><strong>Richer questions.</strong> Add multiple-choice options and a correct answer. That's another one-to-many (Question &rarr; Options) and another migration.</li>
+        <li><strong>Pagination.</strong> Make <code>GET /quizzes</code> take <code>?page=&amp;pageSize=</code> and use <code>Skip</code>/<code>Take</code>. What's a sensible default and maximum page size?</li>
+        <li><strong>Move secrets out of config.</strong> If you used the Docker fallback, move the password into <em>user-secrets</em> (<code>dotnet user-secrets</code>) instead of <code>appsettings.json</code>.</li>
+      </ul>
+      <div class="callout warn">
+        <strong>Migration discipline</strong>
+        Every model change needs its own migration. Never edit a migration that's already been applied and shared — add a new one. Treat <code>Migrations/</code> like any other source code: commit it.
+      </div>
+      <div class="callout check">
+        <strong>Stretch goal</strong>
+        Add <code>POST /quizzes/{id}/attempts</code>: the client submits answers, the server scores them against the stored questions and returns the result. Now your persisted data is doing real work — and the door is open to an AI endpoint that <em>generates</em> a quiz and writes it straight into the database.
+      </div>
+    </div>
+  </div>
+
+  <div class="final">
+    <h2>That's the lab.</h2>
+    <p>Your API has a real memory now. You mapped objects to tables with EF Core, evolved the schema with migrations, swapped storage behind an interface without touching the controller, went async, and modelled a relationship. Everything beyond here — auth, caching, deployment — is more layers on this same foundation.</p>
+  </div>
+
+</div>
+
+</body>
+</html>

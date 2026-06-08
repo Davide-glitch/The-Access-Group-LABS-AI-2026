@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 6 Stretch &mdash; Expose your API as MCP tools</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.2);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --green-border: rgba(5,150,105,0.2);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --orange-border: rgba(217,119,6,0.2);
+    --border: #e5e7eb;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --display: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  .hero {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .3em .8em;
+    margin-bottom: 1.5rem;
+  }
+  .hero-badge span { color: var(--accent); font-weight: 700; }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: .8rem;
+    color: var(--fg);
+  }
+  .hero p {
+    font-size: 1.1rem;
+    color: var(--muted-2);
+    max-width: 62ch;
+  }
+
+  .overview {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 3rem;
+  }
+  .overview h3 {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--fg);
+  }
+  .step-index {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .4rem;
+  }
+  .step-index a {
+    display: flex; align-items: center; gap: .6em;
+    font-size: .88rem;
+    color: var(--muted-2);
+    text-decoration: none;
+    padding: .3em .5em;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+  }
+  .step-index a:hover { background: var(--bg-3); color: var(--accent); }
+  .step-index a .num {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 1.9em; height: 1.6em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .step {
+    margin-bottom: 3.5rem;
+    scroll-margin-top: 2rem;
+  }
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  .step-num {
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 8px;
+    min-width: 2.4em; height: 2.4em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: .15em;
+  }
+  .step h2 {
+    font-family: var(--display);
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--fg);
+  }
+  .step p, .step li {
+    font-size: .97rem;
+    line-height: 1.7;
+    color: #374151;
+  }
+  .step ul, .step ol {
+    padding-left: 1.4rem;
+    margin: .6rem 0;
+  }
+  .step li { margin-bottom: .3em; }
+  .step p + p { margin-top: .7em; }
+  .step-body { padding-left: 3.4rem; }
+
+  .callout {
+    border-radius: 10px;
+    padding: 1em 1.2em;
+    margin: 1.1em 0;
+    font-size: .93rem;
+    line-height: 1.6;
+    border-left: 3px solid;
+  }
+  .callout strong { display: block; margin-bottom: .2em; font-size: .88rem; text-transform: uppercase; letter-spacing: .06em; }
+  .callout.why   { background: var(--accent-dim); border-color: var(--accent); color: #1e3a8a; }
+  .callout.why strong { color: var(--accent); }
+  .callout.check { background: var(--green-dim); border-color: var(--green); color: #065f46; }
+  .callout.check strong { color: var(--green); }
+  .callout.warn  { background: var(--orange-dim); border-color: var(--orange); color: #78350f; }
+  .callout.warn strong { color: var(--orange); }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.1em 1.3em;
+    font-family: var(--mono);
+    font-size: .84rem;
+    line-height: 1.85;
+    overflow-x: auto;
+    white-space: pre;
+    color: #cdd5e0;
+    position: relative;
+  }
+  .code-block[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: .9em;
+    font-size: .65rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .code-block.sm { font-size: .78rem; }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+  .hi  { background: rgba(37,99,235,0.25); border-radius: 3px; padding: 0 2px; }
+  .hi-green { background: rgba(5,150,105,0.2); border-radius: 3px; padding: 0 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .87em;
+    background: var(--bg-3);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .step-divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 3rem 0;
+  }
+
+  .final {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 2rem;
+    margin-top: 4rem;
+    text-align: center;
+  }
+  .final h2 {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: .5rem;
+  }
+  .final p { color: var(--muted-2); font-size: .97rem; }
+
+  .file-path {
+    font-family: var(--mono);
+    font-size: .78rem;
+    background: var(--bg-3);
+    border: 1px dashed var(--border);
+    color: var(--muted-2);
+    padding: .3em .7em;
+    border-radius: 6px;
+    display: inline-block;
+    margin: .3em 0 .8em;
+  }
+  .file-path strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 06</span> &nbsp;·&nbsp; Stretch challenge</div>
+    <h1>Expose your API as MCP tools</h1>
+    <p>You built a persisted Quizzes API. Now make its operations available to an AI agent as <strong>MCP tools</strong> — over the Streamable HTTP transport, hosted inside the same app — and drive it from GitHub Copilot in VS Code. In Lab 2 you taught an LLM to <em>call</em> tools; here you <em>publish</em> your own.</p>
+  </div>
+
+  <div class="callout why" style="margin-bottom:2.5rem;">
+    <strong>What is MCP?</strong>
+    The <strong>Model Context Protocol</strong> is an open standard for how AI agents discover and call external tools. A host (VS Code Copilot, Claude, etc.) connects to an MCP <em>server</em>, asks it which tools exist (<code>tools/list</code>), and invokes them (<code>tools/call</code>). Your server just describes some functions; the agent decides when to use them. We'll expose the quiz operations so an agent can list, read, create quizzes and add questions — writing straight into your SQL Server database.
+  </div>
+
+  <div class="overview">
+    <h3>Steps in this challenge</h3>
+    <div class="step-index">
+      <a href="#s0"><span class="num">00</span> Prerequisites</a>
+      <a href="#s1"><span class="num">01</span> Add the MCP package</a>
+      <a href="#s2"><span class="num">02</span> Write the tools</a>
+      <a href="#s3"><span class="num">03</span> Map Streamable HTTP</a>
+      <a href="#s4"><span class="num">04</span> Run &amp; smoke-test</a>
+      <a href="#s5"><span class="num">05</span> Connect VS Code + Copilot</a>
+      <a href="#s6"><span class="num">06</span> Drive it from the agent</a>
+      <a href="#s7"><span class="num">07</span> How it works &amp; gotchas</a>
+    </div>
+  </div>
+
+  <!-- STEP 0 -->
+  <div class="step" id="s0">
+    <div class="step-header">
+      <div class="step-num">00</div>
+      <h2>Prerequisites</h2>
+    </div>
+    <div class="step-body">
+      <p>Start from your finished Lab 6 — the async, EF Core + SQL Server solution. You'll add the MCP server on top of it.</p>
+      <ul>
+        <li>Your Lab 6 API running against SQL Server (LocalDB or Docker).</li>
+        <li><strong>VS Code</strong> 1.102+ with the <strong>GitHub Copilot</strong> and <strong>Copilot Chat</strong> extensions, and access to <strong>agent mode</strong>.</li>
+        <li>The .NET 10 SDK (you already have it).</li>
+      </ul>
+      <div class="callout warn">
+        <strong>This part needs VS Code, not full Visual Studio</strong>
+        MCP servers are configured for Copilot through <code>.vscode/mcp.json</code>. If you don't have Copilot agent mode, you can still complete and test everything with the <strong>MCP Inspector</strong> fallback in Step 4.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 1 -->
+  <div class="step" id="s1">
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <h2>Add the MCP package</h2>
+    </div>
+    <div class="step-body">
+      <p>The official C# SDK has an ASP.NET Core package that plugs an MCP server into your existing web host and serves it over Streamable HTTP.</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># from inside your Lab 6 project folder</span>
+dotnet add package ModelContextProtocol.AspNetCore --prerelease</div>
+      <p>That pulls in <code>ModelContextProtocol.AspNetCore</code> (v1.3.0 at time of writing) and the core SDK it depends on.</p>
+      <div class="callout why">
+        <strong>Why the ASP.NET Core package, not the plain SDK?</strong>
+        The base <code>ModelContextProtocol</code> package is enough for a stdio server (a console process the host launches). We want <strong>Streamable HTTP</strong> — the server is a normal HTTP endpoint that any client can connect to over the network. That transport lives in the <code>.AspNetCore</code> package and reuses the web host you already have.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 2 -->
+  <div class="step" id="s2">
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <h2>Write the tools</h2>
+    </div>
+    <div class="step-body">
+      <p>A tool is just a method. Mark a class with <code>[McpServerToolType]</code> and each exposed method with <code>[McpServerTool]</code>. The <code>[Description]</code> attributes are not decoration — they're what the agent reads to decide when and how to call your tool.</p>
+      <p>Create a <code>Mcp</code> folder and add:</p>
+      <div class="file-path"><strong>Mcp/</strong>QuizTools.cs</div>
+      <div class="code-block sm" data-lang="csharp">
+<span class="kw">using</span> System.ComponentModel;
+<span class="kw">using</span> Lab6.Models;
+<span class="kw">using</span> Lab6.Repositories;
+<span class="kw">using</span> ModelContextProtocol.Server;
+
+<span class="kw">namespace</span> Lab6.Mcp;
+
+[<span class="ty">McpServerToolType</span>]
+<span class="kw">public class</span> <span class="ty">QuizTools</span>
+{
+    [<span class="ty">McpServerTool</span>(Name = <span class="str">"list_quizzes"</span>)]
+    [<span class="ty">Description</span>(<span class="str">"List all quizzes, including their questions."</span>)]
+    <span class="kw">public static async</span> <span class="ty">Task</span>&lt;<span class="ty">IEnumerable</span>&lt;<span class="ty">Quiz</span>&gt;&gt; <span class="fn">ListQuizzes</span>(<span class="ty">IQuizRepository</span> repo) =&gt;
+        <span class="kw">await</span> repo.<span class="fn">AllAsync</span>();
+
+    [<span class="ty">McpServerTool</span>(Name = <span class="str">"get_quiz"</span>)]
+    [<span class="ty">Description</span>(<span class="str">"Get a single quiz by its id, including its questions."</span>)]
+    <span class="kw">public static async</span> <span class="ty">Task</span>&lt;<span class="ty">Quiz</span>?&gt; <span class="fn">GetQuiz</span>(
+        <span class="ty">IQuizRepository</span> repo,
+        [<span class="ty">Description</span>(<span class="str">"The quiz id (GUID)."</span>)] <span class="ty">Guid</span> id) =&gt;
+        <span class="kw">await</span> repo.<span class="fn">FindAsync</span>(id);
+
+    [<span class="ty">McpServerTool</span>(Name = <span class="str">"create_quiz"</span>)]
+    [<span class="ty">Description</span>(<span class="str">"Create a new quiz. Returns the created quiz with its generated id."</span>)]
+    <span class="kw">public static async</span> <span class="ty">Task</span>&lt;<span class="ty">Quiz</span>&gt; <span class="fn">CreateQuiz</span>(
+        <span class="ty">IQuizRepository</span> repo,
+        [<span class="ty">Description</span>(<span class="str">"The quiz title."</span>)] <span class="kw">string</span> title,
+        [<span class="ty">Description</span>(<span class="str">"Optional quiz description."</span>)] <span class="kw">string</span>? description = <span class="kw">null</span>) =&gt;
+        <span class="kw">await</span> repo.<span class="fn">AddAsync</span>(title, description);
+
+    [<span class="ty">McpServerTool</span>(Name = <span class="str">"add_question"</span>)]
+    [<span class="ty">Description</span>(<span class="str">"Add a question to an existing quiz. Returns the updated quiz, or null if it does not exist."</span>)]
+    <span class="kw">public static async</span> <span class="ty">Task</span>&lt;<span class="ty">Quiz</span>?&gt; <span class="fn">AddQuestion</span>(
+        <span class="ty">IQuizRepository</span> repo,
+        [<span class="ty">Description</span>(<span class="str">"The id (GUID) of the quiz."</span>)] <span class="ty">Guid</span> quizId,
+        [<span class="ty">Description</span>(<span class="str">"The question text."</span>)] <span class="kw">string</span> text) =&gt;
+        <span class="kw">await</span> repo.<span class="fn">AddQuestionAsync</span>(quizId, text);
+}</div>
+      <div class="callout why">
+        <strong>Where does <code>IQuizRepository</code> come from?</strong>
+        The SDK resolves tool-method parameters two ways: values the agent supplies (the ones with <code>[Description]</code>, like <code>title</code>) come from the tool call; everything else is resolved from <strong>dependency injection</strong>. Each tool call runs inside its own DI scope, so the scoped repository — and its <code>DbContext</code> — are created and disposed per call, exactly like an HTTP request. Your tools reuse the same storage path as the controller.
+      </div>
+      <div class="callout why">
+        <strong>No serialization cycle?</strong>
+        Returning <code>Quiz</code> works because <code>Question.Quiz</code> is already <code>[JsonIgnore]</code> from the main lab. The SDK serializes the return value to JSON for the agent. (In a real server you'd return response DTOs — same lesson as the API.)
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 3 -->
+  <div class="step" id="s3">
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <h2>Map the Streamable HTTP endpoint</h2>
+    </div>
+    <div class="step-body">
+      <p>Two additions to <code>Program.cs</code>: register the MCP server (discovering tools from this assembly) and map its endpoint.</p>
+      <p>With the other service registrations:</p>
+      <div class="code-block" data-lang="csharp">
+builder.Services
+    .<span class="fn">AddMcpServer</span>()
+    .<span class="fn">WithHttpTransport</span>()        <span class="cm">// Streamable HTTP, not stdio</span>
+    .<span class="fn">WithToolsFromAssembly</span>();    <span class="cm">// find [McpServerTool] methods</span></div>
+      <p>And after <code>app.MapControllers()</code>:</p>
+      <div class="code-block" data-lang="csharp">
+app.<span class="fn">MapControllers</span>();
+
+<span class="hi-green">app.<span class="fn">MapMcp</span>(<span class="str">"/mcp"</span>);</span>          <span class="cm">// MCP served at http://localhost:5023/mcp</span>
+
+app.<span class="fn">Run</span>();</div>
+      <div class="callout why">
+        <strong>What "Streamable HTTP" means</strong>
+        It's the current MCP transport (it replaced the older HTTP+SSE one). The client POSTs JSON-RPC messages to your endpoint; the server can reply with a single JSON response <em>or</em> stream multiple messages back as Server-Sent Events over the same connection — useful for progress and notifications. The SDK handles all of that; you just map the route. A session id is exchanged via the <code>Mcp-Session-Id</code> header.
+      </div>
+      <div class="callout check">
+        <strong>Verify</strong>
+        <code>dotnet build</code> is clean. Your app now serves the REST API <em>and</em> the MCP endpoint from the same process on port 5023.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 4 -->
+  <div class="step" id="s4">
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <h2>Run &amp; smoke-test</h2>
+    </div>
+    <div class="step-body">
+      <div class="code-block" data-lang="shell">
+dotnet run</div>
+      <p>The REST API is unchanged at <code>/quizzes</code>. The MCP server is now at <code>/mcp</code>. You can confirm it's alive before involving any agent — an MCP client must <code>initialize</code> first, then it can list tools:</p>
+      <div class="code-block sm" data-lang="shell">
+<span class="cm"># 1. initialize — note the Mcp-Session-Id response header</span>
+curl -i -X POST http://localhost:5023/mcp \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -H <span class="str">"Accept: application/json, text/event-stream"</span> \
+  -d <span class="str">'{"jsonrpc":"2.0","id":1,"method":"initialize",
+       "params":{"protocolVersion":"2024-11-05","capabilities":{},
+                 "clientInfo":{"name":"curl","version":"1.0"}}}'</span>
+
+<span class="cm"># 2. list tools — reuse the session id from the header above</span>
+curl -X POST http://localhost:5023/mcp \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -H <span class="str">"Accept: application/json, text/event-stream"</span> \
+  -H <span class="str">"Mcp-Session-Id: &lt;paste-from-step-1&gt;"</span> \
+  -d <span class="str">'{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'</span></span></div>
+      <p>You should see your four tools with their descriptions and input schemas.</p>
+      <div class="callout check">
+        <strong>No-Copilot fallback: MCP Inspector</strong>
+        The official visual tester. With your app running:
+        <div class="code-block sm" data-lang="shell" style="margin-top:.6rem;">
+npx @modelcontextprotocol/inspector</div>
+        In the browser it opens, choose transport <strong>Streamable HTTP</strong>, URL <code>http://localhost:5023/mcp</code>, connect, and click your tools to run them. No Copilot licence needed.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 5 -->
+  <div class="step" id="s5">
+    <div class="step-header">
+      <div class="step-num">05</div>
+      <h2>Connect VS Code + GitHub Copilot</h2>
+    </div>
+    <div class="step-body">
+      <p>Tell VS Code where your MCP server lives. Create a workspace config file:</p>
+      <div class="file-path"><strong>.vscode/</strong>mcp.json</div>
+      <div class="code-block" data-lang="json">
+{
+  <span class="at">"servers"</span>: {
+    <span class="at">"quizzes"</span>: {
+      <span class="at">"type"</span>: <span class="str">"http"</span>,
+      <span class="at">"url"</span>: <span class="str">"http://localhost:5023/mcp"</span>
+    }
+  }
+}</div>
+      <p>Now wire it up in the editor:</p>
+      <ol>
+        <li>Make sure your app is running (<code>dotnet run</code>).</li>
+        <li>Open <code>.vscode/mcp.json</code>. A <strong>Start</strong> code-lens appears above the <code>quizzes</code> server — click it. (Or run <em>MCP: List Servers</em> from the Command Palette and start it there.)</li>
+        <li>The server status should go to <strong>Running</strong> and report <strong>4 tools</strong>.</li>
+      </ol>
+      <div class="callout warn">
+        <strong>Start the API first</strong>
+        An <code>http</code> MCP server in <code>mcp.json</code> connects to a URL you're responsible for hosting. If <code>dotnet run</code> isn't up, VS Code can't connect. (Contrast with <code>stdio</code> servers, which VS Code launches for you.)
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 6 -->
+  <div class="step" id="s6">
+    <div class="step-header">
+      <div class="step-num">06</div>
+      <h2>Drive it from the agent</h2>
+    </div>
+    <div class="step-body">
+      <ol>
+        <li>Open the Copilot Chat view and switch the mode selector to <strong>Agent</strong>.</li>
+        <li>Click the <strong>tools</strong> (wrench) icon — your <code>list_quizzes</code>, <code>get_quiz</code>, <code>create_quiz</code>, <code>add_question</code> tools are listed under the <code>quizzes</code> server. Make sure they're enabled.</li>
+        <li>Ask it to do something. The agent picks the tools itself:</li>
+      </ol>
+      <div class="code-block" data-lang="text">
+"What quizzes do I have?"
+
+"Create a quiz called 'REST basics' with a short description,
+ then add three good questions to it."
+
+"Add a question to the HTTP basics quiz about status codes."</div>
+      <p>The first time a tool runs, VS Code asks you to <strong>confirm</strong> the invocation — you're letting the agent execute real code. Approve it.</p>
+      <div class="callout check">
+        <strong>The payoff</strong>
+        After the agent creates a quiz, switch to Swagger or run <code>curl http://localhost:5023/quizzes</code>. The agent's quiz is there — it went through the same <code>IQuizRepository</code> into the same SQL Server table. The AI and your API are writing to one database.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 7 -->
+  <div class="step" id="s7">
+    <div class="step-header">
+      <div class="step-num">07</div>
+      <h2>How it works &amp; what to watch for</h2>
+    </div>
+    <div class="step-body">
+      <ul>
+        <li><strong>One process, two faces.</strong> The same app serves REST (for humans/clients) and MCP (for agents). Both go through <code>IQuizRepository</code> — the abstraction from Lab 5 pays off a third time.</li>
+        <li><strong>Descriptions are the API for the model.</strong> Vague <code>[Description]</code> text → the agent misuses or ignores the tool. Treat them like prompt engineering: say what the tool does, what each argument means, and what comes back.</li>
+        <li><strong>Stdio vs Streamable HTTP.</strong> A stdio server is a process the host launches and talks to over standard in/out — great for a personal, local tool. Streamable HTTP is a networked endpoint multiple clients can reach — closer to how you'd actually ship one.</li>
+      </ul>
+      <div class="callout warn">
+        <strong>Security — this is a dev setup</strong>
+        Our <code>/mcp</code> endpoint has no authentication, and the tools mutate your database. That's fine on localhost for a lab. A real Streamable HTTP MCP server needs auth (the spec uses OAuth), authorization on each tool, and validation — an agent will call your tools with whatever arguments it infers.
+      </div>
+      <div class="callout why">
+        <strong>Where this could go</strong>
+        Add a <code>generate_quiz</code> tool that uses an LLM to draft questions and persists them; expose <code>delete_quiz</code> (and feel the need for confirmation/auth); or return response DTOs instead of entities. You now have a clean seam between your data and any agent that wants to use it.
+      </div>
+    </div>
+  </div>
+
+  <div class="final">
+    <h2>You shipped an MCP server.</h2>
+    <p>Your Quizzes API now speaks two protocols: REST for clients and MCP for agents, over Streamable HTTP, sharing one database through one repository. Lab 2 consumed tools; today you produced them.</p>
+  </div>
+
+</div>
+
+</body>
+</html>

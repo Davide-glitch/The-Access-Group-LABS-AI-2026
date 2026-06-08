@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "quizzes": {
+      "type": "http",
+      "url": "http://localhost:5023/mcp"
+    }
+  }
+}

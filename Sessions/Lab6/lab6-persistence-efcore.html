@@ -1,0 +1,1154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 6 &mdash; Persistence &amp; EF Core</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.25);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --border: #e5e7eb;
+    --border-2: #d1d5db;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: radial-gradient(circle, #c7d2e8 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.45;
+  }
+
+  .deck { position: relative; width: 100vw; height: 100vh; }
+
+  .slide {
+    position: absolute; inset: 0;
+    padding: 5vh 7vw;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+    animation: slideIn .3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .slide.active { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin-bottom: 0.4em;
+  }
+  h2 {
+    font-size: clamp(1.7rem, 3.2vw, 2.7rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6em;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 1em;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  p, li {
+    font-size: clamp(.95rem, 1.4vw, 1.22rem);
+    line-height: 1.6;
+    color: #374151;
+    font-family: var(--sans);
+    font-weight: 400;
+  }
+  ul { padding-left: 0; list-style: none; }
+  li {
+    padding: .45em 0 .45em 1.4em;
+    position: relative;
+  }
+  li::before {
+    content: '›';
+    position: absolute; left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  strong { color: var(--fg); font-weight: 700; }
+
+  .accent   { color: var(--accent); }
+  .green    { color: var(--green); }
+  .orange   { color: var(--orange); }
+  .muted    { color: var(--muted-2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8vw; }
+
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    padding: 1.3em 1.4em;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: .5;
+  }
+  .card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: .5em;
+    font-family: var(--sans);
+  }
+  .card.green-card::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .card.green-card h4 { color: var(--green); }
+  .card.orange-card::before { background: linear-gradient(90deg, var(--orange), transparent); }
+  .card.orange-card h4 { color: var(--orange); }
+  .card p, .card li { font-size: .97rem; }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.2em 1.4em;
+    font-family: var(--mono);
+    font-size: clamp(.82rem, 1.15vw, .97rem);
+    line-height: 1.85;
+    overflow: auto;
+    position: relative;
+    white-space: pre;
+    color: #cdd5e0;
+  }
+  .code-block::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: 1em;
+    font-size: .68rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+
+  .flow {
+    display: flex; align-items: stretch;
+    gap: 0; margin-top: .8em;
+    flex-wrap: nowrap;
+  }
+  .flow-node {
+    flex: 1;
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: .9em .8em;
+    text-align: center;
+    position: relative;
+  }
+  .flow-node strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--accent);
+    margin-bottom: .3em;
+  }
+  .flow-node span { font-size: .78rem; color: var(--muted-2); }
+  .flow-arrow {
+    display: flex; align-items: center;
+    color: var(--muted);
+    font-size: 1.1rem;
+    padding: 0 .3em;
+    flex-shrink: 0;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: .22em .75em;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    font-family: var(--mono);
+    font-size: .78rem;
+    margin: .2em .2em .2em 0;
+  }
+  .tag.green-tag {
+    background: var(--green-dim);
+    color: var(--green);
+    border-color: rgba(5,150,105,0.25);
+  }
+  .tag.orange-tag {
+    background: var(--orange-dim);
+    color: var(--orange);
+    border-color: rgba(217,119,6,0.25);
+  }
+
+  .title-slide {
+    justify-content: flex-end;
+    padding-bottom: 10vh;
+  }
+  .title-slide h1 {
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    background: linear-gradient(135deg, #0f1117 20%, var(--accent) 60%, var(--green));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    max-width: 14ch;
+  }
+  .title-glow {
+    position: absolute;
+    top: 10%; left: -5%;
+    width: 60vw; height: 60vh;
+    background: radial-gradient(ellipse, rgba(37,99,235,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .title-glow-2 {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 50vw; height: 50vh;
+    background: radial-gradient(ellipse, rgba(5,150,105,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .lab-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .8rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: .4em .9em;
+    margin-bottom: 2em;
+  }
+  .lab-badge span { color: var(--accent); font-weight: 700; }
+
+  .steps { list-style: none; padding: 0; counter-reset: steps; }
+  .steps li {
+    counter-increment: steps;
+    padding: .6em 0 .6em 2.8em;
+  }
+  .steps li::before {
+    content: counter(steps, decimal-leading-zero);
+    position: absolute; left: 0;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 2em; height: 1.7em;
+    display: flex; align-items: center; justify-content: center;
+    top: .65em;
+  }
+
+  .timeline {
+    display: flex; gap: 0;
+    margin-top: 1.5em;
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .tl-item {
+    flex: 1;
+    padding: 1em 1.1em;
+    border-right: 1px solid var(--border-2);
+    position: relative;
+  }
+  .tl-item:last-child { border-right: none; }
+  .tl-item .tl-time {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: .35em;
+    letter-spacing: .05em;
+  }
+  .tl-item .tl-title {
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--fg);
+    margin-bottom: .2em;
+  }
+  .tl-item .tl-desc {
+    font-size: .82rem;
+    color: var(--muted-2);
+    line-height: 1.45;
+  }
+  .tl-item.highlight { background: var(--accent-dim); }
+  .tl-item.highlight .tl-time { color: var(--green); }
+
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    transition: width .3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    box-shadow: 0 0 8px rgba(37,99,235,0.4);
+  }
+  .footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .65em 1.4em;
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: rgba(248,249,252,0.92);
+    backdrop-filter: blur(8px);
+    z-index: 50;
+  }
+  .footer .slide-num { color: var(--muted-2); }
+  .footer .slide-num em { color: var(--accent); font-style: normal; }
+  kbd {
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    color: var(--muted-2);
+    padding: 1px 5px; border-radius: 4px;
+    font-size: .78em; font-family: var(--mono);
+  }
+
+  .warn-li::before { color: var(--orange) !important; content: '!' !important; }
+
+  p code, li code, td code {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: .88em;
+  }
+
+  /* HTTP message diagram */
+  .http-msg {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.1em 1.3em;
+    font-family: var(--mono);
+    font-size: clamp(.82rem, 1.1vw, .96rem);
+    line-height: 1.7;
+    color: #cdd5e0;
+    position: relative;
+  }
+  .http-msg .start-line { color: #93b4ff; font-weight: 700; }
+  .http-msg .hdr-name   { color: #d6aaff; }
+  .http-msg .hdr-val    { color: #cdd5e0; }
+  .http-msg .body       { color: #95e09a; }
+  .http-msg .sep        { color: #4a5568; }
+
+  /* verb / status chips */
+  .verb {
+    display: inline-block;
+    padding: .15em .55em;
+    border-radius: 5px;
+    font-family: var(--mono);
+    font-size: .78rem;
+    font-weight: 700;
+    margin-right: .4em;
+  }
+  .verb-get    { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); }
+  .verb-post   { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(5,150,105,0.25); }
+  .verb-put    { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(217,119,6,0.25); }
+  .verb-patch  { background: rgba(124,58,237,0.08); color: #7c3aed; border: 1px solid rgba(124,58,237,0.25); }
+  .verb-delete { background: rgba(220,38,38,0.08); color: #dc2626; border: 1px solid rgba(220,38,38,0.25); }
+
+  table.crud {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1em;
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  table.crud th, table.crud td {
+    padding: .7em .9em;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: .92rem;
+  }
+  table.crud th {
+    background: var(--bg-3);
+    font-family: var(--mono);
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted-2);
+    font-weight: 700;
+  }
+  table.crud tr:last-child td { border-bottom: none; }
+  table.crud td.url { font-family: var(--mono); font-size: .88rem; color: var(--fg); }
+  table.crud td.desc { color: var(--muted-2); }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: .6em;
+    margin-top: .8em;
+  }
+  .status-box {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: .7em .8em;
+    text-align: center;
+  }
+  .status-box .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--accent);
+    display: block;
+  }
+  .status-box .name {
+    font-size: .78rem;
+    color: var(--muted-2);
+    margin-top: .15em;
+  }
+  .status-box.green .code  { color: var(--green); }
+  .status-box.orange .code { color: var(--orange); }
+  .status-box.red   .code  { color: #dc2626; }
+</style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="deck" id="deck">
+
+    <!-- 1 · TITLE -->
+    <section class="slide title-slide active">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 06</span></div>
+      <h1>Persistence &amp; EF&nbsp;Core</h1>
+      <p class="muted" style="max-width:60ch; margin-top:.8em; font-size:1.1rem;">
+        Our Quizzes API forgets everything when it restarts. Today we give it a
+        real memory — SQL Server, through Entity Framework Core — without
+        rewriting the controller.
+      </p>
+      <p class="muted" style="margin-top:2.5em; font-size:.88rem;">
+        <kbd>&rarr;</kbd> next &nbsp; <kbd>&larr;</kbd> previous &nbsp; <kbd>F</kbd> fullscreen
+      </p>
+    </section>
+
+    <!-- 2 · AGENDA -->
+    <section class="slide">
+      <div class="eyebrow">Agenda</div>
+      <h2>What we'll cover today</h2>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-time">20 min</div>
+          <div class="tl-title">Why &amp; how</div>
+          <div class="tl-desc">In-memory pain, ORMs, the EF Core mental model</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">25 min</div>
+          <div class="tl-title">Wire it up</div>
+          <div class="tl-desc">SQL Server, connection string, DbContext, DI</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">20 min</div>
+          <div class="tl-title">Migrations</div>
+          <div class="tl-desc">Model as source of truth; create the schema</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">25 min</div>
+          <div class="tl-title">The swap</div>
+          <div class="tl-desc">EF repository, flip one line, data survives</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">20 min</div>
+          <div class="tl-title">Async</div>
+          <div class="tl-desc">Interface, repo, controller go async</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">25 min</div>
+          <div class="tl-title">Questions</div>
+          <div class="tl-desc">A one-to-many relationship, second migration</div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1.4em; font-size:.9rem;">
+        Roughly two hours. The blue blocks are concept; the green blocks are hands-on in the guide.
+      </p>
+    </section>
+
+    <!-- 3 · RECAP / BASELINE -->
+    <section class="slide">
+      <div class="eyebrow">Part 1 · Where we are</div>
+      <h2>We start from a known-good baseline</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Lab 5 left us with a working <strong>Quizzes CRUD API</strong>:</p>
+          <ul style="margin-top:.6em;">
+            <li>A <code>Quiz</code> model</li>
+            <li>An <code>IQuizRepository</code> abstraction</li>
+            <li>An <code>InMemoryQuizRepository</code> behind it</li>
+            <li>DTOs + validation, and a controller doing the five verbs</li>
+          </ul>
+          <div class="card orange-card" style="margin-top:1.1em;">
+            <h4>Everyone opens the provided <code>Lab6/Code</code></h4>
+            <p>Not your own Lab 5 folder. It's the exact end-of-Lab-5 state &mdash;
+            Quiz only, in memory, no Questions. If your homework didn't get done,
+            it doesn't matter: none of it is needed.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="cm">// the abstraction the whole app depends on</span>
+<span class="kw">public interface</span> <span class="ty">IQuizRepository</span>
+{
+    <span class="ty">IEnumerable</span>&lt;<span class="ty">Quiz</span>&gt; <span class="fn">All</span>();
+    <span class="ty">Quiz</span>?            <span class="fn">Find</span>(<span class="ty">Guid</span> id);
+    <span class="ty">Quiz</span>             <span class="fn">Add</span>(<span class="kw">string</span> title, <span class="kw">string</span>? description);
+    <span class="kw">bool</span>             <span class="fn">Update</span>(<span class="ty">Guid</span> id, <span class="kw">string</span> title, <span class="kw">string</span>? description);
+    <span class="kw">bool</span>             <span class="fn">Remove</span>(<span class="ty">Guid</span> id);
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · THE PROBLEM -->
+    <section class="slide">
+      <div class="eyebrow">Part 1 · The problem</div>
+      <h2>In-memory means amnesia</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>The in-memory repo keeps quizzes in a <code>ConcurrentDictionary</code>.
+          That dictionary lives in <strong>RAM, inside the process</strong>.</p>
+          <p style="margin-top:.9em;">The moment the app stops &mdash; a deploy, a crash,
+          a machine reboot, even <kbd>Ctrl</kbd>+<kbd>C</kbd> in development &mdash; every quiz
+          your users created is gone. Back to the three seeded rows.</p>
+          <p style="margin-top:.9em;">Run two copies behind a load balancer and it's
+          worse: each has its <em>own</em> dictionary. A quiz created on server A
+          doesn't exist on server B.</p>
+          <p style="margin-top:.9em;" class="accent"><strong>We need state that
+          outlives the process and is shared across instances. That's a database.</strong></p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:.9em;">
+          <div class="card"><h4>RAM</h4><p>Fast, but volatile and per-process. Perfect for a cache, fatal for a system of record.</p></div>
+          <div class="card green-card"><h4>Database</h4><p>Durable, shared, queryable, transactional. Survives restarts and scales across servers.</p></div>
+          <div class="http-msg">
+<span class="sep"># restart the app...</span>
+<span class="start-line">GET /quizzes</span>
+<span class="body">[ "C# fundamentals", "HTTP basics", "REST principles" ]</span>
+<span class="sep"># your 47 created quizzes? gone.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · WHAT IS AN ORM -->
+    <section class="slide">
+      <div class="eyebrow">Part 1 · Concepts</div>
+      <h2>An ORM maps objects to tables</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>A relational database speaks <strong>tables, rows, and SQL</strong>.
+          Your code speaks <strong>classes, objects, and properties</strong>. An
+          <strong>O</strong>bject-<strong>R</strong>elational <strong>M</strong>apper
+          bridges the two.</p>
+          <p style="margin-top:.9em;"><strong>Entity Framework Core</strong> is .NET's
+          ORM. You write LINQ over C# objects; it generates the SQL, runs it, and
+          turns rows back into objects.</p>
+          <p style="margin-top:.9em;">The alternative &mdash; hand-writing SQL strings with
+          ADO.NET &mdash; is still valid and sometimes faster, but it's verbose and easy to
+          get wrong. EF Core is the default starting point in .NET.</p>
+        </div>
+        <div>
+          <div class="flow" style="flex-direction:column; gap:.6em;">
+            <div class="flow-node"><strong>C# object</strong><span>new Quiz { Title = "REST" }</span></div>
+            <div class="flow-arrow" style="justify-content:center;">&#8597; &nbsp; EF Core maps</div>
+            <div class="flow-node"><strong>table row</strong><span>Quizzes(Id, Title, Description, CreatedAt)</span></div>
+          </div>
+          <div class="card" style="margin-top:1em;">
+            <h4>What EF Core does for you</h4>
+            <ul>
+              <li>Generates <code>CREATE TABLE</code> and CRUD SQL</li>
+              <li>Translates LINQ into SQL queries</li>
+              <li>Tracks changes and batches them into one save</li>
+              <li>Manages connections and transactions</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · EF CORE PIECES -->
+    <section class="slide">
+      <div class="eyebrow">Part 1 · Concepts</div>
+      <h2>The four pieces of EF Core</h2>
+      <div class="grid-2" style="gap:2vw; align-items:start;">
+        <div class="card">
+          <h4>DbContext</h4>
+          <p>Your session with the database. One per request. Holds the connection,
+          the change tracker, and your <code>DbSet</code>s. You'll write
+          <code>QuizzesDbContext</code>.</p>
+        </div>
+        <div class="card">
+          <h4>DbSet&lt;T&gt;</h4>
+          <p>A table, as a queryable collection. <code>DbSet&lt;Quiz&gt; Quizzes</code>
+          is "the Quizzes table". You <code>Add</code>, <code>Remove</code>, and LINQ
+          over it.</p>
+        </div>
+        <div class="card green-card">
+          <h4>Change tracker</h4>
+          <p>Watches the entities the context loaded, notices what you modified, and
+          works out the minimal <code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code>
+          on <code>SaveChanges</code>.</p>
+        </div>
+        <div class="card green-card">
+          <h4>Provider</h4>
+          <p>The database-specific plug-in that emits the right SQL dialect. We use
+          the <strong>SQL Server</strong> provider; swapping to Postgres or SQLite is
+          mostly a package change.</p>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1.2em; font-size:.9rem;">
+        Mental model: a <code>DbContext</code> is a short-lived workspace. Load things, poke at them, save, dispose.
+      </p>
+    </section>
+
+    <!-- 7 · CHANGE TRACKING / UNIT OF WORK -->
+    <section class="slide">
+      <div class="eyebrow">Part 1 · Concepts</div>
+      <h2>SaveChanges is one unit of work</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>You don't write SQL per change. You mutate tracked objects, then call
+          <code>SaveChanges()</code> <strong>once</strong>. EF Core diffs the tracked
+          state and sends everything in a single transaction.</p>
+          <p style="margin-top:.9em;">Either all of it commits, or none of it does.
+          That's the <strong>unit of work</strong> pattern, for free.</p>
+          <div class="card orange-card" style="margin-top:1em;">
+            <h4>The #1 beginner trap</h4>
+            <p>You changed an object but the database didn't update. You forgot to call
+            <code>SaveChanges()</code>. Tracking is not saving.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="kw">var</span> quiz = ctx.Quizzes.<span class="fn">Find</span>(id);  <span class="cm">// tracked</span>
+quiz.Title = <span class="str">"REST, revised"</span>;       <span class="cm">// tracker notices</span>
+
+ctx.Quizzes.<span class="fn">Add</span>(newQuiz);          <span class="cm">// pending insert</span>
+ctx.Quizzes.<span class="fn">Remove</span>(oldQuiz);       <span class="cm">// pending delete</span>
+
+ctx.<span class="fn">SaveChanges</span>();
+<span class="cm">// one transaction: 1 UPDATE + 1 INSERT + 1 DELETE</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · SQL SERVER OPTIONS -->
+    <section class="slide">
+      <div class="eyebrow">Part 2 · Setup</div>
+      <h2>Which SQL Server?</h2>
+      <div class="grid-3">
+        <div class="card green-card">
+          <h4>LocalDB &nbsp;<span class="tag green-tag">we use this</span></h4>
+          <p>A lightweight, on-demand SQL Server that ships with Visual Studio. Zero
+          setup, file-based, Windows-only.</p>
+          <p style="margin-top:.5em;"><code>(localdb)\MSSQLLocalDB</code></p>
+        </div>
+        <div class="card">
+          <h4>Docker &nbsp;<span class="tag">fallback</span></h4>
+          <p>Full SQL Server in a container. Cross-platform &mdash; the option for Mac/Linux
+          or anyone without LocalDB.</p>
+          <p style="margin-top:.5em;"><code>localhost,1433</code></p>
+        </div>
+        <div class="card">
+          <h4>Full / Express</h4>
+          <p>A real installed instance, or Azure SQL in production. Same provider, same
+          code &mdash; only the connection string changes.</p>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1.3em; font-size:.92rem;">
+        The beauty: <strong>your C# doesn't change between these</strong>. The provider and
+        connection string absorb the difference. The baseline ships with the LocalDB string
+        already in <code>appsettings.json</code>; the Docker command and string are in the README.
+      </p>
+    </section>
+
+    <!-- 9 · CONNECTION STRINGS -->
+    <section class="slide">
+      <div class="eyebrow">Part 2 · Setup</div>
+      <h2>Connection strings live in config</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>A connection string tells the provider <strong>where</strong> the server is
+          and <strong>how</strong> to authenticate. It belongs in
+          <code>appsettings.json</code>, read by name &mdash; never hard-coded in C#.</p>
+          <ul style="margin-top:.8em;">
+            <li><code>Server</code> &mdash; the instance to reach</li>
+            <li><code>Database</code> &mdash; created on first migration if absent</li>
+            <li><code>Trusted_Connection</code> &mdash; use your Windows login (LocalDB)</li>
+            <li><code>TrustServerCertificate</code> &mdash; accept the dev cert locally</li>
+          </ul>
+          <div class="card orange-card" style="margin-top:1em;">
+            <h4>Don't commit real secrets</h4>
+            <p>LocalDB needs no password, so it's git-safe. For Docker/production,
+            keep passwords in <em>user-secrets</em> or environment variables, not source.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="json">
+<span class="cm">// appsettings.json (already in the baseline)</span>
+<span class="at">"ConnectionStrings"</span>: {
+  <span class="at">"QuizzesDb"</span>:
+    <span class="str">"Server=(localdb)\\MSSQLLocalDB;</span>
+<span class="str">     Database=QuizzesDb;</span>
+<span class="str">     Trusted_Connection=True;</span>
+<span class="str">     TrustServerCertificate=True"</span>
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 · MIGRATIONS CONCEPT -->
+    <section class="slide">
+      <div class="eyebrow">Part 3 · Migrations</div>
+      <h2>Your model is the source of truth</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>You don't hand-write <code>CREATE TABLE</code>. You define C# classes;
+          EF Core compares them to a snapshot of the last known schema and generates a
+          <strong>migration</strong> &mdash; the diff needed to bring the database in line.</p>
+          <p style="margin-top:.9em;">Each migration is a checked-in C# file with
+          <code>Up()</code> (apply) and <code>Down()</code> (revert). They're ordered,
+          they're versioned, and they're how the schema evolves safely over a project's life.</p>
+          <p style="margin-top:.9em;" class="accent"><strong>Change a model &rarr;
+          add a migration &rarr; update the database.</strong> Every time.</p>
+        </div>
+        <div>
+          <div class="flow" style="flex-direction:column; gap:.55em;">
+            <div class="flow-node"><strong>C# model</strong><span>class Quiz { ... }</span></div>
+            <div class="flow-arrow" style="justify-content:center;">&#8595; &nbsp; migrations add</div>
+            <div class="flow-node"><strong>migration file</strong><span>Up() / Down() — the diff</span></div>
+            <div class="flow-arrow" style="justify-content:center;">&#8595; &nbsp; database update</div>
+            <div class="flow-node"><strong>SQL Server schema</strong><span>tables actually created</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 · DOTNET EF WORKFLOW -->
+    <section class="slide">
+      <div class="eyebrow">Part 3 · Migrations</div>
+      <h2>The <code>dotnet ef</code> workflow</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Migrations are driven by a CLI tool you install once per machine, plus two
+          packages in the project.</p>
+          <ul style="margin-top:.6em;">
+            <li><code>Microsoft.EntityFrameworkCore.SqlServer</code> &mdash; the provider</li>
+            <li><code>Microsoft.EntityFrameworkCore.Design</code> &mdash; powers the tooling</li>
+          </ul>
+          <p style="margin-top:.9em;">Then it's a tight loop: add a migration when the
+          model changes, apply it to the database.</p>
+          <div class="card green-card" style="margin-top:1em;">
+            <h4>Read before you apply</h4>
+            <p>Open the generated migration and actually look at the <code>Up()</code> method.
+            It's the contract for what hits your database.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="bash">
+<span class="cm"># once per machine</span>
+dotnet tool install --global dotnet-ef
+
+<span class="cm"># add packages</span>
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add package Microsoft.EntityFrameworkCore.Design
+
+<span class="cm"># the loop, every time the model changes</span>
+dotnet ef migrations add InitialCreate
+dotnet ef database update
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 · THE CLEAN SWAP -->
+    <section class="slide">
+      <div class="eyebrow">Part 4 · The swap</div>
+      <h2>This is why we built an interface</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>The controller depends on <code>IQuizRepository</code>, never on a concrete
+          class. So a database-backed implementation is a <strong>drop-in</strong>.</p>
+          <p style="margin-top:.9em;">We write a new <code>EfQuizRepository</code> that
+          implements the same interface, then change <strong>one line</strong> of DI
+          registration. The controller, the DTOs, the routes &mdash; untouched.</p>
+          <p style="margin-top:.9em;">Note the lifetime change: an in-memory store is a
+          <code>Singleton</code>; a <code>DbContext</code>-backed repo must be
+          <strong><code>Scoped</code></strong> &mdash; one per request.</p>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="cm">// before — volatile, one shared instance</span>
+builder.Services.<span class="fn">AddSingleton</span>&lt;<span class="ty">IQuizRepository</span>,
+                          <span class="ty">InMemoryQuizRepository</span>&gt;();
+
+<span class="cm">// after — durable, one per request</span>
+builder.Services.<span class="fn">AddScoped</span>&lt;<span class="ty">IQuizRepository</span>,
+                       <span class="ty">EfQuizRepository</span>&gt;();
+
+<span class="cm">// the controller never changed.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 · SYNC VS ASYNC -->
+    <section class="slide">
+      <div class="eyebrow">Part 5 · Async</div>
+      <h2>Database calls should be async</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>A query to SQL Server is <strong>I/O</strong> &mdash; your thread would otherwise
+          sit blocked, waiting on the network and disk, doing nothing.</p>
+          <p style="margin-top:.9em;">With <code>async</code>/<code>await</code>, the thread
+          is released to serve other requests while the database works. Same hardware,
+          far more throughput. This is the norm for web APIs.</p>
+          <p style="margin-top:.9em;">EF Core exposes async versions of everything:
+          <code>ToListAsync</code>, <code>FindAsync</code>, <code>SaveChangesAsync</code>.
+          We'll thread <code>Task</code> through the interface, the repo, and the controller.</p>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="cm">// sync — thread blocks on I/O</span>
+<span class="ty">Quiz</span>? <span class="fn">Find</span>(<span class="ty">Guid</span> id);
+<span class="kw">var</span> all = ctx.Quizzes.<span class="fn">ToList</span>();
+
+<span class="cm">// async — thread freed while DB works</span>
+<span class="ty">Task</span>&lt;<span class="ty">Quiz</span>?&gt; <span class="fn">FindAsync</span>(<span class="ty">Guid</span> id);
+<span class="kw">var</span> all = <span class="kw">await</span> ctx.Quizzes.<span class="fn">ToListAsync</span>();
+<span class="kw">await</span> ctx.<span class="fn">SaveChangesAsync</span>();
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 · LAB ROADMAP -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on</div>
+      <h2>The lab, step by step</h2>
+      <ol class="steps">
+        <li><strong>Step 0</strong> &mdash; open the provided baseline, run it, confirm CRUD in Swagger</li>
+        <li>Add the SQL Server + Design packages and the <code>dotnet-ef</code> tool</li>
+        <li>Write <code>QuizzesDbContext</code> with <code>DbSet&lt;Quiz&gt;</code> and seed data</li>
+        <li>Register it with <code>AddDbContext</code> + the connection string</li>
+        <li>Create the first migration and apply it; inspect the database in SSMS</li>
+        <li>Write <code>EfQuizRepository</code>; flip the one DI line</li>
+        <li>Go async &mdash; interface, repository, controller</li>
+        <li>Add <code>Question</code> &mdash; a one-to-many relationship + second migration</li>
+        <li>Verify: restart the app, watch your data survive</li>
+      </ol>
+    </section>
+
+    <!-- 15 · DBCONTEXT -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · brief</div>
+      <h2>The DbContext and seed data</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>One class with a <code>DbSet</code> per table. Seed data moves out of the
+          repo constructor and into <code>OnModelCreating</code> via <code>HasData</code> &mdash;
+          so it's applied by a migration, with stable IDs.</p>
+          <div class="card" style="margin-top:1em;">
+            <h4>Why fixed GUIDs in the seed?</h4>
+            <p>Seed rows need deterministic keys, or every migration would think the data
+            changed. Hard-code the GUIDs for seeded quizzes.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="kw">public class</span> <span class="ty">QuizzesDbContext</span> : <span class="ty">DbContext</span>
+{
+    <span class="kw">public</span> <span class="ty">QuizzesDbContext</span>(<span class="ty">DbContextOptions</span> o) : <span class="kw">base</span>(o) { }
+
+    <span class="kw">public</span> <span class="ty">DbSet</span>&lt;<span class="ty">Quiz</span>&gt; Quizzes =&gt; <span class="fn">Set</span>&lt;<span class="ty">Quiz</span>&gt;();
+
+    <span class="kw">protected override void</span> <span class="fn">OnModelCreating</span>(<span class="ty">ModelBuilder</span> b)
+        =&gt; b.<span class="fn">Entity</span>&lt;<span class="ty">Quiz</span>&gt;().<span class="fn">HasData</span>(/* seeded rows */);
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- 16 · ADDDBCONTEXT -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · brief</div>
+      <h2>Register the context in DI</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p><code>AddDbContext</code> wires the context into the container as a
+          <strong>Scoped</strong> service and tells it which provider and connection
+          string to use.</p>
+          <p style="margin-top:.9em;">Now the <code>EfQuizRepository</code> can ask for a
+          <code>QuizzesDbContext</code> in its constructor &mdash; DI hands it a fresh one per
+          request and disposes it after.</p>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="kw">var</span> cs = builder.Configuration
+    .<span class="fn">GetConnectionString</span>(<span class="str">"QuizzesDb"</span>);
+
+builder.Services.<span class="fn">AddDbContext</span>&lt;<span class="ty">QuizzesDbContext</span>&gt;(
+    opt =&gt; opt.<span class="fn">UseSqlServer</span>(cs));
+
+builder.Services.<span class="fn">AddScoped</span>&lt;<span class="ty">IQuizRepository</span>,
+                       <span class="ty">EfQuizRepository</span>&gt;();
+        </div>
+      </div>
+    </section>
+
+    <!-- 17 · FIRST MIGRATION + INSPECT -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · brief</div>
+      <h2>Create the schema, then look at it</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Run the two commands. <code>migrations add</code> writes the C# diff;
+          <code>database update</code> connects to LocalDB, creates the
+          <code>QuizzesDb</code> database, the <code>Quizzes</code> table, and inserts the
+          seed rows.</p>
+          <p style="margin-top:.9em;">Then open <strong>SSMS</strong> or
+          <strong>Azure Data Studio</strong>, connect to
+          <code>(localdb)\MSSQLLocalDB</code>, and see your table and rows with your own eyes.</p>
+        </div>
+        <div class="code-block" data-lang="bash">
+dotnet ef migrations add InitialCreate
+<span class="cm"># -> Migrations/..._InitialCreate.cs</span>
+
+dotnet ef database update
+<span class="cm"># -> Applying migration...</span>
+<span class="cm"># -> Done. DB + table + seed rows exist.</span>
+
+<span class="cm"># a __EFMigrationsHistory table now</span>
+<span class="cm"># records which migrations have run.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 18 · EF REPOSITORY -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · brief</div>
+      <h2>The EF-backed repository</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Same interface, real storage. The context comes in through the constructor;
+          each method becomes a LINQ query plus, for writes, a
+          <code>SaveChanges</code>.</p>
+          <p style="margin-top:.9em;">Then flip the one DI line from
+          <code>InMemory</code> to <code>Ef</code>. Run the app &mdash; same Swagger, same
+          endpoints, but the data is now in SQL Server.</p>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="kw">public class</span> <span class="ty">EfQuizRepository</span> : <span class="ty">IQuizRepository</span>
+{
+    <span class="kw">private readonly</span> <span class="ty">QuizzesDbContext</span> _db;
+    <span class="kw">public</span> <span class="ty">EfQuizRepository</span>(<span class="ty">QuizzesDbContext</span> db) =&gt; _db = db;
+
+    <span class="kw">public</span> <span class="ty">IEnumerable</span>&lt;<span class="ty">Quiz</span>&gt; <span class="fn">All</span>() =&gt;
+        _db.Quizzes.<span class="fn">OrderBy</span>(q =&gt; q.CreatedAt).<span class="fn">ToList</span>();
+
+    <span class="cm">// Find / Add / Update / Remove + SaveChanges...</span>
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- 19 · QUESTIONS ONE-TO-MANY -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · brief</div>
+      <h2>Questions: a one-to-many relationship</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>A quiz <em>has many</em> questions; a question <em>belongs to</em> one quiz.
+          In relational terms that's a <strong>foreign key</strong>. In EF terms it's a
+          <strong>navigation property</strong>.</p>
+          <p style="margin-top:.9em;">EF infers the relationship from the
+          <code>QuizId</code> + <code>Quiz</code> properties and the
+          <code>List&lt;Question&gt;</code> on the other side. This is what a dictionary
+          could never give you cleanly.</p>
+          <p style="margin-top:.9em;">Add the model, then a <strong>second migration</strong> &mdash;
+          watch it generate only the diff: a new table and FK.</p>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="kw">public class</span> <span class="ty">Question</span>
+{
+    <span class="kw">public</span> <span class="ty">Guid</span>   Id   { <span class="kw">get; set;</span> } = <span class="ty">Guid</span>.<span class="fn">NewGuid</span>();
+    <span class="kw">public</span> <span class="kw">string</span> Text { <span class="kw">get; set;</span> } = <span class="str">""</span>;
+
+    <span class="cm">// foreign key + navigation</span>
+    <span class="kw">public</span> <span class="ty">Guid</span> QuizId { <span class="kw">get; set;</span> }
+    <span class="kw">public</span> <span class="ty">Quiz</span>? Quiz   { <span class="kw">get; set;</span> }
+}
+
+<span class="cm">// on Quiz:</span>
+<span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">Question</span>&gt; Questions { <span class="kw">get; set;</span> } = [];
+        </div>
+      </div>
+    </section>
+
+    <!-- 20 · VERIFY -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · the payoff</div>
+      <h2>Restart the app. Data's still there.</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>The whole point, in one experiment:</p>
+          <ul style="margin-top:.6em;">
+            <li><span class="verb verb-post">POST</span> a new quiz with a couple of questions</li>
+            <li>Stop the app entirely (<kbd>Ctrl</kbd>+<kbd>C</kbd>)</li>
+            <li>Start it again</li>
+            <li><span class="verb verb-get">GET</span> <code>/quizzes</code> &mdash; <strong>your quiz is still there</strong></li>
+          </ul>
+          <p style="margin-top:1em;" class="green"><strong>That's persistence. The data
+          outlived the process &mdash; because it lives in SQL Server now, not in RAM.</strong></p>
+        </div>
+        <div class="http-msg">
+<span class="sep"># before: in-memory</span>
+<span class="start-line">GET /quizzes</span> <span class="sep">(after restart)</span>
+<span class="body">[ seeded only — your data gone ]</span>
+
+<span class="sep"># after: EF + SQL Server</span>
+<span class="start-line">GET /quizzes</span> <span class="sep">(after restart)</span>
+<span class="body">[ seeded + everything you created ]</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 21 · GOTCHAS -->
+    <section class="slide">
+      <div class="eyebrow">Watch out</div>
+      <h2>Things people get wrong on day one</h2>
+      <ul>
+        <li class="warn-li">Forgetting <code>SaveChanges</code> &mdash; you changed objects, nothing persisted. Tracking is not saving.</li>
+        <li class="warn-li">Changing a model but not adding a migration &mdash; runtime error: the model and database disagree.</li>
+        <li class="warn-li">Registering the context or repo as <code>Singleton</code> &mdash; a <code>DbContext</code> is not thread-safe. It must be <code>Scoped</code>.</li>
+        <li class="warn-li">Returning EF entities straight from the API and triggering the <strong>N+1</strong> problem, or serializing a navigation-property cycle. Keep using DTOs.</li>
+        <li class="warn-li">Editing an already-applied migration by hand. Don't &mdash; add a <em>new</em> migration instead.</li>
+        <li class="warn-li">Committing a Docker/production password in the connection string. Use user-secrets or env vars.</li>
+      </ul>
+    </section>
+
+    <!-- 22 · RECAP -->
+    <section class="slide">
+      <div class="eyebrow">Wrap-up</div>
+      <h2>What you can do now</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>You took an API that forgot everything on restart and gave it durable,
+          shared, queryable storage &mdash; <strong>without touching the controller</strong>.</p>
+          <ul style="margin-top:.8em;">
+            <li>Model data as C# and map it to SQL Server with EF Core</li>
+            <li>Evolve a schema safely with migrations</li>
+            <li>Swap implementations behind an interface</li>
+            <li>Write async data access</li>
+            <li>Model a one-to-many relationship</li>
+          </ul>
+        </div>
+        <div class="card green-card">
+          <h4>Where this goes next</h4>
+          <p>Real persistence unlocks the rest of a production API: authentication tied
+          to stored users, pagination and filtering over real tables, integration tests
+          against a database, and deployment to a hosted SQL Server.</p>
+          <p style="margin-top:.6em;">It also reconnects to our AI track &mdash; a persisted
+          quiz store is exactly what an LLM-powered <code>/generate</code> endpoint would
+          write into.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 23 · QUESTIONS -->
+    <section class="slide title-slide">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 06</span></div>
+      <h1>Questions?</h1>
+      <p class="muted" style="max-width:54ch; margin-top:.8em; font-size:1.1rem;">
+        Open the guide and let's build it. Start from the provided
+        <code>Lab6/Code</code> baseline &mdash; Step 0 first.
+      </p>
+    </section>
+
+  </div>
+
+  <div class="footer">
+    <span>AC Labs 2026 &middot; Lab 06 &mdash; Persistence &amp; EF Core</span>
+    <span class="slide-num"><em id="cur">1</em> / <span id="total">23</span></span>
+    <span><kbd>&rarr;</kbd> <kbd>&larr;</kbd> <kbd>F</kbd></span>
+  </div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  let i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    document.getElementById('cur').textContent = i + 1;
+    document.getElementById('progress').style.width = ((i + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight','PageDown',' '].includes(e.key)) { show(i+1); e.preventDefault(); }
+    else if (['ArrowLeft','PageUp'].includes(e.key)) { show(i-1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(total - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.footer')) return;
+    show(i + 1);
+  });
+
+  show(0);
+</script>
+</body>
+</html>
