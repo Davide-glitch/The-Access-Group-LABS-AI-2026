@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 7 &mdash; Step-by-step guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.2);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --green-border: rgba(5,150,105,0.2);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --orange-border: rgba(217,119,6,0.2);
+    --border: #e5e7eb;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --display: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  .hero {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .3em .8em;
+    margin-bottom: 1.5rem;
+  }
+  .hero-badge span { color: var(--accent); font-weight: 700; }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: .8rem;
+    color: var(--fg);
+  }
+  .hero p {
+    font-size: 1.1rem;
+    color: var(--muted-2);
+    max-width: 62ch;
+  }
+
+  .overview {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 3rem;
+  }
+  .overview h3 {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--fg);
+  }
+  .step-index {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .4rem;
+  }
+  .step-index a {
+    display: flex; align-items: center; gap: .6em;
+    font-size: .88rem;
+    color: var(--muted-2);
+    text-decoration: none;
+    padding: .3em .5em;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+  }
+  .step-index a:hover { background: var(--bg-3); color: var(--accent); }
+  .step-index a .num {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 1.9em; height: 1.6em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .partlabel {
+    font-family: var(--mono);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 2.5rem 0 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--accent-border);
+  }
+
+  .step {
+    margin-bottom: 3.5rem;
+    scroll-margin-top: 2rem;
+  }
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  .step-num {
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 8px;
+    min-width: 2.4em; height: 2.4em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: .15em;
+  }
+  .step h2 {
+    font-family: var(--display);
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--fg);
+  }
+  .step p, .step li {
+    font-size: .97rem;
+    line-height: 1.7;
+    color: #374151;
+  }
+  .step ul, .step ol {
+    padding-left: 1.4rem;
+    margin: .6rem 0;
+  }
+  .step li { margin-bottom: .3em; }
+  .step p + p { margin-top: .7em; }
+  .step-body { padding-left: 3.4rem; }
+
+  .callout {
+    border-radius: 10px;
+    padding: 1em 1.2em;
+    margin: 1.1em 0;
+    font-size: .93rem;
+    line-height: 1.6;
+    border-left: 3px solid;
+  }
+  .callout strong { display: block; margin-bottom: .2em; font-size: .88rem; text-transform: uppercase; letter-spacing: .06em; }
+  .callout.why   { background: var(--accent-dim); border-color: var(--accent); color: #1e3a8a; }
+  .callout.why strong { color: var(--accent); }
+  .callout.check { background: var(--green-dim); border-color: var(--green); color: #065f46; }
+  .callout.check strong { color: var(--green); }
+  .callout.warn  { background: var(--orange-dim); border-color: var(--orange); color: #78350f; }
+  .callout.warn strong { color: var(--orange); }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.1em 1.3em;
+    font-family: var(--mono);
+    font-size: .84rem;
+    line-height: 1.85;
+    overflow-x: auto;
+    white-space: pre;
+    color: #cdd5e0;
+    position: relative;
+  }
+  .code-block[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: .9em;
+    font-size: .65rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .code-block.sm { font-size: .78rem; }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+  .hi  { background: rgba(37,99,235,0.25); border-radius: 3px; padding: 0 2px; }
+  .hi-green { background: rgba(5,150,105,0.2); border-radius: 3px; padding: 0 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .87em;
+    background: var(--bg-3);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .step-divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 3rem 0;
+  }
+
+  .final {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 2rem;
+    margin-top: 4rem;
+    text-align: center;
+  }
+  .final h2 {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: .5rem;
+  }
+  .final p { color: var(--muted-2); font-size: .97rem; }
+
+  .file-path {
+    font-family: var(--mono);
+    font-size: .78rem;
+    background: var(--bg-3);
+    border: 1px dashed var(--border);
+    color: var(--muted-2);
+    padding: .3em .7em;
+    border-radius: 6px;
+    display: inline-block;
+    margin: .3em 0 .8em;
+  }
+  .file-path strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 07</span> &nbsp;·&nbsp; Self-paced guide</div>
+    <h1>Who are you, and is this yours to change?</h1>
+    <p>Right now anyone can edit or delete any quiz. In this lab you'll sign users in with their <strong>Microsoft account</strong> (via Swagger, no front-end needed), then enforce the rule that <strong>only the owner of a quiz can modify or delete it</strong>. Authentication answers <em>who are you</em>; authorization answers <em>are you allowed</em> &mdash; and the interesting half is the second one.</p>
+  </div>
+
+  <div class="overview">
+    <h3>Steps in this guide</h3>
+    <div class="step-index">
+      <a href="#s0"><span class="num">00</span> Open the baseline</a>
+      <a href="#s1"><span class="num">01</span> Add the auth package</a>
+      <a href="#s2"><span class="num">02</span> Wire authentication</a>
+      <a href="#s3"><span class="num">03</span> Lock a route &rarr; 401</a>
+      <a href="#s4"><span class="num">04</span> Swagger sign-in</a>
+      <a href="#s5"><span class="num">05</span> Get a token &rarr; 200</a>
+      <a href="#s6"><span class="num">06</span> Add an owner</a>
+      <a href="#s7"><span class="num">07</span> Stamp the owner</a>
+      <a href="#s8"><span class="num">08</span> Owner-only mutation</a>
+      <a href="#s9"><span class="num">09</span> Test ownership</a>
+      <a href="#s10"><span class="num">10</span> Homework</a>
+    </div>
+  </div>
+
+  <div class="partlabel">Part A &middot; Authentication &mdash; prove who you are</div>
+
+  <!-- STEP 0 -->
+  <div class="step" id="s0">
+    <div class="step-header">
+      <div class="step-num">00</div>
+      <h2>Open the baseline &mdash; and collect three values</h2>
+    </div>
+    <div class="step-body">
+      <p>Open the project in <span class="file-path"><strong>Sessions/Lab7/</strong>Code</span> — the folder provided for this lab. It's the finished Lab 6 Quizzes API: persisted in SQL Server, async, with a one-to-many to Questions.</p>
+      <div class="callout warn">
+        <strong>Do not use your Lab 6 folder</strong>
+        Everyone starts from this exact baseline so we're all on identical, compiling code. Create the database and run it once to confirm it works before changing anything.
+      </div>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># from inside Sessions/Lab7/Code</span>
+dotnet ef database update   <span class="cm"># build the QuizzesDb from the migrations</span>
+dotnet run</div>
+      <p>Open <code>http://localhost:5023/swagger</code>, run <code>GET /quizzes</code>, confirm you get the three seeded quizzes, then stop with <kbd>Ctrl</kbd>+<kbd>C</kbd>.</p>
+      <p>Your instructor has registered a shared <strong>Microsoft Entra application</strong> for the class. You need three values from them — paste them somewhere handy, you'll use each one:</p>
+      <ul>
+        <li><strong>Client ID</strong> — a GUID identifying the app, e.g. <code>11112222-3333-4444-5555-666677778888</code></li>
+        <li><strong>Scope</strong> — what you're asking permission for, e.g. <code>api://&lt;client-id&gt;/access_as_user</code></li>
+        <li><strong>Authority</strong> — always <code>https://login.microsoftonline.com/consumers</code> for this lab (personal Microsoft accounts)</li>
+      </ul>
+      <div class="callout why">
+        <strong>Why a shared app registration?</strong>
+        Registering an app in the Entra portal is a one-time, click-heavy setup that you'd rarely do yourself — so we've done it for you. It's configured for <em>personal Microsoft accounts</em> (the <code>consumers</code> endpoint), so you sign in with any <code>outlook.com</code>/<code>hotmail.com</code> account — no work account, no IT involvement. The redirect URL <code>http://localhost:5023/swagger/oauth2-redirect.html</code> is already registered, which is exactly why the baseline's port is pinned to <strong>5023</strong>. Don't change it, or sign-in will fail.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 1 -->
+  <div class="step" id="s1">
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <h2>Add the authentication package and config</h2>
+    </div>
+    <div class="step-body">
+      <p><code>Microsoft.Identity.Web</code> is Microsoft's library for wiring an ASP.NET Core app to the Microsoft identity platform. For an API, its job is narrow: <em>validate</em> the bearer token on each request.</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># from inside Sessions/Lab7/Code</span>
+dotnet add package Microsoft.Identity.Web --version 4.10.0</div>
+      <p>Now add an <code>AzureAd</code> section to <code>appsettings.json</code>, alongside the existing <code>ConnectionStrings</code>. Replace the client id with the one your instructor gave you:</p>
+      <div class="file-path"><strong>/</strong>appsettings.json</div>
+      <div class="code-block" data-lang="json">
+<span class="hi-green">"AzureAd": {
+  "Instance": <span class="str">"https://login.microsoftonline.com/"</span>,
+  "TenantId": <span class="str">"consumers"</span>,
+  "ClientId": <span class="str">"&lt;paste-your-client-id&gt;"</span>
+},</span>
+"ConnectionStrings": {
+  "QuizzesDb": <span class="str">"Server=(localdb)\\MSSQLLocalDB;Database=QuizzesDb;..."</span>
+}</div>
+      <div class="callout why">
+        <strong>What each value does</strong>
+        <code>Instance</code> + <code>TenantId</code> together form the <em>authority</em> — the issuer the API will trust. <code>consumers</code> means "personal Microsoft accounts only", which keeps the owner story simple: every user lives in one place, so a single id uniquely identifies them. <code>ClientId</code> is the audience: the API only accepts tokens that were issued <em>for this app</em>.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 2 -->
+  <div class="step" id="s2">
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <h2>Wire authentication into the pipeline</h2>
+    </div>
+    <div class="step-body">
+      <p>Open <code>Program.cs</code>. Add two usings at the top, register the authentication services, and add two middleware lines. The highlighted lines are new:</p>
+      <div class="file-path"><strong>/</strong>Program.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">using</span> Lab7.Data;
+<span class="kw">using</span> Lab7.Repositories;
+<span class="kw">using</span> Microsoft.EntityFrameworkCore;
+<span class="hi-green"><span class="kw">using</span> Microsoft.AspNetCore.Authentication.JwtBearer;
+<span class="kw">using</span> Microsoft.Identity.Web;</span>
+
+<span class="kw">var</span> builder = <span class="ty">WebApplication</span>.<span class="fn">CreateBuilder</span>(args);
+
+builder.Services.<span class="fn">AddControllers</span>();
+builder.Services.<span class="fn">AddEndpointsApiExplorer</span>();
+builder.Services.<span class="fn">AddSwaggerGen</span>();
+
+<span class="cm">// ... existing DbContext + repository registration ...</span>
+
+<span class="hi-green"><span class="cm">// Authentication: validate Microsoft-issued bearer tokens using the AzureAd config.</span>
+builder.Services.<span class="fn">AddAuthentication</span>(<span class="ty">JwtBearerDefaults</span>.AuthenticationScheme)
+    .<span class="fn">AddMicrosoftIdentityWebApi</span>(builder.Configuration.<span class="fn">GetSection</span>(<span class="str">"AzureAd"</span>));</span>
+
+<span class="kw">var</span> app = builder.<span class="fn">Build</span>();
+
+<span class="kw">if</span> (app.Environment.<span class="fn">IsDevelopment</span>())
+{
+    app.<span class="fn">UseSwagger</span>();
+    app.<span class="fn">UseSwaggerUI</span>();
+}
+
+<span class="hi-green">app.<span class="fn">UseAuthentication</span>();   <span class="cm">// 1. who are you?   (reads + validates the token)</span>
+app.<span class="fn">UseAuthorization</span>();    <span class="cm">// 2. are you allowed? (enforces [Authorize])</span></span>
+
+app.<span class="fn">MapControllers</span>();
+
+app.<span class="fn">Run</span>();</div>
+      <div class="callout warn">
+        <strong>Order matters — and it's the classic mistake</strong>
+        <code>UseAuthentication</code> must come <em>before</em> <code>UseAuthorization</code>: you can't decide if someone is allowed until you know who they are. Both must sit <em>after</em> the Swagger middleware and <em>before</em> <code>MapControllers</code>. Get the order wrong and you'll get baffling 401s on endpoints that should be open.
+      </div>
+      <div class="callout check">
+        <strong>Verify</strong>
+        <code>dotnet build</code> succeeds. Nothing is protected yet — we've installed the lock but haven't put it on any door.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 3 -->
+  <div class="step" id="s3">
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <h2>Lock a route &mdash; and watch it reject you</h2>
+    </div>
+    <div class="step-body">
+      <p>The <code>[Authorize]</code> attribute is the door lock. Put it on the whole <code>QuizzesController</code> so every action requires a valid token:</p>
+      <div class="file-path"><strong>Controllers/</strong>QuizzesController.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">using</span> Lab7.Dtos;
+<span class="kw">using</span> Lab7.Models;
+<span class="kw">using</span> Lab7.Repositories;
+<span class="kw">using</span> Microsoft.AspNetCore.Mvc;
+<span class="hi-green"><span class="kw">using</span> Microsoft.AspNetCore.Authorization;</span>
+
+<span class="kw">namespace</span> Lab7.Controllers;
+
+[<span class="ty">ApiController</span>]
+[<span class="ty">Route</span>(<span class="str">"quizzes"</span>)]
+<span class="hi-green">[<span class="ty">Authorize</span>]</span>
+<span class="kw">public class</span> <span class="ty">QuizzesController</span> : <span class="ty">ControllerBase</span>
+{</div>
+      <p>Run the app, open Swagger, and call <code>GET /quizzes</code> &mdash; <strong>Try it out &rarr; Execute</strong>.</p>
+      <div class="callout check">
+        <strong>Expect a 401 Unauthorized</strong>
+        This is success, not a bug. The endpoint now demands a token and you don't have one yet. The lock works; next we cut a key.
+      </div>
+      <div class="callout why">
+        <strong>One attribute, whole controller</strong>
+        <code>[Authorize]</code> on the class applies to every action. You could put it on individual methods instead, or open specific ones back up with <code>[AllowAnonymous]</code>. We lock everything because the whole API is about <em>your</em> quizzes.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 4 -->
+  <div class="step" id="s4">
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <h2>Teach Swagger to sign you in</h2>
+    </div>
+    <div class="step-body">
+      <p>We have no front-end — but Swagger UI can run the Microsoft sign-in flow for us and attach the resulting token to every request. We describe the OAuth flow to Swagger, then point its <strong>Authorize</strong> button at our app.</p>
+      <p>This is configuration, not a concept to memorise &mdash; <strong>copy it</strong>. Replace <code>&lt;client-id&gt;</code> in <em>both</em> places with your value. First, expand <code>AddSwaggerGen</code> in <code>Program.cs</code>:</p>
+      <div class="file-path"><strong>/</strong>Program.cs</div>
+      <div class="code-block sm" data-lang="csharp">
+<span class="kw">using</span> Microsoft.OpenApi.Models;  <span class="cm">// add with the other usings</span>
+
+<span class="kw">const string</span> scope = <span class="str">"api://&lt;client-id&gt;/access_as_user"</span>;
+
+builder.Services.<span class="fn">AddSwaggerGen</span>(options =&gt;
+{
+    options.<span class="fn">AddSecurityDefinition</span>(<span class="str">"oauth2"</span>, <span class="kw">new</span> <span class="ty">OpenApiSecurityScheme</span>
+    {
+        Type = <span class="ty">SecuritySchemeType</span>.OAuth2,
+        Flows = <span class="kw">new</span> <span class="ty">OpenApiOAuthFlows</span>
+        {
+            AuthorizationCode = <span class="kw">new</span> <span class="ty">OpenApiOAuthFlow</span>
+            {
+                AuthorizationUrl = <span class="kw">new</span> <span class="ty">Uri</span>(<span class="str">"https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize"</span>),
+                TokenUrl         = <span class="kw">new</span> <span class="ty">Uri</span>(<span class="str">"https://login.microsoftonline.com/consumers/oauth2/v2.0/token"</span>),
+                Scopes = <span class="kw">new</span> <span class="ty">Dictionary</span>&lt;<span class="kw">string</span>, <span class="kw">string</span>&gt; { { scope, <span class="str">"Access the Quizzes API as you"</span> } }
+            }
+        }
+    });
+    options.<span class="fn">AddSecurityRequirement</span>(<span class="kw">new</span> <span class="ty">OpenApiSecurityRequirement</span>
+    {
+        {
+            <span class="kw">new</span> <span class="ty">OpenApiSecurityScheme</span>
+            {
+                Reference = <span class="kw">new</span> <span class="ty">OpenApiReference</span> { Type = <span class="ty">ReferenceType</span>.SecurityScheme, Id = <span class="str">"oauth2"</span> }
+            },
+            <span class="kw">new</span>[] { scope }
+        }
+    });
+});</div>
+      <p>Then configure the <strong>Authorize</strong> button in <code>UseSwaggerUI</code>:</p>
+      <div class="code-block sm" data-lang="csharp">
+app.<span class="fn">UseSwaggerUI</span>(options =&gt;
+{
+    options.<span class="fn">OAuthClientId</span>(<span class="str">"&lt;client-id&gt;"</span>);
+    options.<span class="fn">OAuthUsePkce</span>();           <span class="cm">// proof-key flow — no client secret needed</span>
+    options.<span class="fn">OAuthScopeSeparator</span>(<span class="str">" "</span>);
+});</div>
+      <div class="callout why">
+        <strong>Why PKCE and no secret?</strong>
+        Swagger is a public client running in a browser — it can't keep a secret. PKCE (Proof Key for Code Exchange) secures the authorization-code flow without one: Swagger generates a one-time proof per sign-in. That's why the lab ships no passwords or secrets anywhere.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 5 -->
+  <div class="step" id="s5">
+    <div class="step-header">
+      <div class="step-num">05</div>
+      <h2>Get a token &mdash; and turn the 401 into a 200</h2>
+    </div>
+    <div class="step-body">
+      <p>Run the app and reload <code>http://localhost:5023/swagger</code>. There's now an <strong>Authorize</strong> button (and padlock icons on the endpoints).</p>
+      <ol>
+        <li>Click <strong>Authorize</strong>, tick the scope, click <strong>Authorize</strong> again.</li>
+        <li>A Microsoft sign-in window opens. Sign in with a <strong>personal</strong> Microsoft account and accept the one-time consent prompt.</li>
+        <li>The window closes; Swagger now holds your token. Click <strong>Close</strong>.</li>
+        <li>Run <code>GET /quizzes</code> again.</li>
+      </ol>
+      <div class="callout check">
+        <strong>200 OK — you're authenticated</strong>
+        Same request that gave 401 in step 03 now returns the quizzes. Swagger attached <code>Authorization: Bearer &lt;token&gt;</code> and the API validated it.
+      </div>
+      <p>Look at what's <em>in</em> that token. Paste it into <a href="https://jwt.ms">jwt.ms</a> (the token is the long string Swagger sent — you can copy it from the request's <code>curl</code> in Swagger). Find the <code>oid</code> claim:</p>
+      <div class="code-block" data-lang="text">
+"oid": "a1b2c3d4-....-............"   &larr; your stable user id
+"name": "Ada Lovelace"
+"preferred_username": "ada@outlook.com"</div>
+      <div class="callout why">
+        <strong>Meet <code>oid</code> — the key to ownership</strong>
+        <code>oid</code> (object id) is the one claim that's <em>stable and unique per user</em> and never changes — unlike a display name or email, which can. In Part B this single value becomes the owner of every quiz you create. Names and emails are for humans; <code>oid</code> is for code.
+      </div>
+    </div>
+  </div>
+
+  <div class="partlabel">Part B &middot; Authorization &mdash; is this yours to change?</div>
+
+  <!-- STEP 6 -->
+  <div class="step" id="s6">
+    <div class="step-header">
+      <div class="step-num">06</div>
+      <h2>Give a quiz an owner</h2>
+    </div>
+    <div class="step-body">
+      <p>Ownership needs a column. Add <code>OwnerId</code> to the <code>Quiz</code> model — it'll hold the creator's <code>oid</code>:</p>
+      <div class="file-path"><strong>Models/</strong>Quiz.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">public class</span> <span class="ty">Quiz</span>
+{
+    <span class="kw">public</span> <span class="ty">Guid</span>     Id          { <span class="kw">get; set;</span> } = <span class="ty">Guid</span>.<span class="fn">NewGuid</span>();
+    <span class="kw">public</span> <span class="kw">string</span>   Title       { <span class="kw">get; set;</span> } = <span class="str">""</span>;
+    <span class="kw">public</span> <span class="kw">string</span>?  Description { <span class="kw">get; set;</span> }
+    <span class="kw">public</span> <span class="ty">DateTime</span> CreatedAt   { <span class="kw">get; set;</span> } = <span class="ty">DateTime</span>.UtcNow;
+    <span class="hi-green"><span class="kw">public</span> <span class="kw">string</span>   OwnerId     { <span class="kw">get; set;</span> } = <span class="str">""</span>;</span>
+
+    <span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">Question</span>&gt; Questions { <span class="kw">get; set;</span> } = [];
+}</div>
+      <p>Now give the three seeded quizzes an owner — a fixed, documented id that is deliberately <strong>not</strong> any student. In <code>QuizzesDbContext.OnModelCreating</code>, add this constant and an <code>OwnerId</code> to each seeded quiz:</p>
+      <div class="file-path"><strong>Data/</strong>QuizzesDbContext.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="cm">// The "house" account that owns the demo quizzes. No real person has this oid,</span>
+<span class="cm">// so no student will ever match it — that's the point (see step 09).</span>
+<span class="kw">const string</span> seedOwner = <span class="str">"00000000-0000-0000-0000-00000000feed"</span>;
+
+modelBuilder.<span class="fn">Entity</span>&lt;<span class="ty">Quiz</span>&gt;().<span class="fn">HasData</span>(
+    <span class="kw">new</span> <span class="ty">Quiz</span> { Id = <span class="ty">Guid</span>.<span class="fn">Parse</span>(<span class="str">"11111111-..."</span>), Title = <span class="str">"C# fundamentals"</span>, <span class="cm">/* ... */</span> <span class="hi-green">OwnerId = seedOwner</span> },
+    <span class="kw">new</span> <span class="ty">Quiz</span> { Id = <span class="ty">Guid</span>.<span class="fn">Parse</span>(<span class="str">"22222222-..."</span>), Title = <span class="str">"HTTP basics"</span>,     <span class="cm">/* ... */</span> <span class="hi-green">OwnerId = seedOwner</span> },
+    <span class="kw">new</span> <span class="ty">Quiz</span> { Id = <span class="ty">Guid</span>.<span class="fn">Parse</span>(<span class="str">"33333333-..."</span>), Title = <span class="str">"REST principles"</span>, <span class="cm">/* ... */</span> <span class="hi-green">OwnerId = seedOwner</span> });</div>
+      <p>Model changed, so add a migration and apply it:</p>
+      <div class="code-block" data-lang="shell">
+dotnet ef migrations add AddQuizOwner
+dotnet ef database update</div>
+      <div class="callout warn">
+        <strong>"An operation was scaffolded that may result in the loss of data"</strong>
+        You'll see this message after <code>migrations add</code> — it's expected, not an error. It's warning about the <code>Down()</code> method (which <em>drops</em> the column if you ever roll back). The <code>Up()</code> we're applying only <em>adds</em> a column with a default, so it's safe. Carry on with <code>database update</code>.
+      </div>
+      <div class="callout check">
+        <strong>Verify</strong>
+        Open the generated migration: <code>Up()</code> has one <code>AddColumn&lt;string&gt;("OwnerId", ...)</code> plus three <code>UpdateData</code> calls stamping the seed owner. In SSMS, the <code>Quizzes</code> table now has an <code>OwnerId</code> column with that <code>...feed</code> value on all three rows.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 7 -->
+  <div class="step" id="s7">
+    <div class="step-header">
+      <div class="step-num">07</div>
+      <h2>Stamp the owner on create</h2>
+    </div>
+    <div class="step-body">
+      <p>When a signed-in user creates a quiz, the server reads their <code>oid</code> from the validated token and records it. The client never sends it — that would let anyone claim any identity.</p>
+      <p><strong>1.</strong> Widen the repository so <code>Add</code> takes an owner. Update the interface and the EF implementation:</p>
+      <div class="file-path"><strong>Repositories/</strong>IQuizRepository.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="ty">Task</span>&lt;<span class="ty">Quiz</span>&gt; <span class="fn">AddAsync</span>(<span class="kw">string</span> title, <span class="kw">string</span>? description<span class="hi-green">, <span class="kw">string</span> ownerId</span>);</div>
+      <div class="file-path"><strong>Repositories/</strong>EfQuizRepository.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">Quiz</span>&gt; <span class="fn">AddAsync</span>(<span class="kw">string</span> title, <span class="kw">string</span>? description<span class="hi-green">, <span class="kw">string</span> ownerId</span>)
+{
+    <span class="kw">var</span> quiz = <span class="kw">new</span> <span class="ty">Quiz</span> { Title = title, Description = description<span class="hi-green">, OwnerId = ownerId</span> };
+    _db.Quizzes.<span class="fn">Add</span>(quiz);
+    <span class="kw">await</span> _db.<span class="fn">SaveChangesAsync</span>();
+    <span class="kw">return</span> quiz;
+}</div>
+      <p><strong>2.</strong> In the controller, read the caller's <code>oid</code> and pass it in. <code>Microsoft.Identity.Web</code> gives you a tidy helper, <code>User.GetObjectId()</code>:</p>
+      <div class="file-path"><strong>Controllers/</strong>QuizzesController.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">using</span> Microsoft.Identity.Web;  <span class="cm">// for User.GetObjectId()</span>
+
+[<span class="ty">HttpPost</span>]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">ActionResult</span>&lt;<span class="ty">Quiz</span>&gt;&gt; <span class="fn">Create</span>(<span class="ty">CreateQuizDto</span> dto)
+{
+    <span class="hi-green"><span class="kw">var</span> ownerId = <span class="ty">User</span>.<span class="fn">GetObjectId</span>()!;  <span class="cm">// the oid claim — guaranteed present, the route is [Authorize]d</span></span>
+    <span class="kw">var</span> quiz = <span class="kw">await</span> _repo.<span class="fn">AddAsync</span>(dto.Title, dto.Description<span class="hi-green">, ownerId</span>);
+    <span class="kw">return</span> <span class="fn">CreatedAtAction</span>(<span class="kw">nameof</span>(GetById), <span class="kw">new</span> { id = quiz.Id }, quiz);
+}</div>
+      <div class="callout check">
+        <strong>Verify</strong>
+        Create a quiz in Swagger (while signed in). In the response — and in SSMS — its <code>OwnerId</code> matches the <code>oid</code> you saw in step 05. <em>You</em> own it.
+      </div>
+      <div class="callout warn">
+        <strong>Never trust the client for identity</strong>
+        Notice <code>OwnerId</code> is <em>not</em> on <code>CreateQuizDto</code> — the client can't send it. Identity comes only from the validated token. If you let the body set the owner, anyone could impersonate anyone. This is the cardinal rule of authorization.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 8 -->
+  <div class="step" id="s8">
+    <div class="step-header">
+      <div class="step-num">08</div>
+      <h2>Enforce owner-only update and delete</h2>
+    </div>
+    <div class="step-body">
+      <p>Now the rule: <strong>only the owner may update or delete</strong>. Both actions must <em>load the quiz first</em> (you can't check the owner of a row you haven't read), compare its <code>OwnerId</code> to the caller, and bail with <code>403 Forbidden</code> if they differ:</p>
+      <div class="file-path"><strong>Controllers/</strong>QuizzesController.cs</div>
+      <div class="code-block" data-lang="csharp">
+[<span class="ty">HttpPut</span>(<span class="str">"{id:guid}"</span>)]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; <span class="fn">Replace</span>(<span class="ty">Guid</span> id, <span class="ty">UpdateQuizDto</span> dto)
+{
+    <span class="kw">var</span> quiz = <span class="kw">await</span> _repo.<span class="fn">FindAsync</span>(id);
+    <span class="kw">if</span> (quiz <span class="kw">is null</span>) <span class="kw">return</span> <span class="fn">NotFound</span>();
+
+    <span class="hi"><span class="kw">if</span> (quiz.OwnerId != <span class="ty">User</span>.<span class="fn">GetObjectId</span>()) <span class="kw">return</span> <span class="fn">Forbid</span>();</span>
+
+    <span class="kw">await</span> _repo.<span class="fn">UpdateAsync</span>(id, dto.Title, dto.Description);
+    <span class="kw">return</span> <span class="fn">NoContent</span>();
+}
+
+[<span class="ty">HttpDelete</span>(<span class="str">"{id:guid}"</span>)]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">IActionResult</span>&gt; <span class="fn">Delete</span>(<span class="ty">Guid</span> id)
+{
+    <span class="kw">var</span> quiz = <span class="kw">await</span> _repo.<span class="fn">FindAsync</span>(id);
+    <span class="kw">if</span> (quiz <span class="kw">is null</span>) <span class="kw">return</span> <span class="fn">NotFound</span>();
+
+    <span class="hi"><span class="kw">if</span> (quiz.OwnerId != <span class="ty">User</span>.<span class="fn">GetObjectId</span>()) <span class="kw">return</span> <span class="fn">Forbid</span>();</span>
+
+    <span class="kw">await</span> _repo.<span class="fn">RemoveAsync</span>(id);
+    <span class="kw">return</span> <span class="fn">NoContent</span>();
+}</div>
+      <div class="callout why">
+        <strong>401 vs 403 — know the difference</strong>
+        <code>401 Unauthorized</code> means "I don't know who you are" (no/invalid token). <code>403 Forbidden</code> means "I know exactly who you are, and you still can't do this." Editing someone else's quiz is a 403 — you're authenticated, just not the owner. <code>Forbid()</code> returns 403; <code>Unauthorized()</code> returns 401.
+      </div>
+      <div class="callout why">
+        <strong>Why check inside the action, not with <code>[Authorize]</code>?</strong>
+        Attributes run <em>before</em> the action — before the quiz is loaded — so they can't see a specific row. Ownership is a fact about <em>one</em> row, so the check has to happen <em>after</em> you fetch it. That's why it's a plain <code>if</code> in the body, not another attribute on the method.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 9 -->
+  <div class="step" id="s9">
+    <div class="step-header">
+      <div class="step-num">09</div>
+      <h2>Test ownership &mdash; with one account</h2>
+    </div>
+    <div class="step-body">
+      <p>Here's the payoff of the seeded "house" owner from step 06: you can prove the whole rule with just <em>your</em> account. Signed in, run this in Swagger:</p>
+      <div class="code-block" data-lang="text">
+1.  POST /quizzes            {"title":"My quiz"}      &rarr; 201  (you own it)
+2.  GET  /quizzes                                     &rarr; 200  your quiz + 3 seeded
+3.  PUT  /quizzes/{your-id}   {"title":"Edited"}      &rarr; 204  allowed — you're the owner
+4.  PUT  /quizzes/11111111-1111-1111-1111-111111111111
+                              {"title":"Hijacked"}    &rarr; 403  blocked — owned by the house
+5.  DELETE /quizzes/11111111-1111-1111-1111-111111111111  &rarr; 403  blocked too</div>
+      <div class="callout check">
+        <strong>That's resource-level authorization</strong>
+        Same endpoint, same signed-in user — but the answer depends on <em>which row</em> you point it at. You can edit what you own (204) and you're refused on what you don't (403). The seeded quizzes act as "someone else's data" without needing a second person in the room.
+      </div>
+      <div class="callout why">
+        <strong>Read still lets everyone see everything</strong>
+        <code>GET</code> isn't owner-gated — any signed-in user sees all quizzes. Ownership here governs <em>mutation</em>, not visibility. Restricting reads to your own quizzes is a one-line filter — and the first homework option below.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 10 -->
+  <div class="step" id="s10">
+    <div class="step-header">
+      <div class="step-num">10</div>
+      <h2>Homework &mdash; take it further</h2>
+    </div>
+    <div class="step-body">
+      <p>You have an authenticated API with owner-enforced mutation. Extend it, and note your choices in a short <code>README.md</code> next to your code.</p>
+      <p><strong>Pick at least two:</strong></p>
+      <ul>
+        <li><strong>"My quizzes" only.</strong> Add <code>GET /quizzes/mine</code> that returns just the caller's quizzes — filter on <code>OwnerId == User.GetObjectId()</code> in a new repository method. Decide: should the existing <code>GET /quizzes</code> stay public-to-all-signed-in-users, or become owner-scoped?</li>
+        <li><strong>Owner-only questions.</strong> Adding a question to a quiz should also be owner-only. Apply the same load-then-check to <code>AddQuestion</code>.</li>
+        <li><strong>Extract a helper.</strong> The same owner check now appears in two actions. Pull it into one small private method (e.g. <code>bool IsOwner(Quiz quiz)</code>) so the rule is written once and reused — your first step toward not repeating yourself.</li>
+        <li><strong>Two-account test.</strong> Sign in as a second personal account and confirm you get <code>403</code> trying to edit a quiz the first account created — the "real" multi-user version of step 09.</li>
+        <li><strong>Real 403 body.</strong> <code>Forbid()</code> returns an empty 403. Return a small problem-details payload explaining <em>why</em> ("you are not the owner of this quiz") without leaking anything sensitive.</li>
+        <li><strong>Move config to user-secrets.</strong> Take the <code>AzureAd</code> client id out of <code>appsettings.json</code> and into <code>dotnet user-secrets</code> — the same secret-hygiene lesson as Lab 6's connection string.</li>
+      </ul>
+      <div class="callout warn">
+        <strong>The two rules to carry forward</strong>
+        1. Identity comes from the validated token, never the request body. 2. Resource ownership is checked <em>after</em> you load the resource — an attribute can't see a specific row, so the check lives inside the action.
+      </div>
+      <div class="callout check">
+        <strong>Stretch goal</strong>
+        Combine this with the Lab 6 scoring idea: let any signed-in user <em>attempt</em> anyone's quiz (<code>POST /quizzes/{id}/attempts</code>) and store the attempt under <em>their</em> <code>oid</code> — but only the quiz's owner can see the list of attempts. Two different ownership rules on two different resources, same pattern.
+      </div>
+    </div>
+  </div>
+
+  <div class="final">
+    <h2>That's the lab.</h2>
+    <p>Your API knows who's calling and enforces who's allowed. You validated Microsoft-issued tokens, signed in through Swagger with no front-end, stamped a stable <code>oid</code> as the owner, and enforced an owner-only rule on update and delete. Next week's front-end just reuses the same app registration and the same API — the hard part is already done.</p>
+  </div>
+
+</div>
+
+</body>
+</html>

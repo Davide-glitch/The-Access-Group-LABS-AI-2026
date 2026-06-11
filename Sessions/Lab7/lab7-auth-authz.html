@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 7 &mdash; Authentication &amp; Authorization</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.25);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --border: #e5e7eb;
+    --border-2: #d1d5db;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: radial-gradient(circle, #c7d2e8 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.45;
+  }
+
+  .deck { position: relative; width: 100vw; height: 100vh; }
+
+  .slide {
+    position: absolute; inset: 0;
+    padding: 5vh 7vw;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+    animation: slideIn .3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .slide.active { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin-bottom: 0.4em;
+  }
+  h2 {
+    font-size: clamp(1.7rem, 3.2vw, 2.7rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6em;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 1em;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  p, li {
+    font-size: clamp(.95rem, 1.4vw, 1.22rem);
+    line-height: 1.6;
+    color: #374151;
+    font-family: var(--sans);
+    font-weight: 400;
+  }
+  ul { padding-left: 0; list-style: none; }
+  li {
+    padding: .45em 0 .45em 1.4em;
+    position: relative;
+  }
+  li::before {
+    content: '›';
+    position: absolute; left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  strong { color: var(--fg); font-weight: 700; }
+
+  .accent   { color: var(--accent); }
+  .green    { color: var(--green); }
+  .orange   { color: var(--orange); }
+  .muted    { color: var(--muted-2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8vw; }
+
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    padding: 1.3em 1.4em;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: .5;
+  }
+  .card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: .5em;
+    font-family: var(--sans);
+  }
+  .card.green-card::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .card.green-card h4 { color: var(--green); }
+  .card.orange-card::before { background: linear-gradient(90deg, var(--orange), transparent); }
+  .card.orange-card h4 { color: var(--orange); }
+  .card p, .card li { font-size: .97rem; }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.2em 1.4em;
+    font-family: var(--mono);
+    font-size: clamp(.82rem, 1.15vw, .97rem);
+    line-height: 1.85;
+    overflow: auto;
+    position: relative;
+    white-space: pre;
+    color: #cdd5e0;
+  }
+  .code-block::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: 1em;
+    font-size: .68rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+
+  .flow {
+    display: flex; align-items: stretch;
+    gap: 0; margin-top: .8em;
+    flex-wrap: nowrap;
+  }
+  .flow-node {
+    flex: 1;
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: .9em .8em;
+    text-align: center;
+    position: relative;
+  }
+  .flow-node strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--accent);
+    margin-bottom: .3em;
+  }
+  .flow-node span { font-size: .78rem; color: var(--muted-2); }
+  .flow-arrow {
+    display: flex; align-items: center;
+    color: var(--muted);
+    font-size: 1.1rem;
+    padding: 0 .3em;
+    flex-shrink: 0;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: .22em .75em;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    font-family: var(--mono);
+    font-size: .78rem;
+    margin: .2em .2em .2em 0;
+  }
+  .tag.green-tag {
+    background: var(--green-dim);
+    color: var(--green);
+    border-color: rgba(5,150,105,0.25);
+  }
+  .tag.orange-tag {
+    background: var(--orange-dim);
+    color: var(--orange);
+    border-color: rgba(217,119,6,0.25);
+  }
+
+  .title-slide {
+    justify-content: flex-end;
+    padding-bottom: 10vh;
+  }
+  .title-slide h1 {
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    background: linear-gradient(135deg, #0f1117 20%, var(--accent) 60%, var(--green));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    max-width: 14ch;
+  }
+  .title-glow {
+    position: absolute;
+    top: 10%; left: -5%;
+    width: 60vw; height: 60vh;
+    background: radial-gradient(ellipse, rgba(37,99,235,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .title-glow-2 {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 50vw; height: 50vh;
+    background: radial-gradient(ellipse, rgba(5,150,105,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .lab-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .8rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: .4em .9em;
+    margin-bottom: 2em;
+  }
+  .lab-badge span { color: var(--accent); font-weight: 700; }
+
+  .steps { list-style: none; padding: 0; counter-reset: steps; }
+  .steps li {
+    counter-increment: steps;
+    padding: .55em 0 .55em 2.8em;
+    font-size: clamp(.9rem, 1.3vw, 1.1rem);
+  }
+  .steps li::before {
+    content: counter(steps, decimal-leading-zero);
+    position: absolute; left: 0;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 2em; height: 1.7em;
+    display: flex; align-items: center; justify-content: center;
+    top: .55em;
+  }
+
+  .timeline {
+    display: flex; gap: 0;
+    margin-top: 1.5em;
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .tl-item {
+    flex: 1;
+    padding: 1em 1.1em;
+    border-right: 1px solid var(--border-2);
+    position: relative;
+  }
+  .tl-item:last-child { border-right: none; }
+  .tl-item .tl-time {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: .35em;
+    letter-spacing: .05em;
+  }
+  .tl-item .tl-title {
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--fg);
+    margin-bottom: .2em;
+  }
+  .tl-item .tl-desc {
+    font-size: .82rem;
+    color: var(--muted-2);
+    line-height: 1.45;
+  }
+  .tl-item.highlight { background: var(--green-dim); }
+  .tl-item.highlight .tl-time { color: var(--green); }
+
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    transition: width .3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    box-shadow: 0 0 8px rgba(37,99,235,0.4);
+  }
+  .footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .65em 1.4em;
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: rgba(248,249,252,0.92);
+    backdrop-filter: blur(8px);
+    z-index: 50;
+  }
+  .footer .slide-num { color: var(--muted-2); }
+  .footer .slide-num em { color: var(--accent); font-style: normal; }
+  kbd {
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    color: var(--muted-2);
+    padding: 1px 5px; border-radius: 4px;
+    font-size: .78em; font-family: var(--mono);
+  }
+
+  .warn-li::before { color: var(--orange) !important; content: '!' !important; }
+
+  p code, li code, td code {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: .88em;
+  }
+
+  /* HTTP message diagram */
+  .http-msg {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.1em 1.3em;
+    font-family: var(--mono);
+    font-size: clamp(.82rem, 1.1vw, .96rem);
+    line-height: 1.7;
+    color: #cdd5e0;
+    position: relative;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .http-msg .start-line { color: #93b4ff; font-weight: 700; }
+  .http-msg .hdr-name   { color: #d6aaff; }
+  .http-msg .hdr-val    { color: #cdd5e0; }
+  .http-msg .body       { color: #95e09a; }
+  .http-msg .sep        { color: #4a5568; }
+
+  /* verb / status chips */
+  .verb {
+    display: inline-block;
+    padding: .15em .55em;
+    border-radius: 5px;
+    font-family: var(--mono);
+    font-size: .78rem;
+    font-weight: 700;
+    margin-right: .4em;
+  }
+  .verb-get    { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); }
+  .verb-post   { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(5,150,105,0.25); }
+  .verb-put    { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(217,119,6,0.25); }
+  .verb-delete { background: rgba(220,38,38,0.08); color: #dc2626; border: 1px solid rgba(220,38,38,0.25); }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .6em;
+    margin-top: .8em;
+  }
+  .status-box {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: .7em .8em;
+    text-align: center;
+  }
+  .status-box .code {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--accent);
+    display: block;
+  }
+  .status-box .name {
+    font-size: .78rem;
+    color: var(--muted-2);
+    margin-top: .15em;
+  }
+  .status-box.green .code  { color: var(--green); }
+  .status-box.orange .code { color: var(--orange); }
+  .status-box.red   .code  { color: #dc2626; }
+</style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="deck" id="deck">
+
+    <!-- 1 · TITLE -->
+    <section class="slide title-slide active">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 07</span></div>
+      <h1>Auth&nbsp;&amp; Authorization</h1>
+      <p class="muted" style="max-width:60ch; margin-top:.8em; font-size:1.1rem;">
+        Right now anyone can edit or delete any quiz. Today we sign users in with
+        their Microsoft account &mdash; through Swagger, no front-end &mdash; and enforce that
+        only the owner of a quiz can change it.
+      </p>
+      <p class="muted" style="margin-top:2.5em; font-size:.88rem;">
+        <kbd>&rarr;</kbd> next &nbsp; <kbd>&larr;</kbd> previous &nbsp; <kbd>F</kbd> fullscreen
+      </p>
+    </section>
+
+    <!-- 2 · AGENDA -->
+    <section class="slide">
+      <div class="eyebrow">Agenda</div>
+      <h2>What we'll cover today</h2>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-time">~20 min</div>
+          <div class="tl-title">Two questions</div>
+          <div class="tl-desc">Authn vs authz, tokens, the OAuth flow, claims</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">~10 min</div>
+          <div class="tl-title">Our approach</div>
+          <div class="tl-desc">Microsoft accounts, Swagger as the client, the API's job</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">~35 min</div>
+          <div class="tl-title">Sign in</div>
+          <div class="tl-desc">Wire auth, lock a route, get a token in Swagger</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">~40 min</div>
+          <div class="tl-title">Ownership</div>
+          <div class="tl-desc">OwnerId, stamp on create, owner-only edit &amp; delete</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">~15 min</div>
+          <div class="tl-title">Test &amp; wrap</div>
+          <div class="tl-desc">200 / 403 with one account, gotchas, homework</div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1.4em; font-size:.9rem;">
+        Roughly two hours. The blue blocks are concept; the green blocks are hands-on in the guide.
+      </p>
+    </section>
+
+    <!-- 3 · THE PROBLEM -->
+    <section class="slide">
+      <div class="eyebrow">Where we are</div>
+      <h2>The API trusts everyone</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Lab 6 left us with a persisted <strong>Quizzes API</strong>. It works &mdash; but
+          it has no idea <em>who</em> is calling.</p>
+          <p style="margin-top:.9em;">Any caller can <span class="verb verb-post">POST</span>
+          a quiz, <span class="verb verb-put">PUT</span> over anyone else's, or
+          <span class="verb verb-delete">DELETE</span> the lot. There's no concept of an
+          account, and no concept of <em>mine</em> vs <em>yours</em>.</p>
+          <p style="margin-top:.9em;" class="accent"><strong>A real API needs to know who
+          you are, and decide what you're allowed to touch.</strong></p>
+        </div>
+        <div class="http-msg">
+<span class="sep"># anyone, no sign-in required</span>
+<span class="start-line">DELETE /quizzes/1111...</span>
+<span class="sep">204 No Content</span>
+
+<span class="sep"># ...that was someone else's quiz.</span>
+<span class="sep"># nothing stopped them.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · TWO QUESTIONS -->
+    <section class="slide">
+      <div class="eyebrow">The core idea</div>
+      <h2>Two different questions</h2>
+      <div class="grid-2" style="gap:2.5vw;">
+        <div class="card">
+          <h4>Authentication &mdash; <em>who are you?</em></h4>
+          <p>Proving identity. The caller presents a credential (here, a token from
+          Microsoft) and the API verifies it. Either we know who you are, or we don't.</p>
+          <p style="margin-top:.6em;" class="muted">Fails &rarr; <strong>401 Unauthorized</strong></p>
+        </div>
+        <div class="card green-card">
+          <h4>Authorization &mdash; <em>are you allowed?</em></h4>
+          <p>Given that we know who you are, deciding whether you may do <em>this</em> to
+          <em>this thing</em>. Editing a quiz you own: yes. Someone else's: no.</p>
+          <p style="margin-top:.6em;" class="muted">Fails &rarr; <strong>403 Forbidden</strong></p>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1.3em; font-size:.92rem;">
+        Authentication is the cheap part today &mdash; Microsoft does the hard work.
+        <span class="green"><strong>Authorization, specifically ownership, is the real lesson.</strong></span>
+      </p>
+    </section>
+
+    <!-- 5 · TOKENS / BEARER -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · authentication</div>
+      <h2>A token is your proof of identity</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>APIs are stateless &mdash; there's no session cookie holding your login. Instead,
+          the caller attaches a <strong>token</strong> to every request, in the
+          <code>Authorization</code> header:</p>
+          <p style="margin-top:.6em;"><code>Authorization: Bearer &lt;token&gt;</code></p>
+          <p style="margin-top:.9em;">"Bearer" means <em>whoever holds it</em> is treated as
+          the user &mdash; like cash. The API checks the token is genuine and unexpired, and
+          reads who you are from it. No database lookup of a password, every request.</p>
+          <p style="margin-top:.9em;">The big question: where does that token come from, and
+          how do we trust it? That's <strong>OAuth</strong>.</p>
+        </div>
+        <div class="http-msg">
+<span class="start-line">GET /quizzes</span>
+<span class="hdr-name">Authorization:</span> <span class="hdr-val">Bearer eyJ0eXAi...9.eyJvaWQ...</span>
+<span class="sep">&#8595;</span>
+<span class="sep"># API: signature valid? issuer + audience</span>
+<span class="sep">#      ours? not expired? &rarr; yes</span>
+<span class="body">200 OK</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · OAUTH FLOW -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · authentication</div>
+      <h2>OAuth: don't handle passwords yourself</h2>
+      <div style="max-width:90ch;">
+        <p>We never see the user's password. We delegate sign-in to Microsoft and get back
+        a token. The browser does a redirect dance &mdash; the <strong>authorization code
+        flow</strong>:</p>
+      </div>
+      <div class="flow" style="margin-top:1.4em;">
+        <div class="flow-node"><strong>1 · Swagger</strong><span>redirects you to Microsoft to sign in</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>2 · Microsoft</strong><span>you log in &amp; consent; it returns a one-time code</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>3 · Swagger</strong><span>swaps the code (+ PKCE) for an access token</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>4 · API</strong><span>gets the token on each call &amp; validates it</span></div>
+      </div>
+      <div class="grid-2" style="gap:3vw; margin-top:1.4em;">
+        <div class="card">
+          <h4>PKCE &mdash; no secret needed</h4>
+          <p>Swagger runs in a browser and can't keep a secret. PKCE secures the code
+          exchange with a one-time proof instead. That's why this lab ships
+          <strong>no passwords or client secrets</strong> anywhere.</p>
+        </div>
+        <div class="card green-card">
+          <h4>OIDC adds identity</h4>
+          <p>OAuth was built for <em>authorization</em>; OpenID Connect layers <em>identity</em>
+          on top &mdash; a standard set of claims about <em>who</em> the user is. That's where
+          your user id comes from.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · WHAT'S IN A TOKEN / CLAIMS -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · authentication</div>
+      <h2>What's inside the token: claims</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Microsoft issues a <strong>JWT</strong> &mdash; a signed JSON object of
+          <strong>claims</strong> (facts about the user and the token). Anyone can read it;
+          only Microsoft can sign it, so it can't be forged.</p>
+          <p style="margin-top:.9em;">The API validates the signature against Microsoft's
+          public keys, checks the <code>aud</code> (audience) is us and it hasn't expired,
+          then exposes the claims as <code>User</code>.</p>
+          <div class="card green-card" style="margin-top:1em;">
+            <h4>The one claim that matters today: <code>oid</code></h4>
+            <p>The <strong>object id</strong> &mdash; stable and unique per user, and it never
+            changes. Unlike a name or email, it's safe to use as a key. This becomes the
+            <strong>owner</strong> of every quiz.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="json">
+<span class="cm">// decoded JWT payload (jwt.ms)</span>
+{
+  <span class="at">"aud"</span>: <span class="str">"5c2ab77a-...-327f600296e6"</span>,  <span class="cm">// us</span>
+  <span class="at">"iss"</span>: <span class="str">"https://login.microsoft..."</span>,
+  <span class="at">"oid"</span>: <span class="str">"a1b2c3d4-...."</span>,   <span class="cm">// &larr; the user</span>
+  <span class="at">"name"</span>: <span class="str">"Ada Lovelace"</span>,
+  <span class="at">"preferred_username"</span>: <span class="str">"ada@outlook.com"</span>,
+  <span class="at">"exp"</span>: <span class="nu">1718000000</span>          <span class="cm">// expiry</span>
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · WHY MICROSOFT ACCOUNTS -->
+    <section class="slide">
+      <div class="eyebrow">Our approach</div>
+      <h2>Microsoft personal accounts, via Swagger</h2>
+      <div class="grid-3">
+        <div class="card green-card">
+          <h4>Personal accounts <span class="tag green-tag">consumers</span></h4>
+          <p>Sign in with any <code>outlook.com</code>/<code>hotmail.com</code> account. No work
+          account, no corporate IT, no admin consent. Everyone can get one in a minute.</p>
+        </div>
+        <div class="card">
+          <h4>Swagger is the client</h4>
+          <p>No front-end yet &mdash; so Swagger's <strong>Authorize</strong> button runs the
+          sign-in flow and attaches the token to every call. Next week's UI reuses the same
+          setup.</p>
+        </div>
+        <div class="card">
+          <h4>One shared app registration</h4>
+          <p>Registering the app in Entra is a one-off, click-heavy job &mdash; done for you.
+          You'll get three values: <strong>client id</strong>, <strong>scope</strong>,
+          <strong>authority</strong>.</p>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1.3em; font-size:.92rem;">
+        Why personal accounts and not work? They keep the ownership lesson clean &mdash; no
+        directory roles or groups to distract, just a stable user id.
+      </p>
+    </section>
+
+    <!-- 9 · THE API'S JOB -->
+    <section class="slide">
+      <div class="eyebrow">Our approach</div>
+      <h2>The API just <em>validates</em> &mdash; that's it</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>For an API, authentication is surprisingly little code. We don't issue tokens,
+          store passwords, or manage users &mdash; Microsoft does all of that.</p>
+          <p style="margin-top:.9em;"><code>Microsoft.Identity.Web</code> adds one
+          authentication handler that checks every incoming token: signature, issuer,
+          audience, expiry. Valid &rarr; <code>User</code> is populated. Invalid or missing
+          &rarr; <strong>401</strong>.</p>
+          <p style="margin-top:.9em;">The config is three values in
+          <code>appsettings.json</code> &mdash; the same ones your instructor hands out.</p>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="cm">// Program.cs — the whole of authentication</span>
+builder.Services
+  .<span class="fn">AddAuthentication</span>(<span class="ty">JwtBearerDefaults</span>.AuthenticationScheme)
+  .<span class="fn">AddMicrosoftIdentityWebApi</span>(
+      builder.Configuration.<span class="fn">GetSection</span>(<span class="str">"AzureAd"</span>));
+
+<span class="cm">// appsettings.json</span>
+<span class="at">"AzureAd"</span>: {
+  <span class="at">"Instance"</span>: <span class="str">"https://login.microsoftonline.com/"</span>,
+  <span class="at">"TenantId"</span>: <span class="str">"consumers"</span>,
+  <span class="at">"ClientId"</span>: <span class="str">"&lt;client-id&gt;"</span>
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 · 401 vs 403 -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · the two failures</div>
+      <h2>401 vs 403 &mdash; learn the difference</h2>
+      <div class="grid-2" style="gap:2.5vw;">
+        <div class="card orange-card">
+          <h4>401 Unauthorized</h4>
+          <p><strong>"I don't know who you are."</strong> No token, an expired one, or one we
+          can't validate. The fix is to <em>authenticate</em> &mdash; sign in and try again.</p>
+        </div>
+        <div class="card orange-card">
+          <h4>403 Forbidden</h4>
+          <p><strong>"I know exactly who you are &mdash; and you still can't do this."</strong>
+          You're signed in, but it's not your resource. Signing in again won't help.</p>
+        </div>
+      </div>
+      <p style="margin-top:1.2em;">Editing someone else's quiz is the textbook
+      <strong class="orange">403</strong>: authenticated, not permitted. In code,
+      <code>Forbid()</code> returns 403; <code>Unauthorized()</code> returns 401. The
+      <code>[Authorize]</code> attribute produces the 401 for you automatically.</p>
+    </section>
+
+    <!-- 11 · TWO LEVELS OF AUTHZ -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · authorization</div>
+      <h2>Two levels of "are you allowed?"</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <div class="card" style="margin-bottom:1em;">
+            <h4>Endpoint-level &mdash; before the action</h4>
+            <p>"Can you call this <em>at all?</em>" Expressed with the
+            <code>[Authorize]</code> attribute (optionally roles/policies). It runs before the
+            action, and knows nothing about a specific row.</p>
+          </div>
+          <div class="card green-card">
+            <h4>Resource-level &mdash; after you load the row</h4>
+            <p>"Can you do this to <em>this object?</em>" Depends on the data &mdash; who owns
+            <em>this</em> quiz. You can't answer it with an attribute, because the quiz hasn't
+            been loaded yet.</p>
+          </div>
+        </div>
+        <div>
+          <p>Ownership is inherently resource-level. The check has to happen
+          <strong>inside the action, after fetching the quiz</strong>:</p>
+          <div class="code-block" data-lang="csharp" style="margin-top:.8em;">
+<span class="cm">// load first — only then can you check ownership</span>
+<span class="kw">var</span> quiz = <span class="kw">await</span> _repo.<span class="fn">FindAsync</span>(id);
+<span class="kw">if</span> (quiz <span class="kw">is null</span>) <span class="kw">return</span> <span class="fn">NotFound</span>();
+
+<span class="kw">if</span> (quiz.OwnerId != <span class="ty">User</span>.<span class="fn">GetObjectId</span>())
+    <span class="kw">return</span> <span class="fn">Forbid</span>();   <span class="cm">// 403</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 · OWNERSHIP MODEL -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · authorization</div>
+      <h2>The ownership model</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Three small moves turn "anyone can edit anything" into "only the owner can":</p>
+          <ul style="margin-top:.6em;">
+            <li>Add an <code>OwnerId</code> column to <code>Quiz</code></li>
+            <li>On <strong>create</strong>, stamp it with the caller's <code>oid</code></li>
+            <li>On <strong>update/delete</strong>, compare <code>OwnerId</code> to the caller &mdash;
+            <code>403</code> if they differ</li>
+          </ul>
+          <p style="margin-top:.9em;"><span class="verb verb-get">GET</span> stays open to any
+          signed-in user &mdash; ownership governs <em>mutation</em>, not visibility.</p>
+        </div>
+        <div class="flow" style="flex-direction:column; gap:.55em;">
+          <div class="flow-node"><strong>POST /quizzes</strong><span>OwnerId = your oid (from the token)</span></div>
+          <div class="flow-arrow" style="justify-content:center;">&#8595;</div>
+          <div class="flow-node"><strong>PUT / DELETE</strong><span>quiz.OwnerId == your oid?</span></div>
+          <div class="flow-arrow" style="justify-content:center;">&#8595;</div>
+          <div class="flow-node"><strong>yes &rarr; 204 &nbsp;·&nbsp; no &rarr; 403</strong><span>only the owner mutates</span></div>
+        </div>
+      </div>
+      <p class="accent" style="margin-top:1.4em; font-size:1.08rem;"><strong>Question for the room: that "caller's <code>oid</code>" &mdash; where does it come from, and could a client just send whatever owner id it wants? &rarr;</strong></p>
+    </section>
+
+    <!-- 13 · NEVER TRUST THE CLIENT -->
+    <section class="slide">
+      <div class="eyebrow">The cardinal rule</div>
+      <h2>Identity comes from the token, never the body</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>The owner is read from the <strong>validated token</strong> (<code>oid</code>) &mdash;
+          server-side, where the client can't touch it.</p>
+          <p style="margin-top:.9em;">It is <strong>never</strong> a field on the request body.
+          If the client could send <code>ownerId</code>, anyone could claim to be anyone &mdash;
+          the whole model collapses.</p>
+          <p style="margin-top:.9em;" class="accent"><strong>Notice <code>OwnerId</code> is not
+          on <code>CreateQuizDto</code>. That's deliberate.</strong></p>
+        </div>
+        <div class="code-block" data-lang="csharp">
+[<span class="ty">HttpPost</span>]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;...&gt; <span class="fn">Create</span>(<span class="ty">CreateQuizDto</span> dto)
+{
+    <span class="cm">// from the token, not the body</span>
+    <span class="kw">var</span> ownerId = <span class="ty">User</span>.<span class="fn">GetObjectId</span>()!;
+
+    <span class="kw">var</span> quiz = <span class="kw">await</span> _repo.<span class="fn">AddAsync</span>(
+        dto.Title, dto.Description, ownerId);
+    ...
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 · THE HOUSE OWNER TRICK -->
+    <section class="slide">
+      <div class="eyebrow">A neat testing trick</div>
+      <h2>Seeded quizzes belong to "the house"</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>The three demo quizzes are seeded with a <strong>fixed owner id</strong> that no
+          real person has &mdash; <code>...feed</code>.</p>
+          <p style="margin-top:.9em;">So you can prove the whole rule with <strong>just your own
+          account</strong>: a quiz you create is yours (edit &rarr; <code>204</code>), and a
+          seeded quiz is someone else's (edit &rarr; <code>403</code>).</p>
+          <p style="margin-top:.9em;" class="green"><strong>The 403 is success, not a bug.</strong>
+          No second account, no partner needed.</p>
+        </div>
+        <div class="status-grid" style="grid-template-columns: repeat(2, 1fr);">
+          <div class="status-box green"><span class="code">204</span><span class="name">PUT your own quiz</span></div>
+          <div class="status-box red"><span class="code">403</span><span class="name">PUT a seeded quiz</span></div>
+          <div class="status-box green"><span class="code">204</span><span class="name">DELETE your own</span></div>
+          <div class="status-box red"><span class="code">403</span><span class="name">DELETE a seeded one</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15 · LAB ROADMAP -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on</div>
+      <h2>The lab, step by step</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p class="accent" style="font-family:var(--mono); font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; margin-bottom:.4em;">Part A · Authentication</p>
+          <ol class="steps" style="counter-reset: steps -1;">
+            <li>Open the baseline, collect the three values</li>
+            <li>Add the package + <code>AzureAd</code> config</li>
+            <li>Wire auth into the pipeline</li>
+            <li>Lock a route &mdash; prove the <strong>401</strong></li>
+            <li>Configure Swagger sign-in</li>
+            <li>Get a token &rarr; <strong>200</strong>, inspect <code>oid</code></li>
+          </ol>
+        </div>
+        <div>
+          <p class="green" style="font-family:var(--mono); font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; margin-bottom:.4em;">Part B · Authorization</p>
+          <ol class="steps" style="counter-reset: steps 5;">
+            <li>Add <code>OwnerId</code> + a migration</li>
+            <li>Stamp the owner on create</li>
+            <li>Enforce owner-only update &amp; delete</li>
+            <li>Test ownership with one account</li>
+            <li>Homework &mdash; take it further</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16 · LOCK A ROUTE -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · brief</div>
+      <h2>Lock the controller, watch it reject you</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>One attribute on the controller requires a valid token for every action. Then
+          two middleware lines turn it on &mdash; in the right order.</p>
+          <div class="card orange-card" style="margin-top:1em;">
+            <h4>Order matters</h4>
+            <p><code>UseAuthentication</code> (who are you) must come <em>before</em>
+            <code>UseAuthorization</code> (are you allowed). Reverse them and you get baffling
+            401s. The classic mistake.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="csharp">
+[<span class="ty">ApiController</span>]
+[<span class="ty">Route</span>(<span class="str">"quizzes"</span>)]
+[<span class="ty">Authorize</span>]            <span class="cm">// &larr; every action needs a token</span>
+<span class="kw">public class</span> <span class="ty">QuizzesController</span> ...
+
+<span class="cm">// Program.cs, after Swagger, before MapControllers</span>
+app.<span class="fn">UseAuthentication</span>();  <span class="cm">// 1. who are you?</span>
+app.<span class="fn">UseAuthorization</span>();   <span class="cm">// 2. are you allowed?</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 17 · SWAGGER SIGN-IN -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · brief</div>
+      <h2>Get a token in Swagger</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>We describe the OAuth flow to Swagger and point its <strong>Authorize</strong>
+          button at our app. This snippet is fiddly &mdash; the guide gives it to you to
+          <strong>copy</strong>, not memorize.</p>
+          <p style="margin-top:.9em;">Then: click <strong>Authorize</strong>, sign in with a
+          personal account, consent once. Swagger holds the token and attaches it to every
+          call. The 401 becomes a <span class="green"><strong>200</strong></span>.</p>
+          <p style="margin-top:.9em;">Paste the token into <code>jwt.ms</code> to see your
+          <code>oid</code> &mdash; the value Part B builds on.</p>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="cm">// UseSwaggerUI — the Authorize button</span>
+app.<span class="fn">UseSwaggerUI</span>(o =&gt;
+{
+    o.<span class="fn">OAuthClientId</span>(clientId);
+    o.<span class="fn">OAuthUsePkce</span>();        <span class="cm">// no secret</span>
+    o.<span class="fn">OAuthScopeSeparator</span>(<span class="str">" "</span>);
+});
+        </div>
+      </div>
+    </section>
+
+    <!-- 18 · OWNERID + MIGRATION -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · brief</div>
+      <h2>Add the owner, then a migration</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>A new column on <code>Quiz</code>, and the seed rows get the "house" owner. The
+          model changed &mdash; so it's the same migration loop from Lab 6.</p>
+          <div class="card green-card" style="margin-top:1em;">
+            <h4>Expect a scary-looking warning</h4>
+            <p>"An operation was scaffolded that may result in the loss of data" &mdash; that's
+            about <code>Down()</code> dropping the column on rollback. The <code>Up()</code> we
+            apply only <em>adds</em> a column. It's safe; carry on.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="cm">// Models/Quiz.cs</span>
+<span class="kw">public</span> <span class="kw">string</span> OwnerId { <span class="kw">get; set;</span> } = <span class="str">""</span>;
+
+<span class="cm">// seed owner — no real user has this</span>
+<span class="kw">const string</span> seedOwner =
+    <span class="str">"00000000-0000-0000-0000-00000000feed"</span>;
+
+<span class="cm"># then the loop</span>
+dotnet ef migrations add AddQuizOwner
+dotnet ef database update
+        </div>
+      </div>
+    </section>
+
+    <!-- 19 · GOTCHAS -->
+    <section class="slide">
+      <div class="eyebrow">Watch out</div>
+      <h2>Things people get wrong on day one</h2>
+      <ul>
+        <li class="warn-li"><strong>Middleware order</strong> &mdash; <code>UseAuthorization</code> before <code>UseAuthentication</code>. Auth must come first, both before <code>MapControllers</code>.</li>
+        <li class="warn-li"><strong>Changing the port</strong> &mdash; the sign-in redirect URI is registered for <code>localhost:5023</code> exactly. A different port breaks the login popup.</li>
+        <li class="warn-li"><strong>Trusting the client for identity</strong> &mdash; reading <code>ownerId</code> from the request body instead of <code>User.GetObjectId()</code>. Never.</li>
+        <li class="warn-li"><strong>Checking ownership with an attribute</strong> &mdash; you can't; the row isn't loaded yet. The check lives inside the action, after the fetch.</li>
+        <li class="warn-li"><strong>Confusing 401 and 403</strong> &mdash; "not signed in" vs "signed in but not yours". They mean different things; return the right one.</li>
+        <li class="warn-li"><strong>Forgetting <code>[Authorize]</code></strong> &mdash; an endpoint with no attribute is wide open, even with auth configured.</li>
+      </ul>
+    </section>
+
+    <!-- 20 · RECAP -->
+    <section class="slide">
+      <div class="eyebrow">Wrap-up</div>
+      <h2>What you can do now</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>You took an API that trusted everyone and gave it a sense of identity and
+          ownership &mdash; with very little code on our side.</p>
+          <ul style="margin-top:.8em;">
+            <li>Validate Microsoft-issued tokens in an API</li>
+            <li>Sign in through Swagger with no front-end</li>
+            <li>Read a stable user id (<code>oid</code>) from claims</li>
+            <li>Tell endpoint-level from resource-level authorization</li>
+            <li>Enforce owner-only mutation &mdash; the 403 path</li>
+          </ul>
+        </div>
+        <div class="card green-card">
+          <h4>Where this goes next</h4>
+          <p>Next week's front-end reuses this exact app registration and API &mdash; the auth
+          work is already done. Beyond that: roles and admin overrides, "my quizzes" filters,
+          per-user attempts and scores.</p>
+          <p style="margin-top:.6em;">The two rules carry everywhere: <strong>identity from the
+          token</strong>, and <strong>check ownership after you load the resource</strong>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 21 · QUESTIONS -->
+    <section class="slide title-slide">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 07</span></div>
+      <h1>Questions?</h1>
+      <p class="muted" style="max-width:54ch; margin-top:.8em; font-size:1.1rem;">
+        Open the guide and let's build it. Start from the provided
+        <code>Lab7/Code</code> baseline &mdash; Step 00, and grab the three values first.
+      </p>
+    </section>
+
+  </div>
+
+  <div class="footer">
+    <span>AC Labs 2026 &middot; Lab 07 &mdash; Authentication &amp; Authorization</span>
+    <span class="slide-num"><em id="cur">1</em> / <span id="total">21</span></span>
+    <span><kbd>&rarr;</kbd> <kbd>&larr;</kbd> <kbd>F</kbd></span>
+  </div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  let i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    document.getElementById('cur').textContent = i + 1;
+    document.getElementById('progress').style.width = ((i + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight','PageDown',' '].includes(e.key)) { show(i+1); e.preventDefault(); }
+    else if (['ArrowLeft','PageUp'].includes(e.key)) { show(i-1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(total - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.footer')) return;
+    show(i + 1);
+  });
+
+  show(0);
+</script>
+</body>
+</html>
