@@ -1,0 +1,1271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 9 &mdash; Step-by-step guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.2);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --green-border: rgba(5,150,105,0.2);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --orange-border: rgba(217,119,6,0.2);
+    --cyan: #0891b2;
+    --cyan-dim: rgba(8,145,178,0.08);
+    --cyan-border: rgba(8,145,178,0.2);
+    --border: #e5e7eb;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --display: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  .hero {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .3em .8em;
+    margin-bottom: 1.5rem;
+  }
+  .hero-badge span { color: var(--accent); font-weight: 700; }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: .8rem;
+    color: var(--fg);
+  }
+  .hero p {
+    font-size: 1.1rem;
+    color: var(--muted-2);
+    max-width: 62ch;
+  }
+
+  .overview {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 3rem;
+  }
+  .overview h3 {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--fg);
+  }
+  .step-index {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .4rem;
+  }
+  .step-index a {
+    display: flex; align-items: center; gap: .6em;
+    font-size: .88rem;
+    color: var(--muted-2);
+    text-decoration: none;
+    padding: .3em .5em;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+  }
+  .step-index a:hover { background: var(--bg-3); color: var(--accent); }
+  .step-index a .num {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 1.9em; height: 1.6em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .partlabel {
+    font-family: var(--mono);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 2.5rem 0 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--accent-border);
+  }
+
+  .step {
+    margin-bottom: 3.5rem;
+    scroll-margin-top: 2rem;
+  }
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  .step-num {
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 8px;
+    min-width: 2.4em; height: 2.4em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: .15em;
+  }
+  .step h2 {
+    font-family: var(--display);
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--fg);
+  }
+  .step p, .step li {
+    font-size: .97rem;
+    line-height: 1.7;
+    color: #374151;
+  }
+  .step ul, .step ol {
+    padding-left: 1.4rem;
+    margin: .6rem 0;
+  }
+  .step li { margin-bottom: .3em; }
+  .step p + p { margin-top: .7em; }
+  .step-body { padding-left: 3.4rem; }
+
+  .callout {
+    border-radius: 10px;
+    padding: 1em 1.2em;
+    margin: 1.1em 0;
+    font-size: .93rem;
+    line-height: 1.6;
+    border-left: 3px solid;
+  }
+  .callout strong { display: block; margin-bottom: .2em; font-size: .88rem; text-transform: uppercase; letter-spacing: .06em; }
+  .callout.why   { background: var(--accent-dim); border-color: var(--accent); color: #1e3a8a; }
+  .callout.why strong { color: var(--accent); }
+  .callout.check { background: var(--green-dim); border-color: var(--green); color: #065f46; }
+  .callout.check strong { color: var(--green); }
+  .callout.warn  { background: var(--orange-dim); border-color: var(--orange); color: #78350f; }
+  .callout.warn strong { color: var(--orange); }
+  .callout.tip   { background: var(--cyan-dim); border-color: var(--cyan); color: #164e63; }
+  .callout.tip strong { color: var(--cyan); }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.1em 1.3em;
+    font-family: var(--mono);
+    font-size: .84rem;
+    line-height: 1.85;
+    overflow-x: auto;
+    white-space: pre;
+    color: #cdd5e0;
+    position: relative;
+  }
+  .code-block[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: .9em;
+    font-size: .65rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .code-block.sm { font-size: .78rem; }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+  .tg  { color: #f0a3c4; }
+  .hi  { background: rgba(37,99,235,0.25); border-radius: 3px; padding: 0 2px; }
+  .hi-green { background: rgba(5,150,105,0.2); border-radius: 3px; padding: 0 2px; }
+
+  .diff-add, .diff-rm, .diff-ctx { display: block; }
+  .diff-add { color: #95e09a; }
+  .diff-rm  { color: #ff9db5; opacity: .7; }
+  .diff-ctx { color: #cdd5e0; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .87em;
+    background: var(--bg-3);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .step-divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 3rem 0;
+  }
+
+  .final {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 2rem;
+    margin-top: 4rem;
+    text-align: center;
+  }
+  .final h2 {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: .5rem;
+  }
+  .final p { color: var(--muted-2); font-size: .97rem; }
+
+  .file-path {
+    font-family: var(--mono);
+    font-size: .78rem;
+    background: var(--bg-3);
+    border: 1px dashed var(--border);
+    color: var(--muted-2);
+    padding: .3em .7em;
+    border-radius: 6px;
+    display: inline-block;
+    margin: .3em 0 .8em;
+  }
+  .file-path strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-badge">AC Labs 2026 &nbsp;&middot;&nbsp; <span>Lab 09</span> &nbsp;&middot;&nbsp; Self-paced guide</div>
+    <h1>AI-generated quizzes &amp; real grading</h1>
+    <p>QuizMaster can already fetch from the API, and build and run a quiz in the browser. Today it grows up in three directions at once: you'll <strong>sign in for real</strong> with your Microsoft account instead of pasting a token from Swagger, the backend can <strong>write a quiz for you</strong> from a block of pasted text, and the <strong>server</strong> &mdash; not the browser &mdash; now decides what's correct. By the end you'll sign in once, paste a paragraph, watch a quiz appear, take it, and get a real score.</p>
+  </div>
+
+  <div class="overview">
+    <h3>Steps in this guide</h3>
+    <div class="step-index">
+      <a href="#s0"><span class="num">00</span> Run the baseline</a>
+      <a href="#s1"><span class="num">01</span> Tour the starter</a>
+      <a href="#s2"><span class="num">02</span> Sign in for real, with MSAL</a>
+      <a href="#s2b"><span class="num">02b</span> A dedicated sign-in page</a>
+      <a href="#s3"><span class="num">03</span> Mark a correct answer</a>
+      <a href="#s4"><span class="num">04</span> Send options to the API</a>
+      <a href="#s5"><span class="num">05</span> Build QuizGenerator</a>
+      <a href="#s6"><span class="num">06</span> PlayQuiz: fetch &amp; answer</a>
+      <a href="#s7"><span class="num">07</span> PlayQuiz: submit &amp; grade</a>
+      <a href="#s8"><span class="num">08</span> Wire it up in App</a>
+      <a href="#s9"><span class="num">09</span> Homework</a>
+    </div>
+  </div>
+
+  <div class="partlabel">Part A &middot; Setup &mdash; run the frontend, tour the starter</div>
+
+  <!-- STEP 0 -->
+  <div class="step" id="s0">
+    <div class="step-header">
+      <div class="step-num">00</div>
+      <h2>Run the baseline</h2>
+    </div>
+    <div class="step-body">
+      <p>The API is already running for you at <code>http://localhost:5023</code> &mdash; see <code>INSTRUCTOR-SETUP.md</code> if you ever need to start it yourself. All you need to run is the frontend.</p>
+      <p><strong>Your copy of <code>Lab9/Code</code>:</strong></p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># from inside Lab9/Code</span>
+<span class="kw">cd</span> Lab9/Code
+npm install
+npm run dev
+<span class="cm"># → http://localhost:5173</span></div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 1 -->
+  <div class="step" id="s1">
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <h2>Tour the starter</h2>
+    </div>
+    <div class="step-body">
+      <p>Unlike Lab 8, <code>Code/</code> here is <strong>not</strong> a bare scaffold &mdash; it's your finished Lab 8 app. Open it and you'll recognize everything: <code>ExistingQuizzes</code>, <code>QuizBuilder</code>, <code>QuizRunner</code>, <code>ServerQuizDetail</code>. That's deliberate. The brief for today is "go deeper," not "start over" &mdash; the backend endpoints you'll use are already a frontend's HTTP call away, you're about to make those calls.</p>
+      <p>Two things changed under the hood before you opened it, both in <code>src/types/quiz.ts</code>:</p>
+      <ol>
+        <li><code>Answer</code> (the local, in-browser shape) now has an <code>isCorrect: boolean</code>. The backend needs to know which option is right to grade anything, so the frontend's local state needs a place to put that.</li>
+        <li>Four new shapes arrived ahead of you, the same way <code>ApiQuiz</code> arrived ahead of you in Lab 8: <code>PlayQuiz</code> / <code>PlayQuestion</code> / <code>PlayOption</code> (what <code>GET /quizzes/{id}/play</code> returns &mdash; no <code>isCorrect</code> anywhere) and <code>QuizResult</code> / <code>QuestionResult</code> / <code>ResultOption</code> (what <code>POST /quizzes/{id}/evaluate</code> returns &mdash; <code>isCorrect</code> is back, because revealing it is the whole point of that response).</li>
+      </ol>
+      <p>Run <code>npm run build</code> right now and watch it fail:</p>
+      <div class="code-block sm" data-lang="text">
+src/components/QuizBuilder.tsx(43,18): error TS2345: ...
+Property 'isCorrect' is missing in type '{ id: ...; text: string; }'
+but required in type 'Answer'.</div>
+      <p>That's <code>addAnswer</code> in <code>QuizBuilder.tsx</code> &mdash; it builds a new answer with only <code>id</code> and <code>text</code>, and <code>Answer</code> now also requires <code>isCorrect</code>. <code>npm run dev</code> doesn't care (Vite's dev server uses esbuild, which strips types without fully checking them), so the app still runs. The build is the canary. Step 03 fixes it for real, not just enough to compile.</p>
+    </div>
+  </div>
+
+  <div class="partlabel">Part B &middot; Sign in for real, with MSAL</div>
+
+  <!-- STEP 2 -->
+  <div class="step" id="s2">
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <h2>Sign in for real, with MSAL</h2>
+    </div>
+    <div class="step-body">
+      <p>Every lab since 7 has had the same awkward step: open Swagger, click <strong>Authorize</strong>, sign in there, copy the token it hands you, paste it into a plain <code>&lt;input type="password"&gt;</code> in the React app. It worked, but it was never the real thing &mdash; a production app doesn't ask its users to visit a different website and copy-paste a string to prove who they are. Today that goes away. <code>QuizBuilder</code> keeps its "Access token" field for one more step; by the end of this one, it's gone for good, replaced by an actual <strong>Sign in with Microsoft</strong> button.</p>
+      <p>The library doing the work is <strong>MSAL</strong> &mdash; the Microsoft Authentication Library. <code>@azure/msal-browser</code> handles the actual OAuth2/OIDC dance with Microsoft's identity platform (popups, redirects, token caching, silent renewal); <code>@azure/msal-react</code> is a thin wrapper that exposes all of that as hooks (<code>useMsal</code>, <code>useIsAuthenticated</code>) so components can read sign-in state the same way they read any other piece of React state. Both are already in <code>package.json</code> &mdash; <code>npm install</code> in step 00 already pulled them in.</p>
+      <p><strong>The pieces, before you write any code:</strong></p>
+      <ul>
+        <li><strong>One app registration, two roles.</strong> The backend has trusted an Entra ID app registration since Lab 7 (<code>Lab9/api/appsettings.json</code>'s <code>AzureAd</code> section &mdash; Client ID <code>5c2ab77a-5cfb-4b0e-aa3c-327f600296e6</code>, tenant <code>consumers</code>). The API validates tokens <em>against</em> that registration; today, the React app signs users in and asks Microsoft <em>for</em> a token under that same registration. One registration, one Client ID, two different roles.</li>
+        <li><strong>A second redirect URI.</strong> That app registration's "Single-page application" platform currently only lists Swagger's redirect URI (<code>http://localhost:5023/swagger/oauth2-redirect.html</code>). MSAL in the React app runs on Vite's dev server instead &mdash; <code>http://localhost:5173</code> &mdash; so it needs to be added as a second redirect URI on the <em>same</em> platform entry. Your instructor should have already done this; if sign-in fails with <code>AADSTS50011</code> ("redirect URI ... does not match"), that's the first thing to check.</li>
+        <li><strong><code>src/auth/authConfig.ts</code> is already there</strong>, given upfront the same way <code>types/quiz.ts</code> was in Lab 8 &mdash; there's no lesson in typing out a Client ID by hand. Open it and read it: it exports <code>msalConfig</code> (the <code>PublicClientApplication</code>'s settings &mdash; Client ID, authority, redirect URI, where to cache tokens) and <code>loginRequest</code> (the one scope this app ever asks for, the API's own <code>access_as_user</code>).</li>
+      </ul>
+      <p><strong>First, wire <code>MsalProvider</code> around the app.</strong> Open <code>src/main.tsx</code>:</p>
+      <div class="file-path"><strong>src/</strong>main.tsx</div>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx"> import React from 'react';</span>
+<span class="diff-ctx"> import ReactDOM from 'react-dom/client';</span>
+<span class="diff-add">+import { PublicClientApplication, EventType } from '@azure/msal-browser';</span>
+<span class="diff-add">+import { MsalProvider } from '@azure/msal-react';</span>
+<span class="diff-ctx"> import App from './App';</span>
+<span class="diff-add">+import { msalConfig } from './auth/authConfig';</span>
+<span class="diff-ctx"> import './index.css';</span>
+<span class="diff-ctx"> </span>
+<span class="diff-rm">-ReactDOM.createRoot(document.getElementById('root')!).render(</span>
+<span class="diff-rm">-  &lt;React.StrictMode&gt;</span>
+<span class="diff-rm">-    &lt;App /&gt;</span>
+<span class="diff-rm">-  &lt;/React.StrictMode&gt;,</span>
+<span class="diff-rm">-);</span>
+<span class="diff-add">+const msalInstance = new PublicClientApplication(msalConfig);</span>
+<span class="diff-add">+</span>
+<span class="diff-add">+// The first time someone signs in, make their account "active" — without</span>
+<span class="diff-add">+// this, acquireTokenSilent later has an account in the list but nothing</span>
+<span class="diff-add">+// marked as *the* one to use.</span>
+<span class="diff-add">+msalInstance.addEventCallback((event) => {</span>
+<span class="diff-add">+  if (event.eventType === EventType.LOGIN_SUCCESS && event.payload) {</span>
+<span class="diff-add">+    const account = (event.payload as { account?: import('@azure/msal-browser').AccountInfo }).account;</span>
+<span class="diff-add">+    if (account) msalInstance.setActiveAccount(account);</span>
+<span class="diff-add">+  }</span>
+<span class="diff-add">+});</span>
+<span class="diff-add">+</span>
+<span class="diff-add">+// MSAL needs to finish initializing before anything renders.</span>
+<span class="diff-add">+msalInstance.initialize().then(() => {</span>
+<span class="diff-add">+  ReactDOM.createRoot(document.getElementById('root')!).render(</span>
+<span class="diff-add">+    &lt;React.StrictMode&gt;</span>
+<span class="diff-add">+      &lt;MsalProvider instance={msalInstance}&gt;</span>
+<span class="diff-add">+        &lt;App /&gt;</span>
+<span class="diff-add">+      &lt;/MsalProvider&gt;</span>
+<span class="diff-add">+    &lt;/React.StrictMode&gt;,</span>
+<span class="diff-add">+  );</span>
+<span class="diff-add">+});</span></div>
+      <p><code>MsalProvider</code> is what makes <code>useMsal()</code> and <code>useIsAuthenticated()</code> work anywhere underneath it &mdash; same idea as any other React context provider, just one Microsoft wrote for you.</p>
+      <p><strong>Second, replace the pasted token with real sign-in in <code>App.tsx</code>.</strong> Three changes.</p>
+      <p>Imports:</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx"> import { useState } from 'react';</span>
+<span class="diff-add">+import { useMsal, useIsAuthenticated } from '@azure/msal-react';</span>
+<span class="diff-add">+import { InteractionRequiredAuthError } from '@azure/msal-browser';</span>
+<span class="diff-ctx"> import ExistingQuizzes from './components/ExistingQuizzes';</span>
+<span class="diff-ctx"> import QuizBuilder from './components/QuizBuilder';</span>
+<span class="diff-ctx"> import ServerQuizDetail from './components/ServerQuizDetail';</span>
+<span class="diff-ctx"> import QuizCard from './components/QuizCard';</span>
+<span class="diff-add">+import { loginRequest } from './auth/authConfig';</span></div>
+      <p>The <code>token</code> state and <code>setTokenPersisted</code> go away, replaced by MSAL's own hooks plus one function that turns "I need a token right now" into an actual token:</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx"> function App() {</span>
+<span class="diff-ctx">   const [quizzes, setQuizzes] = useState&lt;Quiz[]&gt;([]);</span>
+<span class="diff-ctx">   const [view, setView] = useState&lt;View&gt;({ name: 'home' });</span>
+<span class="diff-ctx">   const [serverQuiz, setServerQuiz] = useState&lt;ApiQuiz | null&gt;(null);</span>
+<span class="diff-rm">-  // Bearer token for the authorized write calls, kept here (and in</span>
+<span class="diff-rm">-  // localStorage) so it survives navigation and reloads instead of being</span>
+<span class="diff-rm">-  // re-pasted every time. A real sign-in flow replaces this later.</span>
+<span class="diff-rm">-  const [token, setToken] = useState(() => localStorage.getItem('apiToken') ?? '');</span>
+<span class="diff-ctx">   const [serverReloadKey, setServerReloadKey] = useState(0);</span>
+<span class="diff-ctx"> </span>
+<span class="diff-rm">-  function setTokenPersisted(value: string) {</span>
+<span class="diff-rm">-    setToken(value);</span>
+<span class="diff-rm">-    localStorage.setItem('apiToken', value);</span>
+<span class="diff-rm">-  }</span>
+<span class="diff-add">+  const { instance, accounts } = useMsal();</span>
+<span class="diff-add">+  const isAuthenticated = useIsAuthenticated();</span>
+<span class="diff-add">+</span>
+<span class="diff-add">+  // Fetches a fresh bearer token right before each authorized call, instead</span>
+<span class="diff-add">+  // of storing one. acquireTokenSilent returns a cached token (renewing it</span>
+<span class="diff-add">+  // quietly if it's expired but the sign-in is still good) and only throws</span>
+<span class="diff-add">+  // InteractionRequiredAuthError when it genuinely needs the user's</span>
+<span class="diff-add">+  // attention — first sign-in, revoked consent — which is the one case</span>
+<span class="diff-add">+  // worth a popup for.</span>
+<span class="diff-add">+  async function getAccessToken(): Promise&lt;string&gt; {</span>
+<span class="diff-add">+    const account = accounts[0];</span>
+<span class="diff-add">+    if (!account) throw new Error('Sign in with Microsoft first.');</span>
+<span class="diff-add">+    try {</span>
+<span class="diff-add">+      const result = await instance.acquireTokenSilent({ ...loginRequest, account });</span>
+<span class="diff-add">+      return result.accessToken;</span>
+<span class="diff-add">+    } catch (err) {</span>
+<span class="diff-add">+      if (err instanceof InteractionRequiredAuthError) {</span>
+<span class="diff-add">+        const result = await instance.acquireTokenPopup(loginRequest);</span>
+<span class="diff-add">+        return result.accessToken;</span>
+<span class="diff-add">+      }</span>
+<span class="diff-add">+      throw err;</span>
+<span class="diff-add">+    }</span>
+<span class="diff-add">+  }</span></div>
+      <p>And the header gets an actual sign-in/sign-out control:</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx">       &lt;header className="app-header"&gt;</span>
+<span class="diff-rm">-        &lt;h1 onClick={() => setView({ name: 'home' })} style={{ cursor: 'pointer' }}&gt;</span>
+<span class="diff-rm">-          QuizMaster</span>
+<span class="diff-rm">-        &lt;/h1&gt;</span>
+<span class="diff-rm">-        &lt;p&gt;Fetch quizzes from the API, then build and run your own.&lt;/p&gt;</span>
+<span class="diff-add">+        &lt;div&gt;</span>
+<span class="diff-add">+          &lt;h1 onClick={() => setView({ name: 'home' })} style={{ cursor: 'pointer' }}&gt;</span>
+<span class="diff-add">+            QuizMaster</span>
+<span class="diff-add">+          &lt;/h1&gt;</span>
+<span class="diff-add">+          &lt;p&gt;Fetch quizzes from the API, then build and run your own.&lt;/p&gt;</span>
+<span class="diff-add">+        &lt;/div&gt;</span>
+<span class="diff-add">+        &lt;div className="auth-status"&gt;</span>
+<span class="diff-add">+          {isAuthenticated ? (</span>
+<span class="diff-add">+            &lt;&gt;</span>
+<span class="diff-add">+              &lt;span className="field-hint"&gt;Signed in as {accounts[0]?.username}&lt;/span&gt;</span>
+<span class="diff-add">+              &lt;button className="btn-ghost" onClick={() => instance.logoutPopup()}&gt;</span>
+<span class="diff-add">+                Sign out</span>
+<span class="diff-add">+              &lt;/button&gt;</span>
+<span class="diff-add">+            &lt;/&gt;</span>
+<span class="diff-add">+          ) : (</span>
+<span class="diff-add">+            &lt;button className="btn-secondary" onClick={() => instance.loginPopup(loginRequest)}&gt;</span>
+<span class="diff-add">+              Sign in with Microsoft</span>
+<span class="diff-add">+            &lt;/button&gt;</span>
+<span class="diff-add">+          )}</span>
+<span class="diff-add">+        &lt;/div&gt;</span>
+<span class="diff-ctx">       &lt;/header&gt;</span></div>
+      <p>Add the matching layout to <code>src/index.css</code>:</p>
+      <div class="code-block" data-lang="css">
+<span class="tg">.app-header</span> {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+<span class="tg">.auth-status</span> {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding-top: .3rem;
+}
+
+<span class="tg">.auth-status .field-hint</span> {
+  margin: 0;
+  white-space: nowrap;
+}</div>
+      <p><strong>Third, swap <code>QuizBuilder</code>'s props</strong> &mdash; it's still expecting <code>token</code> / <code>onTokenChange</code>, which no longer exist in <code>App</code>:</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx">         &lt;QuizBuilder</span>
+<span class="diff-ctx">           onCreate={addQuiz}</span>
+<span class="diff-ctx">           onCancel={() => setView({ name: 'home' })}</span>
+<span class="diff-ctx">           onSaved={refreshServerQuizzes}</span>
+<span class="diff-rm">-          token={token}</span>
+<span class="diff-rm">-          onTokenChange={setTokenPersisted}</span>
+<span class="diff-add">+          isAuthenticated={isAuthenticated}</span>
+<span class="diff-add">+          getToken={getAccessToken}</span>
+<span class="diff-ctx">         /&gt;</span></div>
+      <p><strong>Now <code>QuizBuilder.tsx</code> itself.</strong> Swap the prop types:</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx"> type QuizBuilderProps = {</span>
+<span class="diff-ctx">   onCreate: (quiz: Quiz) => void;</span>
+<span class="diff-ctx">   onCancel: () => void;</span>
+<span class="diff-ctx">   onSaved: () => void;</span>
+<span class="diff-rm">-  token: string;</span>
+<span class="diff-rm">-  onTokenChange: (token: string) => void;</span>
+<span class="diff-add">+  isAuthenticated: boolean;</span>
+<span class="diff-add">+  getToken: () => Promise&lt;string&gt;;</span>
+<span class="diff-ctx"> };</span></div>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-rm">-function QuizBuilder({ onCreate, onCancel, onSaved, token, onTokenChange }: QuizBuilderProps) {</span>
+<span class="diff-add">+function QuizBuilder({ onCreate, onCancel, onSaved, isAuthenticated, getToken }: QuizBuilderProps) {</span></div>
+      <p>Swap the pre-flight check and fetch a token right before using it:</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-rm">-    if (token.trim() === '') {</span>
+<span class="diff-rm">-      setWarning('Paste an access token to save to the server.');</span>
+<span class="diff-rm">-      return;</span>
+<span class="diff-rm">-    }</span>
+<span class="diff-add">+    if (!isAuthenticated) {</span>
+<span class="diff-add">+      setWarning('Sign in with Microsoft to save to the server.');</span>
+<span class="diff-add">+      return;</span>
+<span class="diff-add">+    }</span>
+<span class="diff-ctx"> </span>
+<span class="diff-ctx">     setWarning(null);</span>
+<span class="diff-ctx">     setSaving(true);</span>
+<span class="diff-ctx">     try {</span>
+<span class="diff-rm">-      const created = await createQuiz(token.trim(), { title: cleanTitle });</span>
+<span class="diff-add">+      const token = await getToken();</span>
+<span class="diff-add">+      const created = await createQuiz(token, { title: cleanTitle });</span>
+<span class="diff-ctx">       for (const q of questions) {</span>
+<span class="diff-rm">-        await apiAddQuestion(token.trim(), created.id, q.text.trim());</span>
+<span class="diff-add">+        await apiAddQuestion(token, created.id, q.text.trim());</span>
+<span class="diff-ctx">       }</span></div>
+      <p>And finally, delete the "Access token" <code>&lt;label&gt;</code> block from the JSX entirely &mdash; no more input, just a one-line status:</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-rm">-      &lt;label className="field"&gt;</span>
+<span class="diff-rm">-        &lt;span&gt;Access token&lt;/span&gt;</span>
+<span class="diff-rm">-        &lt;input</span>
+<span class="diff-rm">-          type="password"</span>
+<span class="diff-rm">-          value={token}</span>
+<span class="diff-rm">-          placeholder="Bearer token for saving to the server"</span>
+<span class="diff-rm">-          onChange={(e) => onTokenChange(e.target.value)}</span>
+<span class="diff-rm">-        /&gt;</span>
+<span class="diff-rm">-        &lt;small className="field-hint"&gt;</span>
+<span class="diff-rm">-          Saving POSTs to the API, which requires sign-in. Get a token from{' '}</span>
+<span class="diff-rm">-          &lt;code&gt;http://localhost:5023/swagger&lt;/code&gt; → &lt;strong&gt;Authorize&lt;/strong&gt;.</span>
+<span class="diff-rm">-          Answer options stay local — the backend only stores question text.</span>
+<span class="diff-rm">-        &lt;/small&gt;</span>
+<span class="diff-rm">-      &lt;/label&gt;</span>
+<span class="diff-add">+      &lt;p className="field-hint"&gt;</span>
+<span class="diff-add">+        {isAuthenticated</span>
+<span class="diff-add">+          ? 'Signed in — saving will POST this quiz to the API.'</span>
+<span class="diff-add">+          : 'Sign in with Microsoft before saving.'}</span>
+<span class="diff-add">+      &lt;/p&gt;</span></div>
+      <p>Run <code>npm run build</code> &mdash; clean. Run the app: you should see a <strong>Sign in with Microsoft</strong> button next to the title. Click it, a popup opens, sign in with your Microsoft account, the popup closes, and the header now reads "Signed in as ...". Build a quiz and save it &mdash; same as before, except nothing was ever pasted.</p>
+      <div class="callout why">
+        <strong>Why a popup, not a redirect?</strong>
+        MSAL supports both <code>loginRedirect</code> (navigates the whole page away to Microsoft and back) and <code>loginPopup</code> (opens a second window, the main app never unmounts). For a small app like this one, a popup keeps your component state intact across sign-in &mdash; no need to persist <code>quizzes</code> or <code>view</code> through a full-page navigation. Production SPAs use both patterns; popups are the easier one to reason about for a lab.
+      </div>
+      <div class="callout why">
+        <strong>Why acquireTokenSilent, not just store the token?</strong>
+        Access tokens expire &mdash; usually within an hour. A token you stored at sign-in time would quietly start failing later in the session with a 401, for a reason that has nothing to do with anything you did. <code>acquireTokenSilent</code> re-checks (and silently renews) on every call, so the token you send is always the freshest one MSAL has, no matter how long you've had the tab open.
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2b -->
+  <div class="step" id="s2b">
+    <div class="step-header">
+      <div class="step-num">02b</div>
+      <h2>Promote sign-in to its own page (the gate)</h2>
+    </div>
+    <div class="step-body">
+      <p>Right now sign-in is a button in the corner, and the whole app is usable signed out &mdash; you can browse quizzes, open the builder, and only get stopped at the moment you try to save. That's fine for a demo, but most real apps put a <strong>front door</strong> first: a dedicated sign-in page that the rest of the app lives behind. Let's do that &mdash; a hard <em>gate</em>. Until you're signed in, the only thing you can see is the sign-in page; once you are, the app appears in its place.</p>
+      <p>The nice part: we already have everything we need. <code>useIsAuthenticated()</code> from step 02 is the only signal the gate needs &mdash; no new library, no router.</p>
+      <p><strong>First, a tiny presentational component for the page.</strong> It owns one job: start a sign-in and show "opening…/error". It never touches a token.</p>
+      <div class="file-path"><strong>src/components/</strong>AuthPage.tsx</div>
+      <div class="code-block sm" data-lang="tsx">
+<span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> { useMsal } <span class="kw">from</span> <span class="str">'@azure/msal-react'</span>;
+<span class="kw">import</span> { loginRequest } <span class="kw">from</span> <span class="str">'../auth/authConfig'</span>;
+
+<span class="kw">function</span> <span class="fn">AuthPage</span>() {
+  <span class="kw">const</span> { instance } = <span class="fn">useMsal</span>();
+  <span class="kw">const</span> [signingIn, setSigningIn] = <span class="fn">useState</span>(<span class="kw">false</span>);
+  <span class="kw">const</span> [error, setError] = <span class="fn">useState</span>&lt;<span class="ty">string</span> | <span class="kw">null</span>&gt;(<span class="kw">null</span>);
+
+  <span class="kw">async function</span> <span class="fn">signIn</span>() {
+    <span class="fn">setError</span>(<span class="kw">null</span>);
+    <span class="fn">setSigningIn</span>(<span class="kw">true</span>);
+    <span class="kw">try</span> {
+      <span class="kw">await</span> instance.<span class="fn">loginPopup</span>(loginRequest);
+      <span class="cm">// No manual navigation — App's useIsAuthenticated flips and</span>
+      <span class="cm">// swaps this page out for the app on its own.</span>
+    } <span class="kw">catch</span> (err) {
+      <span class="fn">setError</span>((err <span class="kw">as</span> <span class="ty">Error</span>).message);
+    } <span class="kw">finally</span> {
+      <span class="fn">setSigningIn</span>(<span class="kw">false</span>);
+    }
+  }
+
+  <span class="kw">return</span> (
+    &lt;<span class="tg">div</span> className=<span class="str">"auth-page"</span>&gt;
+      &lt;<span class="tg">div</span> className=<span class="str">"auth-card"</span>&gt;
+        &lt;<span class="tg">h1</span> className=<span class="str">"auth-brand"</span>&gt;QuizMaster&lt;/<span class="tg">h1</span>&gt;
+        &lt;<span class="tg">p</span> className=<span class="str">"auth-tagline"</span>&gt;Sign in to build, generate, and play quizzes.&lt;/<span class="tg">p</span>&gt;
+        &lt;<span class="tg">button</span> className=<span class="str">"btn-primary auth-signin"</span> onClick={signIn} disabled={signingIn}&gt;
+          {signingIn ? <span class="str">'Opening sign-in…'</span> : <span class="str">'Sign in with Microsoft'</span>}
+        &lt;/<span class="tg">button</span>&gt;
+        {error &amp;&amp; &lt;<span class="tg">p</span> className=<span class="str">"status-message error"</span>&gt;{error}&lt;/<span class="tg">p</span>&gt;}
+      &lt;/<span class="tg">div</span>&gt;
+    &lt;/<span class="tg">div</span>&gt;
+  );
+}
+
+<span class="kw">export default</span> AuthPage;</div>
+      <p><strong>Second, gate the app in <code>App.tsx</code>.</strong> Import the page, then add a single early return above the existing <code>return</code> &mdash; before any of the header/main JSX. Because we now render <code>AuthPage</code> whenever nobody's signed in, the old sign-in button in the header is dead code; collapse the ternary down to just the signed-in status.</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx"> import QuizCard from './components/QuizCard';</span>
+<span class="diff-add">+import AuthPage from './components/AuthPage';</span>
+<span class="diff-ctx"> import { loginRequest } from './auth/authConfig';</span></div>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx">   const isAuthenticated = useIsAuthenticated();</span>
+<span class="diff-ctx"> </span>
+<span class="diff-add">+  // The hard gate: until MSAL reports an account, the whole app is</span>
+<span class="diff-add">+  // replaced by the sign-in page. Past this line, the user is always</span>
+<span class="diff-add">+  // signed in — the rest of App can assume it.</span>
+<span class="diff-add">+  if (!isAuthenticated) {</span>
+<span class="diff-add">+    return &lt;AuthPage /&gt;;</span>
+<span class="diff-add">+  }</span>
+<span class="diff-ctx"> </span>
+<span class="diff-ctx">   return (</span></div>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx">         &lt;div className="auth-status"&gt;</span>
+<span class="diff-rm">-          {isAuthenticated ? (</span>
+<span class="diff-rm">-            &lt;&gt;</span>
+<span class="diff-ctx">               &lt;span className="field-hint"&gt;Signed in as {accounts[0]?.username}&lt;/span&gt;</span>
+<span class="diff-ctx">               &lt;button className="btn-ghost" onClick={() => instance.logoutPopup()}&gt;</span>
+<span class="diff-ctx">                 Sign out</span>
+<span class="diff-ctx">               &lt;/button&gt;</span>
+<span class="diff-rm">-            &lt;/&gt;</span>
+<span class="diff-rm">-          ) : (</span>
+<span class="diff-rm">-            &lt;button className="btn-secondary" onClick={() => instance.loginPopup(loginRequest)}&gt;</span>
+<span class="diff-rm">-              Sign in with Microsoft</span>
+<span class="diff-rm">-            &lt;/button&gt;</span>
+<span class="diff-rm">-          )}</span>
+<span class="diff-ctx">         &lt;/div&gt;</span></div>
+      <p>Finally, a few styles for the centered card. Add to <code>src/index.css</code> &mdash; it reuses <code>.btn-primary</code> and <code>.status-message</code> from earlier, so this is just the layout:</p>
+      <div class="code-block sm" data-lang="css">
+<span class="tg">.auth-page</span> {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+}
+<span class="tg">.auth-card</span> {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+  padding: 2.4rem 2.2rem; max-width: 380px; width: 100%; text-align: center;
+  box-shadow: 0 10px 30px rgba(15, 17, 23, .06);
+}
+<span class="tg">.auth-brand</span> { font-size: 1.8rem; margin: 0 0 .4rem; }
+<span class="tg">.auth-tagline</span> { color: #6b7280; margin: 0 0 1.6rem; font-size: .95rem; }
+<span class="tg">.auth-signin</span> { width: 100%; padding: .65rem 1rem; font-weight: 600; }</div>
+      <p>Run the app: instead of the quiz list, you land on the sign-in page. Click <strong>Sign in with Microsoft</strong>, finish the popup, and the app appears &mdash; no link to click, no redirect. That "appearing" <em>is</em> the navigation: React re-renders, <code>isAuthenticated</code> is now <code>true</code>, the early return stops firing.</p>
+      <div class="callout warn">
+        <strong>Sign-in popup blank, or "redirect_uri is not valid"?</strong>
+        If the popup opens blank / stuck on <code>about:blank</code>, give it a second &mdash; it usually resolves to a Microsoft error: <em>"The provided value for the input parameter <code>redirect_uri</code> is not valid"</em> (a.k.a. <code>AADSTS50011</code>). That's not a bug in your code: it means <code>http://localhost:5173</code> hasn't been registered as a redirect URI on the app registration, under the <strong>Single-page application</strong> platform (not "Web"). Your instructor adds this once for the whole cohort &mdash; flag it to them if you hit it. Also confirm the app is actually served on <code>http://localhost:5173</code> (if Vite reports a different port because 5173 was taken, the registered URI won't match).
+      </div>
+      <div class="callout why">
+        <strong>Separation of concerns &mdash; why three pieces, not one.</strong>
+        <code>AuthPage</code> knows how to <em>start</em> a sign-in. <code>App</code> decides <em>whether</em> to show the app or the door, from one boolean. <code>getAccessToken</code> knows how to <em>get a token</em> when a write needs one. None of them reaches into the others' job. That's why this whole gate is a four-line change instead of a rewrite: each piece has one reason to change, and you can swap one (popup → redirect, gate → real router) without touching the rest. A component that fetched data, decided routing, <em>and</em> managed tokens would be three concerns tangled together &mdash; hard to test, harder to change.
+      </div>
+      <div class="callout why">
+        <strong>"Navigation" without a router.</strong>
+        We never call <code>history.push</code> or define a route. The gate is just conditional rendering driven by state &mdash; the same pattern as the <code>view</code> switch inside <code>App</code>. When an app grows past a handful of screens (real URLs, the back button, deep links), that's when you reach for a router like React Router. Until then, a boolean and an early return is the simpler tool, and it's worth seeing that "going to a page" is, underneath, just rendering different JSX.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <div class="partlabel">Part C &middot; Give grading something to grade</div>
+
+  <!-- STEP 3 -->
+  <div class="step" id="s3">
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <h2>Mark a correct answer in QuizBuilder</h2>
+    </div>
+    <div class="step-body">
+      <p>Open <code>src/components/QuizBuilder.tsx</code>. Two changes.</p>
+      <p><strong>First, give every new answer a default.</strong> In <code>addAnswer</code>:</p>
+      <div class="file-path"><strong>src/components/</strong>QuizBuilder.tsx</div>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx">  function addAnswer(qid: string) {</span>
+<span class="diff-ctx">    setQuestions((qs) =&gt;</span>
+<span class="diff-ctx">      qs.map((q) =&gt;</span>
+<span class="diff-ctx">        q.id === qid</span>
+<span class="diff-rm">-          ? { ...q, answers: [...q.answers, { id: newId(), text: '' }] }</span>
+<span class="diff-add">+          ? { ...q, answers: [...q.answers, { id: newId(), text: '', isCorrect: false }] }</span>
+<span class="diff-ctx">           : q,</span>
+<span class="diff-ctx">      ),</span>
+<span class="diff-ctx">    );</span>
+<span class="diff-ctx">  }</span></div>
+      <p>That alone fixes the build. But right now there's no way to ever set <code>isCorrect</code> to <code>true</code> &mdash; you need a way to mark <em>one</em> answer per question as correct, radio-button style (picking a new one unpicks the old one, in the same question only).</p>
+      <p><strong>Second, add a <code>markCorrect</code> function:</strong></p>
+      <div class="code-block" data-lang="tsx">
+<span class="kw">function</span> <span class="fn">markCorrect</span>(qid: <span class="ty">string</span>, aid: <span class="ty">string</span>) {
+  <span class="fn">setQuestions</span>((qs) =&gt;
+    qs.<span class="fn">map</span>((q) =&gt;
+      q.id === qid
+        ? { ...q, answers: q.answers.<span class="fn">map</span>((a) =&gt; ({ ...a, isCorrect: a.id === aid })) }
+        : q,
+    ),
+  );
+}</div>
+      <p>Read that map closely: every answer in the matching question gets a <em>new</em> object where <code>isCorrect</code> is <code>a.id === aid</code> &mdash; <code>true</code> for the one you clicked, <code>false</code> for every other one in that question. One line, no separate "clear the old one first" step, because you're not mutating anything &mdash; you're computing the whole next state in one pass. Answers in <em>other</em> questions are untouched (the outer <code>q.id === qid</code> check skips them entirely).</p>
+      <p><strong>Now wire it into the JSX.</strong> Inside the <code>q.answers.map(...)</code> block, add a radio input before each answer's text input:</p>
+      <div class="code-block" data-lang="tsx">
+&lt;<span class="tg">div</span> className=<span class="str">"answer-row"</span> key={a.id}&gt;
+  &lt;<span class="tg">label</span> className=<span class="str">"answer-correct-toggle"</span> title=<span class="str">"Mark as the correct answer"</span>&gt;
+    &lt;<span class="tg">input</span>
+      type=<span class="str">"radio"</span>
+      name={<span class="str">`correct-${q.id}`</span>}
+      checked={a.isCorrect}
+      onChange={() =&gt; <span class="fn">markCorrect</span>(q.id, a.id)}
+    /&gt;
+  &lt;/<span class="tg">label</span>&gt;
+  &lt;<span class="tg">input</span>
+    type=<span class="str">"text"</span>
+    value={a.text}
+    placeholder=<span class="str">"Answer option"</span>
+    onChange={(e) =&gt; <span class="fn">updateAnswerText</span>(q.id, a.id, e.target.value)}
+  /&gt;
+  &lt;<span class="tg">button</span> className=<span class="str">"btn-ghost"</span> onClick={() =&gt; <span class="fn">removeAnswer</span>(q.id, a.id)}&gt;
+    ✕
+  &lt;/<span class="tg">button</span>&gt;
+&lt;/<span class="tg">div</span>&gt;</div>
+      <div class="callout why">
+        <strong>Why the name and the checked prop matter</strong>
+        <code>name={`correct-${q.id}`}</code> is what makes the radios behave like a group <em>per question</em> &mdash; without it, every radio on the whole page would compete with every other one. <code>checked={a.isCorrect}</code> makes the input a controlled component: React, not the browser, decides which radio looks selected, because it's reading straight off your state.
+      </div>
+      <div class="callout check">
+        <strong>Verify</strong>
+        Run <code>npm run build</code> again &mdash; clean. Run the app, add a question, add two answers, click a radio. Only one stays checked.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 4 -->
+  <div class="step" id="s4">
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <h2>Send answer options to the API</h2>
+    </div>
+    <div class="step-body">
+      <p>Marking a correct answer locally doesn't help if it never leaves the browser. Two files.</p>
+      <p><code>src/api/quizzes.ts</code> &mdash; <code>addQuestion</code> currently only sends <code>text</code>. Give it an <code>options</code> parameter and put it in the request body:</p>
+      <div class="file-path"><strong>src/api/</strong>quizzes.ts</div>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx"> export async function addQuestion(</span>
+<span class="diff-ctx">   token: string,</span>
+<span class="diff-ctx">   quizId: string,</span>
+<span class="diff-ctx">   text: string,</span>
+<span class="diff-add">+  options: { text: string; isCorrect: boolean }[] = [],</span>
+<span class="diff-ctx"> ): Promise&lt;ApiQuiz&gt; {</span>
+<span class="diff-ctx">   const res = await fetch(`${API_BASE}/quizzes/${quizId}/questions`, {</span>
+<span class="diff-ctx">     method: 'POST',</span>
+<span class="diff-ctx">     headers: authHeaders(token),</span>
+<span class="diff-rm">-    body: JSON.stringify({ text }),</span>
+<span class="diff-add">+    body: JSON.stringify({ text, options }),</span>
+<span class="diff-ctx">   });</span>
+<span class="diff-ctx">   if (!res.ok) throw new Error(`Add question failed: HTTP ${res.status}`);</span>
+<span class="diff-ctx">   return res.json();</span>
+<span class="diff-ctx"> }</span></div>
+      <p>The default <code>= []</code> matters: it keeps <code>addQuestion(token, quizId, text)</code> valid everywhere you already call it without options (a text-only question is still a legal thing to create &mdash; the backend treats zero options as "nothing to grade," not an error).</p>
+      <p><code>src/components/QuizBuilder.tsx</code> &mdash; <code>save()</code> needs to do two things it doesn't yet: validate that each question's options make sense, and actually send them.</p>
+      <p>The backend (<code>QuizzesController.AddQuestion</code>) rejects a question whose options aren't either <em>none</em> or <em>2-or-more-with-exactly-one-correct</em>. Check that client-side first, before the network round trip, so a mistake gets a specific message instead of a generic "HTTP 400":</p>
+      <div class="code-block" data-lang="tsx">
+<span class="kw">for</span> (<span class="kw">const</span> q <span class="kw">of</span> questions) {
+  <span class="kw">if</span> (q.answers.length === <span class="nu">0</span>) <span class="kw">continue</span>; <span class="cm">// text-only question — always fine</span>
+  <span class="kw">if</span> (q.answers.length &lt; <span class="nu">2</span>) {
+    <span class="fn">setWarning</span>(<span class="str">`"${q.text || '(untitled question)'}" needs at least two answer options, or none at all.`</span>);
+    <span class="kw">return</span>;
+  }
+  <span class="kw">if</span> (q.answers.<span class="fn">filter</span>((a) =&gt; a.isCorrect).length !== <span class="nu">1</span>) {
+    <span class="fn">setWarning</span>(<span class="str">`Mark exactly one correct answer for "${q.text || '(untitled question)'}".`</span>);
+    <span class="kw">return</span>;
+  }
+}</div>
+      <p>Drop that in right after the existing title/question-count/text-length checks, before the <code>isAuthenticated</code> check. Then update the loop that actually saves:</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx">   const token = await getToken();</span>
+<span class="diff-ctx">   const created = await createQuiz(token, { title: cleanTitle });</span>
+<span class="diff-ctx">   for (const q of questions) {</span>
+<span class="diff-rm">-    await apiAddQuestion(token, created.id, q.text.trim());</span>
+<span class="diff-add">+    const options = q.answers.map((a) => ({ text: a.text.trim(), isCorrect: a.isCorrect }));</span>
+<span class="diff-add">+    await apiAddQuestion(token, created.id, q.text.trim(), options);</span>
+<span class="diff-ctx">   }</span></div>
+      <div class="callout check">
+        <strong>Verify</strong>
+        Build a quiz with a multiple-choice question, save it, then check <code>GET /quizzes</code> in Swagger &mdash; your options, including <code>isCorrect</code>, are in the response. That data was always meant to be there; until this step it just never left the browser.
+      </div>
+    </div>
+  </div>
+
+  <div class="partlabel">Part D &middot; Generate quizzes with AI</div>
+
+  <!-- STEP 5 -->
+  <div class="step" id="s5">
+    <div class="step-header">
+      <div class="step-num">05</div>
+      <h2>Build QuizGenerator</h2>
+    </div>
+    <div class="step-body">
+      <p>A new screen: paste in source text, the backend asks a model to write the quiz.</p>
+      <p><strong>Add the API call</strong> in <code>src/api/quizzes.ts</code>:</p>
+      <div class="code-block" data-lang="tsx">
+<span class="kw">export async function</span> <span class="fn">generateQuiz</span>(
+  token: <span class="ty">string</span>,
+  input: { sourceText: <span class="ty">string</span>; title?: <span class="ty">string</span>; questionCount?: <span class="ty">number</span> },
+): <span class="ty">Promise</span>&lt;<span class="ty">ApiQuiz</span>&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`${API_BASE}/quizzes/generate`</span>, {
+    method: <span class="str">'POST'</span>,
+    headers: <span class="fn">authHeaders</span>(token),
+    body: <span class="ty">JSON</span>.<span class="fn">stringify</span>(input),
+  });
+  <span class="kw">if</span> (!res.ok) {
+    <span class="kw">if</span> (res.status === <span class="nu">502</span>) <span class="kw">throw new</span> <span class="ty">Error</span>(<span class="str">'Quiz generation failed — check the API logs / GITHUB_TOKEN.'</span>);
+    <span class="kw">throw new</span> <span class="ty">Error</span>(<span class="str">`Generate quiz failed: HTTP ${res.status}`</span>);
+  }
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}</div>
+      <p>The 502 special-case matters: a 502 here means the <em>model's response</em> misbehaved (a bad token, the model returning something the backend couldn't parse into a quiz), which is a different failure than a normal bad request &mdash; worth a clearer message than "HTTP 502" for your future self.</p>
+      <p><strong>Create <code>src/components/QuizGenerator.tsx</code>:</strong></p>
+      <div class="file-path"><strong>src/components/</strong>QuizGenerator.tsx</div>
+      <div class="code-block sm" data-lang="tsx">
+<span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> { generateQuiz } <span class="kw">from</span> <span class="str">'../api/quizzes'</span>;
+<span class="kw">import type</span> { ApiQuiz } <span class="kw">from</span> <span class="str">'../types/quiz'</span>;
+
+<span class="kw">type</span> <span class="ty">QuizGeneratorProps</span> = {
+  <span class="cm">// Same pattern as QuizBuilder after step 02 — no token to paste,</span>
+  <span class="cm">// isAuthenticated for the pre-flight check, getToken for a fresh</span>
+  <span class="cm">// bearer token from MSAL right before the POST.</span>
+  isAuthenticated: <span class="ty">boolean</span>;
+  getToken: () =&gt; <span class="ty">Promise</span>&lt;<span class="ty">string</span>&gt;;
+  onGenerated: (quiz: <span class="ty">ApiQuiz</span>) =&gt; <span class="ty">void</span>;
+  onCancel: () =&gt; <span class="ty">void</span>;
+};
+
+<span class="kw">function</span> <span class="fn">QuizGenerator</span>({ isAuthenticated, getToken, onGenerated, onCancel }: <span class="ty">QuizGeneratorProps</span>) {
+  <span class="kw">const</span> [sourceText, setSourceText] = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="kw">const</span> [title, setTitle] = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="kw">const</span> [questionCount, setQuestionCount] = <span class="fn">useState</span>(<span class="nu">5</span>);
+  <span class="kw">const</span> [generating, setGenerating] = <span class="fn">useState</span>(<span class="kw">false</span>);
+  <span class="kw">const</span> [warning, setWarning] = <span class="fn">useState</span>&lt;<span class="ty">string</span> | <span class="kw">null</span>&gt;(<span class="kw">null</span>);
+
+  <span class="kw">async function</span> <span class="fn">generate</span>() {
+    <span class="kw">const</span> cleanText = sourceText.<span class="fn">trim</span>();
+    <span class="kw">if</span> (cleanText.length &lt; <span class="nu">200</span>) {
+      <span class="fn">setWarning</span>(<span class="str">`Paste at least 200 characters of source text (currently ${cleanText.length}).`</span>);
+      <span class="kw">return</span>;
+    }
+    <span class="kw">if</span> (!isAuthenticated) {
+      <span class="fn">setWarning</span>(<span class="str">'Sign in with Microsoft — generating saves a quiz, so it needs sign-in like Create quiz does.'</span>);
+      <span class="kw">return</span>;
+    }
+
+    <span class="fn">setWarning</span>(<span class="kw">null</span>);
+    <span class="fn">setGenerating</span>(<span class="kw">true</span>);
+    <span class="kw">try</span> {
+      <span class="kw">const</span> token = <span class="kw">await</span> <span class="fn">getToken</span>();
+      <span class="kw">const</span> quiz = <span class="kw">await</span> <span class="fn">generateQuiz</span>(token, {
+        sourceText: cleanText,
+        title: title.<span class="fn">trim</span>() || <span class="kw">undefined</span>,
+        questionCount,
+      });
+      <span class="fn">onGenerated</span>(quiz);
+    } <span class="kw">catch</span> (err) {
+      <span class="fn">setWarning</span>((err <span class="kw">as</span> <span class="ty">Error</span>).message);
+    } <span class="kw">finally</span> {
+      <span class="fn">setGenerating</span>(<span class="kw">false</span>);
+    }
+  }
+
+  <span class="kw">return</span> (
+    &lt;<span class="tg">div</span> className=<span class="str">"builder"</span>&gt;
+      &lt;<span class="tg">label</span> className=<span class="str">"field"</span>&gt;
+        &lt;<span class="tg">span</span>&gt;Source text&lt;/<span class="tg">span</span>&gt;
+        &lt;<span class="tg">textarea</span>
+          rows={<span class="nu">10</span>}
+          value={sourceText}
+          placeholder=<span class="str">"Paste an article, lecture notes, a study guide…"</span>
+          onChange={(e) =&gt; <span class="fn">setSourceText</span>(e.target.value)}
+        /&gt;
+        &lt;<span class="tg">small</span> className=<span class="str">"field-hint"</span>&gt;{sourceText.trim().length} characters&lt;/<span class="tg">small</span>&gt;
+      &lt;/<span class="tg">label</span>&gt;
+
+      &lt;<span class="tg">label</span> className=<span class="str">"field"</span>&gt;
+        &lt;<span class="tg">span</span>&gt;Quiz title (optional)&lt;/<span class="tg">span</span>&gt;
+        &lt;<span class="tg">input</span> type=<span class="str">"text"</span> value={title} onChange={(e) =&gt; <span class="fn">setTitle</span>(e.target.value)} /&gt;
+      &lt;/<span class="tg">label</span>&gt;
+
+      &lt;<span class="tg">label</span> className=<span class="str">"field"</span>&gt;
+        &lt;<span class="tg">span</span>&gt;Number of questions&lt;/<span class="tg">span</span>&gt;
+        &lt;<span class="tg">input</span> type=<span class="str">"number"</span> min={<span class="nu">3</span>} max={<span class="nu">10</span>} value={questionCount}
+          onChange={(e) =&gt; <span class="fn">setQuestionCount</span>(<span class="ty">Math</span>.<span class="fn">min</span>(<span class="nu">10</span>, <span class="ty">Math</span>.<span class="fn">max</span>(<span class="nu">3</span>, <span class="ty">Number</span>(e.target.value) || <span class="nu">3</span>)))} /&gt;
+      &lt;/<span class="tg">label</span>&gt;
+
+      &lt;<span class="tg">p</span> className=<span class="str">"field-hint"</span>&gt;
+        {isAuthenticated
+          ? <span class="str">'Signed in — generating is a write, same as Create quiz, so it\'ll use your sign-in too.'</span>
+          : <span class="str">'Sign in with Microsoft before generating.'</span>}
+      &lt;/<span class="tg">p</span>&gt;
+
+      {warning &amp;&amp; &lt;<span class="tg">p</span> className=<span class="str">"status-message error"</span>&gt;{warning}&lt;/<span class="tg">p</span>&gt;}
+
+      &lt;<span class="tg">div</span> className=<span class="str">"builder-actions"</span>&gt;
+        &lt;<span class="tg">button</span> className=<span class="str">"btn-primary"</span> onClick={generate} disabled={generating}&gt;
+          {generating ? <span class="str">'Generating…'</span> : <span class="str">'Generate quiz'</span>}
+        &lt;/<span class="tg">button</span>&gt;
+        &lt;<span class="tg">button</span> className=<span class="str">"btn-ghost"</span> onClick={onCancel} disabled={generating}&gt;Cancel&lt;/<span class="tg">button</span>&gt;
+      &lt;/<span class="tg">div</span>&gt;
+    &lt;/<span class="tg">div</span>&gt;
+  );
+}
+
+<span class="kw">export default</span> QuizGenerator;</div>
+      <div class="callout tip">
+        <strong>Nothing new here, really</strong>
+        It's the same idle &rarr; loading &rarr; done/error shape as <code>ExistingQuizzes</code>'s fetch, just triggered by a button instead of mount, and a <code>POST</code> instead of a <code>GET</code>. You'll wire this component into <code>App</code> in step 08; until then it has nowhere to render, which is fine &mdash; build it now, hook it up later, the same order Lab 8 used for <code>QuizBuilder</code>.
+      </div>
+    </div>
+  </div>
+
+  <div class="partlabel">Part E &middot; Play &amp; grade for real</div>
+
+  <!-- STEP 6 -->
+  <div class="step" id="s6">
+    <div class="step-header">
+      <div class="step-num">06</div>
+      <h2>Build PlayQuiz, part 1: fetch &amp; answer</h2>
+    </div>
+    <div class="step-body">
+      <p><code>QuizRunner</code> steps through <em>local</em> questions you already have in state, with no concept of right or wrong. <code>PlayQuiz</code> is its replacement: it fetches a quiz fresh from the server &mdash; the "no peeking" shape, options with no <code>isCorrect</code> field at all &mdash; and lets the student pick one option per question.</p>
+      <p><strong>Add an API call</strong> in <code>src/api/quizzes.ts</code>:</p>
+      <div class="code-block" data-lang="tsx">
+<span class="kw">export async function</span> <span class="fn">fetchPlayQuiz</span>(quizId: <span class="ty">string</span>): <span class="ty">Promise</span>&lt;<span class="ty">PlayQuiz</span>&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`${API_BASE}/quizzes/${quizId}/play`</span>);
+  <span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> <span class="ty">Error</span>(<span class="str">`HTTP ${res.status}`</span>);
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}</div>
+      <p>(You'll add <code>evaluateQuiz</code> in the next step.) Note there's no <code>Authorization</code> header &mdash; <code>GET /quizzes/{id}/play</code>, like <code>GET /quizzes</code>, is <code>[AllowAnonymous]</code>. Don't forget to import <code>PlayQuiz</code> in the type import at the top of the file.</p>
+      <p><strong>Start <code>src/components/PlayQuiz.tsx</code>:</strong></p>
+      <div class="file-path"><strong>src/components/</strong>PlayQuiz.tsx</div>
+      <div class="code-block sm" data-lang="tsx">
+<span class="kw">import</span> { useEffect, useState } <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> { fetchPlayQuiz } <span class="kw">from</span> <span class="str">'../api/quizzes'</span>;
+<span class="kw">import type</span> { PlayQuiz <span class="kw">as</span> PlayQuizType } <span class="kw">from</span> <span class="str">'../types/quiz'</span>;
+
+<span class="kw">type</span> <span class="ty">PlayQuizProps</span> = { quizId: <span class="ty">string</span>; onExit: () =&gt; <span class="ty">void</span>; };
+
+<span class="kw">function</span> <span class="fn">PlayQuiz</span>({ quizId, onExit }: <span class="ty">PlayQuizProps</span>) {
+  <span class="hi-green"><span class="kw">const</span> [quiz, setQuiz] = <span class="fn">useState</span>&lt;<span class="ty">PlayQuizType</span> | <span class="kw">null</span>&gt;(<span class="kw">null</span>);
+  <span class="kw">const</span> [loading, setLoading] = <span class="fn">useState</span>(<span class="kw">true</span>);
+  <span class="kw">const</span> [error, setError] = <span class="fn">useState</span>&lt;<span class="ty">string</span> | <span class="kw">null</span>&gt;(<span class="kw">null</span>);</span>
+
+  <span class="kw">const</span> [current, setCurrent] = <span class="fn">useState</span>(<span class="nu">0</span>);
+  <span class="kw">const</span> [picks, setPicks] = <span class="fn">useState</span>&lt;<span class="ty">Record</span>&lt;<span class="ty">string</span>, <span class="ty">string</span>&gt;&gt;({});
+
+  <span class="hi-green"><span class="fn">useEffect</span>(() =&gt; {
+    <span class="fn">fetchPlayQuiz</span>(quizId)
+      .<span class="fn">then</span>(setQuiz)
+      .<span class="fn">catch</span>((err: <span class="ty">Error</span>) =&gt; <span class="fn">setError</span>(err.message))
+      .<span class="fn">finally</span>(() =&gt; <span class="fn">setLoading</span>(<span class="kw">false</span>));
+  }, [quizId]);  <span class="cm">// keyed on quizId — not an empty array, see below</span></span>
+
+  <span class="kw">if</span> (loading) <span class="kw">return</span> &lt;<span class="tg">p</span> className=<span class="str">"status-message"</span>&gt;Loading quiz…&lt;/<span class="tg">p</span>&gt;;
+  <span class="kw">if</span> (error) <span class="kw">return</span> &lt;<span class="tg">p</span> className=<span class="str">"status-message error"</span>&gt;Couldn't load this quiz: {error}&lt;/<span class="tg">p</span>&gt;;
+  <span class="kw">if</span> (!quiz) <span class="kw">return</span> <span class="kw">null</span>;
+
+  <span class="kw">if</span> (quiz.questions.length === <span class="nu">0</span>) {
+    <span class="kw">return</span> (
+      &lt;<span class="tg">div</span> className=<span class="str">"runner"</span>&gt;
+        &lt;<span class="tg">h2</span>&gt;{quiz.title}&lt;/<span class="tg">h2</span>&gt;
+        &lt;<span class="tg">p</span> className=<span class="str">"status-message"</span>&gt;This quiz has no questions to play yet.&lt;/<span class="tg">p</span>&gt;
+        &lt;<span class="tg">button</span> className=<span class="str">"btn-primary"</span> onClick={onExit}&gt;Back&lt;/<span class="tg">button</span>&gt;
+      &lt;/<span class="tg">div</span>&gt;
+    );
+  }
+
+  <span class="kw">function</span> <span class="fn">pick</span>(questionId: <span class="ty">string</span>, optionId: <span class="ty">string</span>) {
+    <span class="fn">setPicks</span>((prev) =&gt; ({ ...prev, [questionId]: optionId }));
+  }
+
+  <span class="kw">const</span> question = quiz.questions[current];
+  <span class="kw">const</span> isLast = current === quiz.questions.length - <span class="nu">1</span>;
+
+  <span class="kw">return</span> (
+    &lt;<span class="tg">div</span> className=<span class="str">"runner"</span>&gt;
+      &lt;<span class="tg">div</span> className=<span class="str">"runner-progress"</span>&gt;
+        Question {current + <span class="nu">1</span>} of {quiz.questions.length}
+      &lt;/<span class="tg">div</span>&gt;
+      &lt;<span class="tg">h2</span>&gt;{question.text || <span class="str">'(untitled question)'</span>}&lt;/<span class="tg">h2</span>&gt;
+
+      &lt;<span class="tg">div</span> className=<span class="str">"options"</span>&gt;
+        {question.options.map((o) =&gt; (
+          &lt;<span class="tg">button</span>
+            key={o.id}
+            className={<span class="str">'option'</span> + (picks[question.id] === o.id ? <span class="str">' option-selected'</span> : <span class="str">''</span>)}
+            onClick={() =&gt; <span class="fn">pick</span>(question.id, o.id)}
+          &gt;
+            {o.text || <span class="str">'(blank option)'</span>}
+          &lt;/<span class="tg">button</span>&gt;
+        ))}
+      &lt;/<span class="tg">div</span>&gt;
+
+      &lt;<span class="tg">div</span> className=<span class="str">"runner-actions"</span>&gt;
+        &lt;<span class="tg">button</span> className=<span class="str">"btn-ghost"</span> disabled={current === <span class="nu">0</span>} onClick={() =&gt; <span class="fn">setCurrent</span>((c) =&gt; c - <span class="nu">1</span>)}&gt;
+          ← Previous
+        &lt;/<span class="tg">button</span>&gt;
+        {isLast ? (
+          &lt;<span class="tg">button</span> className=<span class="str">"btn-primary"</span> disabled&gt;Submit for grading&lt;/<span class="tg">button</span>&gt;
+        ) : (
+          &lt;<span class="tg">button</span> className=<span class="str">"btn-primary"</span> onClick={() =&gt; <span class="fn">setCurrent</span>((c) =&gt; c + <span class="nu">1</span>)}&gt;
+            Next →
+          &lt;/<span class="tg">button</span>&gt;
+        )}
+      &lt;/<span class="tg">div</span>&gt;
+
+      &lt;<span class="tg">button</span> className=<span class="str">"btn-link"</span> onClick={onExit}&gt;Quit quiz&lt;/<span class="tg">button</span>&gt;
+    &lt;/<span class="tg">div</span>&gt;
+  );
+}
+
+<span class="kw">export default</span> PlayQuiz;</div>
+      <p>This compiles and runs (once it's wired into <code>App</code> in step 08), but the "Submit for grading" button is a deliberate dead end &mdash; it's disabled because there's no grading logic yet. That's step 07.</p>
+      <div class="callout why">
+        <strong>Why <code>[quizId]</code>, not <code>[]</code></strong>
+        With Lab 8's <code>ExistingQuizzes</code> an empty array was correct &mdash; fetch once on mount, nothing ever needs to refetch the same list. Here, if <code>App</code> ever points <code>PlayQuiz</code> at a <em>different</em> <code>quizId</code> without unmounting it, you want a fresh fetch, not the previous quiz lingering on screen. Same hook, different dependency, because the question being asked ("when should this re-run?") is different.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 7 -->
+  <div class="step" id="s7">
+    <div class="step-header">
+      <div class="step-num">07</div>
+      <h2>Build PlayQuiz, part 2: submit &amp; show the grade</h2>
+    </div>
+    <div class="step-body">
+      <p><strong>Add <code>evaluateQuiz</code></strong> to <code>src/api/quizzes.ts</code>, alongside <code>fetchPlayQuiz</code>:</p>
+      <div class="code-block" data-lang="tsx">
+<span class="kw">export async function</span> <span class="fn">evaluateQuiz</span>(
+  quizId: <span class="ty">string</span>,
+  answers: { questionId: <span class="ty">string</span>; selectedOptionId: <span class="ty">string</span> | <span class="kw">null</span> }[],
+): <span class="ty">Promise</span>&lt;<span class="ty">QuizResult</span>&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`${API_BASE}/quizzes/${quizId}/evaluate`</span>, {
+    method: <span class="str">'POST'</span>,
+    headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+    body: <span class="ty">JSON</span>.<span class="fn">stringify</span>({ answers }),
+  });
+  <span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> <span class="ty">Error</span>(<span class="str">`Evaluate failed: HTTP ${res.status}`</span>);
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}</div>
+      <p>Again no <code>Authorization</code> header &mdash; grading is <code>[AllowAnonymous]</code> too, on purpose: it's a read/compute over data the server already has, not a write. Add <code>QuizResult</code> to the type import at the top of <code>quizzes.ts</code>.</p>
+      <p><strong>Back in <code>PlayQuiz.tsx</code></strong>, add the result state and a <code>submit</code> function:</p>
+      <div class="code-block" data-lang="tsx">
+<span class="kw">const</span> [result, setResult] = <span class="fn">useState</span>&lt;<span class="ty">QuizResult</span> | <span class="kw">null</span>&gt;(<span class="kw">null</span>);
+<span class="kw">const</span> [submitting, setSubmitting] = <span class="fn">useState</span>(<span class="kw">false</span>);
+
+<span class="kw">async function</span> <span class="fn">submit</span>() {
+  <span class="kw">if</span> (!quiz) <span class="kw">return</span>;
+  <span class="fn">setSubmitting</span>(<span class="kw">true</span>);
+  <span class="fn">setError</span>(<span class="kw">null</span>);
+  <span class="kw">try</span> {
+    <span class="kw">const</span> answers = quiz.questions.<span class="fn">map</span>((q) =&gt; ({
+      questionId: q.id,
+      selectedOptionId: picks[q.id] ?? <span class="kw">null</span>,
+    }));
+    <span class="kw">const</span> graded = <span class="kw">await</span> <span class="fn">evaluateQuiz</span>(quiz.id, answers);
+    <span class="fn">setResult</span>(graded);
+  } <span class="kw">catch</span> (err) {
+    <span class="fn">setError</span>((err <span class="kw">as</span> <span class="ty">Error</span>).message);
+  } <span class="kw">finally</span> {
+    <span class="fn">setSubmitting</span>(<span class="kw">false</span>);
+  }
+}</div>
+      <p>Notice <code>picks[q.id] ?? null</code> &mdash; a question the student never clicked an answer for still gets sent, as <code>null</code>, rather than silently dropped. The server can then correctly mark it wrong (or, for a text-only question, ignore it) instead of you having to special-case "missing" on the client.</p>
+      <p>Wire <code>submit</code> into the "Submit for grading" button (remove <code>disabled</code>):</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx">         {isLast ? (</span>
+<span class="diff-rm">-          &lt;button className="btn-primary" disabled&gt;Submit for grading&lt;/button&gt;</span>
+<span class="diff-add">+          &lt;button className="btn-primary" onClick={submit} disabled={submitting}&gt;</span>
+<span class="diff-add">+            {submitting ? 'Grading…' : 'Submit for grading'}</span>
+<span class="diff-add">+          &lt;/button&gt;</span></div>
+      <p><strong>Now render the graded view.</strong> Add this block right after the early returns near the top of the component (before the "answering view" <code>return</code>), so that once <code>result</code> is set, it takes over the whole screen:</p>
+      <div class="code-block sm" data-lang="tsx">
+<span class="kw">if</span> (result) {
+  <span class="kw">return</span> (
+    &lt;<span class="tg">div</span> className=<span class="str">"runner"</span>&gt;
+      &lt;<span class="tg">h2</span>&gt;{quiz.title} — graded&lt;/<span class="tg">h2</span>&gt;
+      &lt;<span class="tg">p</span> className=<span class="str">"score-banner"</span>&gt;
+        {result.correctCount} / {result.totalQuestions} correct ({result.scorePercentage}%)
+      &lt;/<span class="tg">p</span>&gt;
+      &lt;<span class="tg">ol</span> className=<span class="str">"summary"</span>&gt;
+        {result.results.map((r) =&gt; (
+          &lt;<span class="tg">li</span> key={r.questionId}&gt;
+            &lt;<span class="tg">strong</span>&gt;{r.questionText || <span class="str">'(untitled question)'</span>}&lt;/<span class="tg">strong</span>&gt;
+            &lt;<span class="tg">div</span> className=<span class="str">"options"</span>&gt;
+              {r.options.map((o) =&gt; {
+                <span class="kw">const</span> wasSelected = o.id === r.selectedOptionId;
+                <span class="kw">const</span> cls =
+                  <span class="str">'option'</span> +
+                  (o.isCorrect ? <span class="str">' option-correct'</span> : <span class="str">''</span>) +
+                  (wasSelected &amp;&amp; !o.isCorrect ? <span class="str">' option-incorrect'</span> : <span class="str">''</span>) +
+                  (wasSelected ? <span class="str">' option-selected'</span> : <span class="str">''</span>);
+                <span class="kw">return</span> (
+                  &lt;<span class="tg">div</span> key={o.id} className={cls}&gt;
+                    {o.text || <span class="str">'(blank option)'</span>}
+                    {o.isCorrect &amp;&amp; <span class="str">' ✓'</span>}
+                    {wasSelected &amp;&amp; !o.isCorrect &amp;&amp; <span class="str">' (your pick)'</span>}
+                  &lt;/<span class="tg">div</span>&gt;
+                );
+              })}
+            &lt;/<span class="tg">div</span>&gt;
+          &lt;/<span class="tg">li</span>&gt;
+        ))}
+      &lt;/<span class="tg">ol</span>&gt;
+      &lt;<span class="tg">button</span> className=<span class="str">"btn-primary"</span> onClick={onExit}&gt;Back to home&lt;/<span class="tg">button</span>&gt;
+    &lt;/<span class="tg">div</span>&gt;
+  );
+}</div>
+      <div class="callout why">
+        <strong>Sit with why this works</strong>
+        <code>PlayQuiz</code> never had the correct answers &mdash; <code>GET /play</code> made sure of that &mdash; and yet here they are, in <code>result</code>. That's the whole design: the <strong>server</strong> graded the submission and is now <em>telling</em> the browser what was right, after the fact. The browser was never in a position to cheat, because it never held the answer key.
+      </div>
+      <p>Finally, add the three new CSS classes used above (<code>score-banner</code>, <code>option-correct</code>, <code>option-incorrect</code>) and the <code>.answer-correct-toggle</code> radio wrapper from step 03 to <code>src/index.css</code>. (<code>Lab9/Solution/src/index.css</code> has the exact rules if you want to copy them &mdash; colors and spacing aren't the point of this lab.)</p>
+      <div class="callout check">
+        <strong>Verify</strong>
+        Run the dev server, build a quiz with a marked-correct answer (step 03&ndash;04), then play it: pick answers, submit, and check that the right one is highlighted green and a wrong pick is highlighted red.
+      </div>
+    </div>
+  </div>
+
+  <div class="partlabel">Part F &middot; Tie it together</div>
+
+  <!-- STEP 8 -->
+  <div class="step" id="s8">
+    <div class="step-header">
+      <div class="step-num">08</div>
+      <h2>Wire it all together in App</h2>
+    </div>
+    <div class="step-body">
+      <p>Open <code>src/App.tsx</code>. Three changes.</p>
+      <p><strong>1. Imports</strong> &mdash; swap <code>QuizRunner</code> for the two new components:</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-rm">-import QuizRunner from './components/QuizRunner';</span>
+<span class="diff-add">+import QuizGenerator from './components/QuizGenerator';</span>
+<span class="diff-add">+import PlayQuiz from './components/PlayQuiz';</span></div>
+      <p><strong>2. The <code>View</code> type</strong> &mdash; <code>run</code> and <code>run-server</code> collapse into one <code>play</code> view. Why one, not two? Because by the time <code>QuizBuilder.save()</code> finishes, the quiz it just built and a quiz fetched from the server are the same row in the database &mdash; both have a real server <code>id</code>, and <code>PlayQuiz</code> only ever needs that <code>id</code> to fetch the no-peeking shape itself. There's no "offline-only" quiz left to special-case.</p>
+      <div class="code-block sm" data-lang="diff">
+<span class="diff-ctx"> type View =</span>
+<span class="diff-ctx">   | { name: 'home' }</span>
+<span class="diff-ctx">   | { name: 'build' }</span>
+<span class="diff-rm">-  | { name: 'run'; quizId: string }</span>
+<span class="diff-rm">-  | { name: 'view-server' }</span>
+<span class="diff-rm">-  | { name: 'run-server' };</span>
+<span class="diff-add">+  | { name: 'generate' }</span>
+<span class="diff-add">+  | { name: 'view-server' }</span>
+<span class="diff-add">+  | { name: 'play'; quizId: string };</span></div>
+      <p>You can also delete the <code>apiQuizToLocal</code> helper function entirely &mdash; it existed only to feed <code>QuizRunner</code> a local-shaped quiz built from server data, and <code>PlayQuiz</code> fetches its own data, so nothing needs it anymore.</p>
+      <p><strong>3. The render branches</strong> &mdash; replace the <code>run</code> / <code>run-server</code> JSX blocks with a <code>generate</code> branch and a single <code>play</code> branch:</p>
+      <div class="code-block" data-lang="tsx">
+{view.name === <span class="str">'generate'</span> &amp;&amp; (
+  &lt;&gt;
+    &lt;<span class="tg">h2</span> className=<span class="str">"section-title"</span>&gt;Generate a quiz from text&lt;/<span class="tg">h2</span>&gt;
+    &lt;<span class="ty">QuizGenerator</span>
+      isAuthenticated={isAuthenticated}
+      getToken={getAccessToken}
+      onGenerated={(quiz) =&gt; {
+        <span class="fn">refreshServerQuizzes</span>();
+        <span class="fn">setView</span>({ name: <span class="str">'play'</span>, quizId: quiz.id });
+      }}
+      onCancel={() =&gt; <span class="fn">setView</span>({ name: <span class="str">'home'</span> })}
+    /&gt;
+  &lt;/&gt;
+)}
+
+{view.name === <span class="str">'view-server'</span> &amp;&amp; serverQuiz &amp;&amp; (
+  &lt;<span class="ty">ServerQuizDetail</span>
+    quiz={serverQuiz}
+    onRun={() =&gt; <span class="fn">setView</span>({ name: <span class="str">'play'</span>, quizId: serverQuiz.id })}
+    onBack={() =&gt; <span class="fn">setView</span>({ name: <span class="str">'home'</span> })}
+  /&gt;
+)}
+
+{view.name === <span class="str">'play'</span> &amp;&amp; (
+  &lt;<span class="ty">PlayQuiz</span>
+    quizId={view.quizId}
+    onExit={() =&gt; <span class="fn">setView</span>(serverQuiz ? { name: <span class="str">'view-server'</span> } : { name: <span class="str">'home'</span> })}
+  /&gt;
+)}</div>
+      <p><code>ServerQuizDetail</code> itself doesn't need to change &mdash; it already just calls <code>onRun()</code> with no arguments; <code>App</code> is the one deciding what that means, and now it means "go play this quiz's <code>id</code>."</p>
+      <p>Two smaller updates in the <code>home</code> view: the "Your quizzes" list's <strong>Run</strong> button should set <code>{ name: 'play', quizId: quiz.id }</code> instead of <code>{ name: 'run', quizId: quiz.id }</code>, and add a second button next to <strong>+ New quiz</strong> for the new screen:</p>
+      <div class="code-block" data-lang="tsx">
+&lt;<span class="tg">button</span> className=<span class="str">"btn-secondary"</span> onClick={() =&gt; <span class="fn">setView</span>({ name: <span class="str">'generate'</span> })}&gt;
+  ✨ Generate from text
+&lt;/<span class="tg">button</span>&gt;</div>
+      <div class="callout check">
+        <strong>Verify end to end</strong>
+        Run <code>npm run build</code> one more time &mdash; clean. Then walk the whole loop by hand: <strong>+ New quiz</strong> → build a multiple-choice question → <strong>Create quiz</strong> → <strong>Run</strong> → answer → <strong>Submit for grading</strong> → see the score. Then from home, <strong>✨ Generate from text</strong> → paste a few paragraphs → <strong>Generate quiz</strong> → you land straight in <code>PlayQuiz</code> for a quiz you never typed a single question into.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 9 -->
+  <div class="step" id="s9">
+    <div class="step-header">
+      <div class="step-num">09</div>
+      <h2>Homework &mdash; take it further</h2>
+    </div>
+    <div class="step-body">
+      <p><strong>Pick one (or more):</strong></p>
+      <ul>
+        <li><strong>Retry on generation failure.</strong> Right now a 502 from <code>/quizzes/generate</code> just shows an error message. Add a "Try again" button that re-runs <code>generate()</code> with the same <code>sourceText</code> still in the textarea (don't clear it on failure).</li>
+        <li><strong>Per-question review.</strong> In the graded view, let the student click a question to expand/collapse its option breakdown, instead of always showing every option for every question &mdash; useful once a generated quiz has 10 questions.</li>
+        <li><strong>A "play again" loop.</strong> After grading, offer a button that resets <code>current</code>, <code>picks</code>, and <code>result</code> back to their initial values without leaving the screen or re-fetching &mdash; same quiz, blank slate.</li>
+        <li><strong>Question-count-aware prompting.</strong> <code>QuizGenerator</code> already clamps question count to 3&ndash;10 in the UI; look at <code>Services/OpenAiQuizGenerator.cs</code> on the backend and find where that number reaches the model's prompt. What happens if you ask for 3 questions from one sentence of source text? Try it, then explain in a comment why the validation loop in <code>Services/OpenAiQuizGenerator.cs</code> ("exactly one correct option") catches a bad response before it ever reaches the database.</li>
+        <li><strong>Sign-in persistence, on purpose.</strong> Sign in, close the tab, reopen <code>http://localhost:5173</code> &mdash; you should land back in a signed-in state with no popup, because <code>authConfig.ts</code> caches MSAL's tokens in <code>localStorage</code>. Confirm that, then try the opposite: click <strong>Sign out</strong>, and confirm <code>QuizBuilder</code>/<code>QuizGenerator</code> correctly refuse to save with a clear message instead of an unhandled promise rejection in the console. If you find one, that's a missing <code>isAuthenticated</code> guard somewhere &mdash; fix it.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="final">
+    <h2>That's the lab.</h2>
+    <p>You gave QuizMaster a second way to fill in the same form &mdash; a model call with a typed contract for its output &mdash; and moved grading from "trust the browser" to "ask the server, which holds the answer key." Same database, same validation rules, a new trust boundary.</p>
+  </div>
+
+</div>
+
+</body>
+</html>

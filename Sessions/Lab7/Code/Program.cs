@@ -14,7 +14,9 @@ builder.Services.AddEndpointsApiExplorer();
 const string scope = "api://5c2ab77a-5cfb-4b0e-aa3c-327f600296e6/access_as_user";
 
 
-builder.Services.AddSwaggerGen(options =>
+builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
+    p.WithOrigins("http://localhost:5173")
+     .AllowAnyHeader().AllowAnyMethod())).AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
     {
@@ -64,6 +66,9 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+
+app.UseCors();
+
 // Order matters: Authentication before Authorization
 app.UseAuthentication();
 app.UseAuthorization();
@@ -71,3 +76,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+//11111111-1111-1111-1111-111111111111

@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Frontend &amp; UI/UX Fundamentals</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.25);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --cyan: #0891b2;
+    --cyan-dim: rgba(8,145,178,0.08);
+    --cyan-border: rgba(8,145,178,0.25);
+    --border: #e5e7eb;
+    --border-2: #d1d5db;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: radial-gradient(circle, #c7d2e8 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.45;
+  }
+
+  .deck { position: relative; width: 100vw; height: 100vh; }
+
+  .slide {
+    position: absolute; inset: 0;
+    padding: 5vh 7vw;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+    animation: slideIn .3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .slide.active { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin-bottom: 0.4em;
+  }
+  h2 {
+    font-size: clamp(1.7rem, 3.2vw, 2.7rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6em;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 1em;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  p, li {
+    font-size: clamp(.95rem, 1.4vw, 1.22rem);
+    line-height: 1.6;
+    color: #374151;
+    font-family: var(--sans);
+    font-weight: 400;
+  }
+  ul { padding-left: 0; list-style: none; }
+  li {
+    padding: .45em 0 .45em 1.4em;
+    position: relative;
+  }
+  li::before {
+    content: '›';
+    position: absolute; left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  strong { color: var(--fg); font-weight: 700; }
+
+  .accent   { color: var(--accent); }
+  .green    { color: var(--green); }
+  .orange   { color: var(--orange); }
+  .cyan     { color: var(--cyan); }
+  .muted    { color: var(--muted-2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8vw; }
+
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    padding: 1.3em 1.4em;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: .5;
+  }
+  .card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: .5em;
+    font-family: var(--sans);
+  }
+  .card.green-card::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .card.green-card h4 { color: var(--green); }
+  .card.orange-card::before { background: linear-gradient(90deg, var(--orange), transparent); }
+  .card.orange-card h4 { color: var(--orange); }
+  .card.cyan-card::before { background: linear-gradient(90deg, var(--cyan), transparent); }
+  .card.cyan-card h4 { color: var(--cyan); }
+  .card p, .card li { font-size: .97rem; }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.2em 1.4em;
+    font-family: var(--mono);
+    font-size: clamp(.78rem, 1.1vw, .95rem);
+    line-height: 1.8;
+    overflow: auto;
+    position: relative;
+    white-space: pre;
+    color: #cdd5e0;
+  }
+  .code-block::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: 1em;
+    font-size: .68rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .code-block.sm { font-size: .76rem; line-height: 1.7; }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+  .tg  { color: #f0a3c4; }
+  .hi  { background: rgba(37,99,235,0.25); border-radius: 3px; padding: 0 2px; }
+  .hi-green { background: rgba(5,150,105,0.2); border-radius: 3px; padding: 0 2px; }
+
+  .flow {
+    display: flex; align-items: stretch;
+    gap: 0; margin-top: .8em;
+    flex-wrap: nowrap;
+  }
+  .flow-node {
+    flex: 1;
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: .9em .8em;
+    text-align: center;
+    position: relative;
+  }
+  .flow-node strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--accent);
+    margin-bottom: .3em;
+  }
+  .flow-node span { font-size: .78rem; color: var(--muted-2); }
+  .flow-arrow {
+    display: flex; align-items: center;
+    color: var(--muted);
+    font-size: 1.1rem;
+    padding: 0 .3em;
+    flex-shrink: 0;
+  }
+
+  .tree-wrap { display: flex; flex-direction: column; align-items: center; gap: .5em; margin-top: 1.4em; }
+  .tree-wrap .flow-arrow { justify-content: center; font-size: .85rem; font-family: var(--mono); color: var(--muted-2); }
+  .tree-row { display: flex; gap: 1em; justify-content: center; flex-wrap: wrap; }
+  .tree-row .flow-node { flex: 0 1 180px; }
+
+  .tag {
+    display: inline-block;
+    padding: .22em .75em;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    font-family: var(--mono);
+    font-size: .78rem;
+    margin: .2em .2em .2em 0;
+  }
+  .tag.green-tag  { background: var(--green-dim); color: var(--green); border-color: rgba(5,150,105,0.25); }
+  .tag.orange-tag { background: var(--orange-dim); color: var(--orange); border-color: rgba(217,119,6,0.25); }
+  .tag.cyan-tag   { background: var(--cyan-dim); color: var(--cyan); border-color: var(--cyan-border); }
+
+  .title-slide {
+    justify-content: flex-end;
+    padding-bottom: 10vh;
+  }
+  .title-slide h1 {
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    background: linear-gradient(135deg, #0f1117 20%, var(--accent) 60%, var(--cyan));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    max-width: 16ch;
+  }
+  .title-glow {
+    position: absolute;
+    top: 10%; left: -5%;
+    width: 60vw; height: 60vh;
+    background: radial-gradient(ellipse, rgba(37,99,235,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .title-glow-2 {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 50vw; height: 50vh;
+    background: radial-gradient(ellipse, rgba(8,145,178,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .lab-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .8rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: .4em .9em;
+    margin-bottom: 2em;
+  }
+  .lab-badge span { color: var(--accent); font-weight: 700; }
+
+  .steps { list-style: none; padding: 0; counter-reset: steps; }
+  .steps li {
+    counter-increment: steps;
+    padding: .55em 0 .55em 2.8em;
+    font-size: clamp(.9rem, 1.3vw, 1.1rem);
+  }
+  .steps li::before {
+    content: counter(steps, decimal-leading-zero);
+    position: absolute; left: 0;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 2em; height: 1.7em;
+    display: flex; align-items: center; justify-content: center;
+    top: .55em;
+  }
+
+  .timeline {
+    display: flex; gap: 0;
+    margin-top: 1.5em;
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .tl-item {
+    flex: 1;
+    padding: 1em 1.1em;
+    border-right: 1px solid var(--border-2);
+    position: relative;
+  }
+  .tl-item:last-child { border-right: none; }
+  .tl-item .tl-time {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: .35em;
+    letter-spacing: .05em;
+  }
+  .tl-item .tl-title {
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--fg);
+    margin-bottom: .2em;
+  }
+  .tl-item .tl-desc {
+    font-size: .82rem;
+    color: var(--muted-2);
+    line-height: 1.45;
+  }
+  .tl-item.highlight { background: var(--cyan-dim); }
+  .tl-item.highlight .tl-time { color: var(--cyan); }
+
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--cyan));
+    transition: width .3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    box-shadow: 0 0 8px rgba(37,99,235,0.4);
+  }
+  .footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .65em 1.4em;
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: rgba(248,249,252,0.92);
+    backdrop-filter: blur(8px);
+    z-index: 50;
+  }
+  .footer .slide-num { color: var(--muted-2); }
+  .footer .slide-num em { color: var(--accent); font-style: normal; }
+  kbd {
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    color: var(--muted-2);
+    padding: 1px 5px; border-radius: 4px;
+    font-size: .78em; font-family: var(--mono);
+  }
+
+  .warn-li::before { color: var(--orange) !important; content: '!' !important; }
+
+  p code, li code, td code {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: .88em;
+  }
+</style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="deck" id="deck">
+
+    <!-- 1 · TITLE -->
+    <section class="slide title-slide active">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Frontend</span></div>
+      <h1>Frontend &amp; UI/UX Fundamentals</h1>
+      <p class="muted" style="max-width:64ch; margin-top:.8em; font-size:1.1rem;">
+        Before we write a line of React: what the frontend actually is, and what
+        separates an interface people enjoy from one they fight. Two skills, one
+        screen &mdash; how to <em>build</em> it, and how to make it <em>good</em>.
+      </p>
+      <p class="muted" style="margin-top:2.5em; font-size:.88rem;">
+        <kbd>&rarr;</kbd> next &nbsp; <kbd>&larr;</kbd> previous &nbsp; <kbd>F</kbd> fullscreen
+      </p>
+    </section>
+
+    <!-- 2 · AGENDA -->
+    <section class="slide">
+      <div class="eyebrow">Agenda</div>
+      <h2>What we'll cover</h2>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-time">~10 min</div>
+          <div class="tl-title">The frontend</div>
+          <div class="tl-desc">Browser vs server, HTML/CSS/JS, the DOM</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">~10 min</div>
+          <div class="tl-title">UI vs UX</div>
+          <div class="tl-desc">What "good design" actually means</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">~20 min</div>
+          <div class="tl-title">Design fundamentals</div>
+          <div class="tl-desc">Hierarchy, layout, type, colour</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">~15 min</div>
+          <div class="tl-title">Usability &amp; a11y</div>
+          <div class="tl-desc">Heuristics, accessibility, UI states</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">~5 min</div>
+          <div class="tl-title">Process &amp; bridge</div>
+          <div class="tl-desc">Wireframe &rarr; build, into Lab 8</div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1.4em; font-size:.9rem;">
+        Concept-only today &mdash; the hands-on React build is the Lab 8 deck that follows.
+      </p>
+    </section>
+
+    <!-- 3 · WHAT IS THE FRONTEND -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · the frontend</div>
+      <h2>Where your code runs: the browser</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>A web app has two halves. The <strong>backend</strong> runs on a server: it owns
+          the database, enforces rules, and answers requests with <strong>data</strong> (JSON).
+          It has no idea what anything looks like.</p>
+          <p style="margin-top:.9em;">The <strong>frontend</strong> runs in <em>each user's
+          browser</em>. It turns that data into pixels, and reacts to clicks and typing. The two
+          talk over <strong>HTTP</strong>.</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:1em;">
+          <div class="card">
+            <h4>Backend <span class="tag">on a server</span></h4>
+            <p>Owns data, auth, business rules. Speaks JSON. One copy, shared by everyone.</p>
+          </div>
+          <div class="flow-arrow" style="text-align:center; justify-content:center;">↕ HTTP request / response</div>
+          <div class="card cyan-card">
+            <h4>Frontend <span class="tag cyan-tag">in the browser</span></h4>
+            <p>Renders the UI, handles interaction. Runs fresh in every visitor's browser.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · HOW A PAGE LOADS -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · how the web works</div>
+      <h2>What happens when you open a page</h2>
+      <div class="flow" style="margin-top:1.4em;">
+        <div class="flow-node"><strong>1 · URL</strong><span>you type / click a link</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>2 · Request</strong><span>browser asks the server</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>3 · Response</strong><span>HTML, CSS, JS come back</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>4 · Render</strong><span>browser paints the page</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>5 · Fetch more</strong><span>JS calls APIs for data</span></div>
+      </div>
+      <p class="muted" style="margin-top:1.6em; max-width:80ch;">
+        Step 5 is where today's apps live: the page loads once, then JavaScript fetches data and
+        updates the screen without a full reload. That's a "single-page app" &mdash; what React builds.
+      </p>
+    </section>
+
+    <!-- 5 · THREE LANGUAGES -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · the building materials</div>
+      <h2>HTML, CSS, JavaScript &mdash; three jobs</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <ul style="margin-top:.2em;">
+            <li><strong>HTML</strong> &mdash; <em>structure</em>: the elements and their meaning.</li>
+            <li><strong>CSS</strong> &mdash; <em>style</em>: colour, spacing, layout, type.</li>
+            <li><strong>JavaScript</strong> &mdash; <em>behaviour</em>: what happens on click, type, load.</li>
+          </ul>
+          <p style="margin-top:.9em;">Keep them separate in your head even when a framework
+          blends them: a thing's <em>meaning</em>, its <em>look</em>, and its <em>behaviour</em>
+          are three different decisions.</p>
+        </div>
+        <div class="code-block" data-lang="web">
+<span class="cm">&lt;!-- HTML: structure --&gt;</span>
+<span class="tg">&lt;button</span> <span class="at">class</span>=<span class="str">"run"</span><span class="tg">&gt;</span>Run quiz<span class="tg">&lt;/button&gt;</span>
+
+<span class="cm">/* CSS: style */</span>
+<span class="fn">.run</span> { background: <span class="str">#2563eb</span>; color: white;
+       padding: <span class="nu">.6em</span> <span class="nu">1em</span>; border-radius: <span class="nu">8px</span>; }
+
+<span class="cm">// JavaScript: behaviour</span>
+btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, startQuiz);
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · THE DOM -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · the page as data</div>
+      <h2>The DOM: your page as a live tree</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>The browser parses your HTML into the <strong>DOM</strong> &mdash; a tree of objects
+          it can change at runtime. Every visible thing is a <em>node</em>.</p>
+          <p style="margin-top:.9em;">Plain JS means <em>you</em> find nodes and update them by
+          hand &mdash; fine for one button, painful for a whole app, where the screen and your data
+          drift apart. Frameworks like React keep the DOM in sync with your data <em>for</em> you.</p>
+        </div>
+        <div class="tree-wrap" style="margin-top:0;">
+          <div class="flow-node" style="max-width:180px;"><strong>document</strong><span>the page</span></div>
+          <div class="flow-arrow">↓</div>
+          <div class="tree-row">
+            <div class="flow-node"><strong>header</strong><span>h1</span></div>
+            <div class="flow-node"><strong>main</strong><span>list of cards</span></div>
+          </div>
+          <div class="flow-arrow">↓ inside main</div>
+          <div class="tree-row">
+            <div class="flow-node"><strong>card</strong><span>title, button</span></div>
+            <div class="flow-node"><strong>card</strong><span>title, button</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · RESPONSIVE -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · many screens</div>
+      <h2>One site, every screen</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Your interface is viewed on phones, tablets, laptops and huge monitors. <strong>Responsive
+          design</strong> means one layout that adapts &mdash; not a separate site per device.</p>
+          <ul style="margin-top:.6em;">
+            <li><strong>Mobile-first</strong> &mdash; design the small screen first, then add for bigger.</li>
+            <li><strong>Fluid layouts</strong> &mdash; relative sizes (%, rem) over fixed pixels.</li>
+            <li><strong>Breakpoints</strong> &mdash; rules that rearrange the layout at certain widths.</li>
+          </ul>
+        </div>
+        <div class="card cyan-card">
+          <h4>Rule of thumb</h4>
+          <p>If it works on a narrow phone, it almost always works on a wide screen &mdash; rarely the
+          reverse. Start narrow. Touch targets need room (≈44px); text needs to stay readable without
+          zooming.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · UI VS UX -->
+    <section class="slide">
+      <div class="eyebrow">Design · the big distinction</div>
+      <h2>UX vs UI &mdash; not the same thing</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div class="card">
+          <h4>UX &mdash; User Experience</h4>
+          <p>The whole journey: can people accomplish their goal? Is the flow logical, fast, and
+          frustration-free? It's about <strong>how it works</strong> &mdash; structure, flow, content.</p>
+        </div>
+        <div class="card cyan-card">
+          <h4>UI &mdash; User Interface</h4>
+          <p>The surface they touch: buttons, type, colour, spacing, motion. It's about <strong>how it
+          looks and feels</strong> &mdash; the visual and interactive layer on top of the UX.</p>
+        </div>
+      </div>
+      <p class="accent" style="margin-top:1.4em;"><strong>Beautiful but confusing fails. Clear but ugly
+      frustrates. You need both &mdash; UX decides the bones, UI dresses them.</strong></p>
+    </section>
+
+    <!-- 9 · USER-CENTERED -->
+    <section class="slide">
+      <div class="eyebrow">Design · the mindset</div>
+      <h2>Design is for the user, not the designer</h2>
+      <p style="max-width:80ch;">Good design starts from what people are trying to do &mdash; not from
+      what looks impressive. It's a loop, not a one-shot:</p>
+      <div class="flow" style="margin-top:1.2em;">
+        <div class="flow-node"><strong>Research</strong><span>who, what goal, what context</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>Design</strong><span>sketch the flow &amp; screens</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>Prototype</strong><span>make it clickable</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>Test</strong><span>watch real people use it</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>Iterate</strong><span>fix what tripped them up</span></div>
+      </div>
+      <p class="muted" style="margin-top:1.6em; max-width:80ch;">
+        You are not your user. The fastest way to find a bad design is to watch someone else try to use it.
+      </p>
+    </section>
+
+    <!-- 10 · VISUAL HIERARCHY -->
+    <section class="slide">
+      <div class="eyebrow">Design · guide the eye</div>
+      <h2>Visual hierarchy: what gets noticed first</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Every screen answers a silent question: <em>where do I look first?</em> You control that
+          with <strong>size</strong>, <strong>weight</strong>, <strong>colour</strong>, and
+          <strong>position</strong>.</p>
+          <p style="margin-top:.9em;">Make the most important thing the most prominent. If everything
+          shouts, nothing is heard &mdash; one clear primary action per screen.</p>
+        </div>
+        <div class="card">
+          <h4>In practice</h4>
+          <ul style="padding-left:0;">
+            <li>Big, bold heading &rarr; the page's purpose</li>
+            <li>One <span class="tag">primary</span> button; secondary actions quieter</li>
+            <li>Group related things; separate unrelated ones</li>
+            <li>Use whitespace to say "these belong together"</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 · LAYOUT / CRAP -->
+    <section class="slide">
+      <div class="eyebrow">Design · arranging things</div>
+      <h2>Four habits that make layouts look intentional</h2>
+      <div class="grid-2" style="gap:2vw;">
+        <div class="card">
+          <h4>Contrast</h4>
+          <p>Make different things look clearly different &mdash; size, colour, weight. Contrast creates
+          hierarchy and draws attention.</p>
+        </div>
+        <div class="card">
+          <h4>Repetition</h4>
+          <p>Reuse the same styles for the same kinds of thing. Consistency is what makes a UI feel like
+          one product.</p>
+        </div>
+        <div class="card">
+          <h4>Alignment</h4>
+          <p>Line things up on a shared edge. Invisible grids are why "clean" designs look calm rather
+          than scattered.</p>
+        </div>
+        <div class="card">
+          <h4>Proximity</h4>
+          <p>Put related items close, unrelated items apart. Spacing groups content without a single
+          border or line.</p>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1.2em; font-size:.9rem;">Contrast · Repetition · Alignment · Proximity &mdash; a checklist you can run on any screen.</p>
+    </section>
+
+    <!-- 12 · TYPOGRAPHY -->
+    <section class="slide">
+      <div class="eyebrow">Design · the words</div>
+      <h2>Typography: most of a UI is text</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <ul style="margin-top:.2em;">
+            <li><strong>One or two typefaces</strong> &mdash; more looks chaotic.</li>
+            <li><strong>A type scale</strong> &mdash; a few defined sizes (e.g. 14 / 16 / 20 / 32),
+            not random ones, to build hierarchy.</li>
+            <li><strong>Line length</strong> &mdash; ~50&ndash;75 characters; long lines are tiring to read.</li>
+            <li><strong>Line height</strong> &mdash; ~1.4&ndash;1.6 for body text, so lines breathe.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Why it matters</h4>
+          <p>Readable type is invisible &mdash; people just absorb the content. Bad type (tiny, cramped,
+          low-contrast, ten sizes) makes even simple screens feel hard, and most users won't know
+          <em>why</em> &mdash; they'll just leave.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 · COLOR -->
+    <section class="slide">
+      <div class="eyebrow">Design · colour</div>
+      <h2>Colour with a purpose</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Colour is a tool, not decoration. A small, deliberate palette beats a rainbow:</p>
+          <ul style="margin-top:.6em;">
+            <li>A neutral base (greys/whites) for most of the screen.</li>
+            <li>One <strong>accent</strong> for the primary action and key highlights.</li>
+            <li>Reserved colours for meaning: <span class="green">success</span>,
+            <span class="orange">warning</span>, error.</li>
+          </ul>
+        </div>
+        <div class="card orange-card">
+          <h4>Contrast is non-negotiable</h4>
+          <p>Text must stand out from its background &mdash; aim for a <strong>4.5:1</strong> ratio for
+          body text (WCAG AA). Never use colour <em>alone</em> to signal meaning; ~1 in 12 men can't
+          distinguish red from green.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 · CONSISTENCY / DESIGN SYSTEMS -->
+    <section class="slide">
+      <div class="eyebrow">Design · scaling it</div>
+      <h2>Consistency &amp; design systems</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>A <strong>design system</strong> is a reusable kit: defined colours, type, spacing, and
+          <strong>components</strong> (buttons, inputs, cards) used the same way everywhere.</p>
+          <p style="margin-top:.9em;">It makes products feel coherent and teams faster &mdash; you assemble
+          screens from trusted pieces instead of reinventing a button each time.</p>
+        </div>
+        <div class="card cyan-card">
+          <h4>This is exactly React's model</h4>
+          <p>A React <strong>component</strong> is a reusable UI piece &mdash; the same idea as a design-system
+          component, in code. The card you'll build in Lab 8 (<code>QuizCard</code>) is rendered many
+          times, identically. Design thinking and component thinking line up.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15 · USABILITY HEURISTICS -->
+    <section class="slide">
+      <div class="eyebrow">Usability · rules of thumb</div>
+      <h2>A few of Nielsen's usability heuristics</h2>
+      <div class="grid-2" style="gap:2vw;">
+        <div class="card">
+          <h4>Visibility of status</h4>
+          <p>Always show what's happening &mdash; loading, saved, failed. Never leave the user guessing.</p>
+        </div>
+        <div class="card">
+          <h4>Match the real world</h4>
+          <p>Use words and concepts people know, not system jargon. Speak the user's language.</p>
+        </div>
+        <div class="card">
+          <h4>User control &amp; freedom</h4>
+          <p>Provide a clear way out: cancel, back, undo. Let people escape mistakes easily.</p>
+        </div>
+        <div class="card">
+          <h4>Error prevention &amp; recovery</h4>
+          <p>Stop errors before they happen; when they do, explain plainly and how to fix them.</p>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1.2em; font-size:.9rem;">Plus: consistency, recognition over recall, and "less is more." Ten in total &mdash; these are the load-bearing ones.</p>
+    </section>
+
+    <!-- 16 · UI STATES -->
+    <section class="slide">
+      <div class="eyebrow">Usability · the honest screen</div>
+      <h2>Every screen has more than a "happy path"</h2>
+      <p style="max-width:80ch;">A list isn't just "a list of things." Design (and build) all of its states,
+      or users hit blank screens and spinners that never end:</p>
+      <div class="flow" style="margin-top:1.2em;">
+        <div class="flow-node"><strong>Loading</strong><span>data on its way</span></div>
+        <div class="flow-arrow">·</div>
+        <div class="flow-node"><strong>Empty</strong><span>nothing here yet</span></div>
+        <div class="flow-arrow">·</div>
+        <div class="flow-node"><strong>Error</strong><span>something failed</span></div>
+        <div class="flow-arrow">·</div>
+        <div class="flow-node"><strong>Success</strong><span>the data, shown</span></div>
+      </div>
+      <div class="card cyan-card" style="margin-top:1.4em;">
+        <h4>Straight into Lab 8</h4>
+        <p>The very first thing you'll build &mdash; a list of quizzes from the API &mdash; renders
+        <em>loading</em>, <em>error</em>, and <em>empty</em> honestly, not just the happy path. This
+        principle is the code.</p>
+      </div>
+    </section>
+
+    <!-- 17 · ACCESSIBILITY -->
+    <section class="slide">
+      <div class="eyebrow">Usability · for everyone</div>
+      <h2>Accessibility is part of "done"</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Accessibility (<strong>a11y</strong>) means people with disabilities can use your app &mdash;
+          and the same habits make it better for <em>everyone</em>.</p>
+          <ul style="margin-top:.6em;">
+            <li>Enough colour <strong>contrast</strong>; don't rely on colour alone.</li>
+            <li><strong>Keyboard</strong> usable &mdash; not everyone uses a mouse.</li>
+            <li>Real labels on inputs and buttons (screen readers read them).</li>
+            <li>Meaningful <strong>alt text</strong> on images.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>The mindset</h4>
+          <p>Curb cuts help wheelchairs <em>and</em> strollers, luggage, bikes. Accessible design is
+          rarely just for a few &mdash; captions, clear contrast and big tap targets help everyone, on a
+          bright street or a small phone.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 18 · PROCESS -->
+    <section class="slide">
+      <div class="eyebrow">Process · from idea to interface</div>
+      <h2>Wireframe &rarr; prototype &rarr; build</h2>
+      <div class="flow" style="margin-top:1.2em;">
+        <div class="flow-node"><strong>Wireframe</strong><span>boxes &amp; labels — structure, no style</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>Mockup</strong><span>visual design — type, colour, spacing</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>Prototype</strong><span>clickable — test the flow</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>Build</strong><span>code it — React components</span></div>
+      </div>
+      <p class="muted" style="margin-top:1.6em; max-width:82ch;">
+        Designers often work in <strong>Figma</strong> for the first three. Cheap to change a wireframe;
+        expensive to change shipped code &mdash; so think on the screen before you think in the editor.
+      </p>
+    </section>
+
+    <!-- 19 · RECAP -->
+    <section class="slide">
+      <div class="eyebrow">Wrap-up</div>
+      <h2>What to carry into the build</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <ul style="margin-top:.2em;">
+            <li>The frontend runs in the browser; it's HTML + CSS + JS over the DOM.</li>
+            <li>UX is how it works; UI is how it looks &mdash; you need both.</li>
+            <li>Hierarchy, alignment, type and colour make a screen feel intentional.</li>
+            <li>Design every state, stay accessible, keep it consistent.</li>
+          </ul>
+        </div>
+        <div class="card cyan-card">
+          <h4>Next: Lab 8</h4>
+          <p>We turn these principles into a real React app &mdash; components (consistency), props &amp;
+          state (behaviour), and honest loading/error states (visibility of status). The design ideas
+          become code.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 20 · BRIDGE / QUESTIONS -->
+    <section class="slide title-slide">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Frontend</span></div>
+      <h1>Now let's build one.</h1>
+      <p class="muted" style="max-width:56ch; margin-top:.8em; font-size:1.1rem;">
+        Questions first &mdash; then on to the Lab 8 deck, where we put these fundamentals to work in
+        React + TypeScript.
+      </p>
+    </section>
+
+  </div>
+
+  <div class="footer">
+    <span>AC Labs 2026 &middot; Frontend &amp; UI/UX Fundamentals</span>
+    <span class="slide-num"><em id="cur">1</em> / <span id="total">19</span></span>
+    <span><kbd>&rarr;</kbd> <kbd>&larr;</kbd> <kbd>F</kbd></span>
+  </div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  let i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    document.getElementById('cur').textContent = i + 1;
+    document.getElementById('progress').style.width = ((i + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight','PageDown',' '].includes(e.key)) { show(i+1); e.preventDefault(); }
+    else if (['ArrowLeft','PageUp'].includes(e.key)) { show(i-1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(total - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.footer')) return;
+    show(i + 1);
+  });
+
+  show(0);
+</script>
+</body>
+</html>

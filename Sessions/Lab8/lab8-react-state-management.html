@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 8 &mdash; Intro to React &amp; State Management</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.25);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --cyan: #0891b2;
+    --cyan-dim: rgba(8,145,178,0.08);
+    --cyan-border: rgba(8,145,178,0.25);
+    --border: #e5e7eb;
+    --border-2: #d1d5db;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: radial-gradient(circle, #c7d2e8 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.45;
+  }
+
+  .deck { position: relative; width: 100vw; height: 100vh; }
+
+  .slide {
+    position: absolute; inset: 0;
+    padding: 5vh 7vw;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+    animation: slideIn .3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .slide.active { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin-bottom: 0.4em;
+  }
+  h2 {
+    font-size: clamp(1.7rem, 3.2vw, 2.7rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6em;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 1em;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  p, li {
+    font-size: clamp(.95rem, 1.4vw, 1.22rem);
+    line-height: 1.6;
+    color: #374151;
+    font-family: var(--sans);
+    font-weight: 400;
+  }
+  ul { padding-left: 0; list-style: none; }
+  li {
+    padding: .45em 0 .45em 1.4em;
+    position: relative;
+  }
+  li::before {
+    content: '›';
+    position: absolute; left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  strong { color: var(--fg); font-weight: 700; }
+
+  .accent   { color: var(--accent); }
+  .green    { color: var(--green); }
+  .orange   { color: var(--orange); }
+  .cyan     { color: var(--cyan); }
+  .muted    { color: var(--muted-2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8vw; }
+
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    padding: 1.3em 1.4em;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: .5;
+  }
+  .card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: .5em;
+    font-family: var(--sans);
+  }
+  .card.green-card::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .card.green-card h4 { color: var(--green); }
+  .card.orange-card::before { background: linear-gradient(90deg, var(--orange), transparent); }
+  .card.orange-card h4 { color: var(--orange); }
+  .card.cyan-card::before { background: linear-gradient(90deg, var(--cyan), transparent); }
+  .card.cyan-card h4 { color: var(--cyan); }
+  .card p, .card li { font-size: .97rem; }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.2em 1.4em;
+    font-family: var(--mono);
+    font-size: clamp(.78rem, 1.1vw, .95rem);
+    line-height: 1.8;
+    overflow: auto;
+    position: relative;
+    white-space: pre;
+    color: #cdd5e0;
+  }
+  .code-block::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: 1em;
+    font-size: .68rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .code-block.sm { font-size: .76rem; line-height: 1.7; }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+  .tg  { color: #f0a3c4; }
+  .hi  { background: rgba(37,99,235,0.25); border-radius: 3px; padding: 0 2px; }
+  .hi-green { background: rgba(5,150,105,0.2); border-radius: 3px; padding: 0 2px; }
+
+  .flow {
+    display: flex; align-items: stretch;
+    gap: 0; margin-top: .8em;
+    flex-wrap: nowrap;
+  }
+  .flow-node {
+    flex: 1;
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: .9em .8em;
+    text-align: center;
+    position: relative;
+  }
+  .flow-node strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--accent);
+    margin-bottom: .3em;
+  }
+  .flow-node span { font-size: .78rem; color: var(--muted-2); }
+  .flow-arrow {
+    display: flex; align-items: center;
+    color: var(--muted);
+    font-size: 1.1rem;
+    padding: 0 .3em;
+    flex-shrink: 0;
+  }
+
+  .tree-wrap { display: flex; flex-direction: column; align-items: center; gap: .5em; margin-top: 1.4em; }
+  .tree-wrap .flow-arrow { justify-content: center; font-size: .85rem; font-family: var(--mono); color: var(--muted-2); }
+  .tree-row { display: flex; gap: 1em; justify-content: center; flex-wrap: wrap; }
+  .tree-row .flow-node { flex: 0 1 180px; }
+
+  .tag {
+    display: inline-block;
+    padding: .22em .75em;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    font-family: var(--mono);
+    font-size: .78rem;
+    margin: .2em .2em .2em 0;
+  }
+  .tag.green-tag  { background: var(--green-dim); color: var(--green); border-color: rgba(5,150,105,0.25); }
+  .tag.orange-tag { background: var(--orange-dim); color: var(--orange); border-color: rgba(217,119,6,0.25); }
+  .tag.cyan-tag   { background: var(--cyan-dim); color: var(--cyan); border-color: var(--cyan-border); }
+
+  .title-slide {
+    justify-content: flex-end;
+    padding-bottom: 10vh;
+  }
+  .title-slide h1 {
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    background: linear-gradient(135deg, #0f1117 20%, var(--accent) 60%, var(--cyan));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    max-width: 16ch;
+  }
+  .title-glow {
+    position: absolute;
+    top: 10%; left: -5%;
+    width: 60vw; height: 60vh;
+    background: radial-gradient(ellipse, rgba(37,99,235,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .title-glow-2 {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 50vw; height: 50vh;
+    background: radial-gradient(ellipse, rgba(8,145,178,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .lab-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .8rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: .4em .9em;
+    margin-bottom: 2em;
+  }
+  .lab-badge span { color: var(--accent); font-weight: 700; }
+
+  .steps { list-style: none; padding: 0; counter-reset: steps; }
+  .steps li {
+    counter-increment: steps;
+    padding: .55em 0 .55em 2.8em;
+    font-size: clamp(.9rem, 1.3vw, 1.1rem);
+  }
+  .steps li::before {
+    content: counter(steps, decimal-leading-zero);
+    position: absolute; left: 0;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 2em; height: 1.7em;
+    display: flex; align-items: center; justify-content: center;
+    top: .55em;
+  }
+
+  .timeline {
+    display: flex; gap: 0;
+    margin-top: 1.5em;
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .tl-item {
+    flex: 1;
+    padding: 1em 1.1em;
+    border-right: 1px solid var(--border-2);
+    position: relative;
+  }
+  .tl-item:last-child { border-right: none; }
+  .tl-item .tl-time {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: .35em;
+    letter-spacing: .05em;
+  }
+  .tl-item .tl-title {
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--fg);
+    margin-bottom: .2em;
+  }
+  .tl-item .tl-desc {
+    font-size: .82rem;
+    color: var(--muted-2);
+    line-height: 1.45;
+  }
+  .tl-item.highlight { background: var(--cyan-dim); }
+  .tl-item.highlight .tl-time { color: var(--cyan); }
+
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--cyan));
+    transition: width .3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    box-shadow: 0 0 8px rgba(37,99,235,0.4);
+  }
+  .footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .65em 1.4em;
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: rgba(248,249,252,0.92);
+    backdrop-filter: blur(8px);
+    z-index: 50;
+  }
+  .footer .slide-num { color: var(--muted-2); }
+  .footer .slide-num em { color: var(--accent); font-style: normal; }
+  kbd {
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    color: var(--muted-2);
+    padding: 1px 5px; border-radius: 4px;
+    font-size: .78em; font-family: var(--mono);
+  }
+
+  .warn-li::before { color: var(--orange) !important; content: '!' !important; }
+
+  p code, li code, td code {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: .88em;
+  }
+</style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="deck" id="deck">
+
+    <!-- 1 · TITLE -->
+    <section class="slide title-slide active">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 08</span></div>
+      <h1>React &amp; State Management</h1>
+      <p class="muted" style="max-width:62ch; margin-top:.8em; font-size:1.1rem;">
+        The backend is done &mdash; quizzes persist, owners are enforced. Today the API gets
+        its first real client: a React app that <em>fetches</em> quizzes from the API, lets you
+        <em>build</em> your own &mdash; questions and answers &mdash; in state, and <em>run</em> through them.
+      </p>
+      <p class="muted" style="margin-top:2.5em; font-size:.88rem;">
+        <kbd>&rarr;</kbd> next &nbsp; <kbd>&larr;</kbd> previous &nbsp; <kbd>F</kbd> fullscreen
+      </p>
+    </section>
+
+    <!-- 2 · AGENDA -->
+    <section class="slide">
+      <div class="eyebrow">Agenda</div>
+      <h2>What we'll cover today</h2>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-time">~15 min</div>
+          <div class="tl-title">Recap &amp; bridge</div>
+          <div class="tl-desc">Where the backend left off, and today's goal</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">~35 min</div>
+          <div class="tl-title">Frontend &amp; React basics</div>
+          <div class="tl-desc">The browser, HTML/CSS/JS, then components, props, state, useEffect</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-time">~10 min</div>
+          <div class="tl-title">Two backend tweaks</div>
+          <div class="tl-desc">CORS, and a temporary AllowAnonymous</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">~30 min</div>
+          <div class="tl-title">Fetch &amp; list</div>
+          <div class="tl-desc">Vite setup, fetch the API, loading &amp; error states</div>
+        </div>
+        <div class="tl-item highlight">
+          <div class="tl-time">~40 min</div>
+          <div class="tl-title">Build &amp; run</div>
+          <div class="tl-desc">Create a quiz in state, add questions/answers, run it</div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:1.4em; font-size:.9rem;">
+        Roughly two hours. The blue blocks are concept; the cyan blocks are hands-on in the guide.
+      </p>
+    </section>
+
+    <!-- 3 · WHERE WE ARE -->
+    <section class="slide">
+      <div class="eyebrow">Where we are</div>
+      <h2>Seven labs of backend, zero pixels of UI</h2>
+      <p style="max-width:80ch;">Labs 1&ndash;4 got us comfortable with LLMs, tool calling and RAG.
+      Labs 5&ndash;7 turned that into a real, persisted, secured API &mdash; the one today's React app will call.</p>
+      <div class="grid-3" style="margin-top:1.3em;">
+        <div class="card">
+          <h4>Quizzes API <span class="tag">Lab 5</span></h4>
+          <p>CRUD endpoints for quizzes &amp; questions &mdash; called, until today, only from Swagger.</p>
+        </div>
+        <div class="card green-card">
+          <h4>Persistence <span class="tag green-tag">Lab 6</span></h4>
+          <p>EF Core + SQL Server. Every quiz and question actually survives a restart.</p>
+        </div>
+        <div class="card">
+          <h4>Auth &amp; ownership <span class="tag">Lab 7</span></h4>
+          <p>Microsoft sign-in, JWT validation, an <code>OwnerId</code> enforced on every mutation.</p>
+        </div>
+      </div>
+      <p class="accent" style="margin-top:1.4em;"><strong>Today: the first pixel. A React app that calls this exact API &mdash; same routes, same models.</strong></p>
+    </section>
+
+    <!-- 4 · THE GAP -->
+    <section class="slide">
+      <div class="eyebrow">The gap</div>
+      <h2>Swagger was never meant to be the product</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Everything you built works &mdash; but the only "client" so far is a developer
+          tool. A real quiz app needs an actual screen: a list of quizzes, a way to create
+          one, a way to take one.</p>
+          <p style="margin-top:.9em;">Today builds all three &mdash; reading from the real API,
+          then creating and running quizzes entirely in React state.</p>
+        </div>
+        <div class="card cyan-card">
+          <h4>Today's scope</h4>
+          <ul style="padding-left:0;">
+            <li>Render a list of quizzes pulled live from the API, with honest loading &amp; error states</li>
+            <li>Build a quiz in the browser &mdash; add questions, add answer options &mdash; held in state</li>
+            <li>Run a quiz: step through the questions one at a time (no grading, by design)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW · FRONTEND INTRO 1 · WHERE CODE RUNS -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · the frontend</div>
+      <h2>Where your code runs: the browser</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Everything in Labs 5&ndash;7 runs on a <strong>server</strong>: it owns the database,
+          enforces the rules, and answers requests with <strong>data</strong> (JSON). It has no
+          idea what anything looks like.</p>
+          <p style="margin-top:.9em;">The <strong>frontend</strong> is the other half. It runs in
+          <em>each user's browser</em>, turns that data into pixels, and reacts to clicks and
+          typing. The two halves talk over <strong>HTTP</strong> &mdash; the same <code>fetch</code>
+          you'll write today.</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:1em;">
+          <div class="card">
+            <h4>Backend <span class="tag">on a server</span></h4>
+            <p>C# + EF Core + SQL. Owns data, auth, business rules. Speaks JSON.</p>
+          </div>
+          <div class="flow-arrow" style="text-align:center;">↕ HTTP request / response</div>
+          <div class="card cyan-card">
+            <h4>Frontend <span class="tag">in the browser</span></h4>
+            <p>React + TypeScript. Renders the UI, handles interaction, calls the API.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW · FRONTEND INTRO 2 · THREE LANGUAGES -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · the building materials</div>
+      <h2>HTML, CSS, JavaScript &mdash; three jobs</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Every web page is made of the same three things, each with one job:</p>
+          <ul style="margin-top:.6em;">
+            <li><strong>HTML</strong> &mdash; the <em>structure</em>: headings, paragraphs, buttons.</li>
+            <li><strong>CSS</strong> &mdash; the <em>style</em>: colour, spacing, layout.</li>
+            <li><strong>JavaScript</strong> &mdash; the <em>behaviour</em>: what happens when you click or type.</li>
+          </ul>
+          <p style="margin-top:.9em;">React's twist: you write HTML-like markup (<strong>JSX</strong>)
+          <em>inside</em> JavaScript, so a component keeps its structure and its behaviour together
+          in one file.</p>
+        </div>
+        <div class="code-block" data-lang="html">
+<span class="cm">&lt;!-- HTML: structure --&gt;</span>
+<span class="tg">&lt;button</span> <span class="at">id</span>=<span class="str">"run"</span><span class="tg">&gt;</span>Run quiz<span class="tg">&lt;/button&gt;</span>
+
+<span class="cm">/* CSS: style */</span>
+<span class="fn">#run</span> { background: <span class="str">#2563eb</span>; color: white; }
+
+<span class="cm">// JavaScript: behaviour</span>
+<span class="fn">document</span>.<span class="fn">querySelector</span>(<span class="str">'#run'</span>)
+  .<span class="fn">addEventListener</span>(<span class="str">'click'</span>, startQuiz);
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW · FRONTEND INTRO 3 · DOM & FRAMEWORKS -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · why a framework</div>
+      <h2>From hand-editing the DOM to React</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>The browser parses your HTML into the <strong>DOM</strong> &mdash; a live tree of
+          objects representing the page. Plain JavaScript means <em>you</em> find nodes and
+          change them by hand.</p>
+          <p style="margin-top:.9em;">Fine for one button. For a whole app it's a nightmare:
+          the screen and your data drift out of sync, and you're forever patching the DOM to
+          catch up.</p>
+          <div class="card cyan-card" style="margin-top:1em;">
+            <h4>What React buys you</h4>
+            <p>You describe what the screen should look like <em>for the current data</em>.
+            Change the data; React updates the DOM to match. You stop touching the DOM at all.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="javascript">
+<span class="cm">// vanilla: keep poking the DOM by hand</span>
+<span class="kw">let</span> count = <span class="nu">0</span>;
+btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () =&gt; {
+  count++;
+  label.textContent = count;       <span class="cm">// don't forget this…</span>
+  badge.style.display = count
+    ? <span class="str">'block'</span> : <span class="str">'none'</span>;            <span class="cm">// …or this…</span>
+});
+
+<span class="cm">// React: change data, the UI follows</span>
+<span class="kw">const</span> [count, setCount] = <span class="fn">useState</span>(<span class="nu">0</span>);
+<span class="cm">// &lt;button onClick={() =&gt; setCount(count + 1)}&gt;{count}&lt;/button&gt;</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · TWO BACKEND TWEAKS -->
+    <section class="slide">
+      <div class="eyebrow">Bridging to the backend</div>
+      <h2>Two small changes the API needs first</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>The browser is a stricter caller than Swagger was. Two changes, already made
+          in <code>Lab8/api</code>, before React can talk to it at all:</p>
+          <ul style="margin-top:.6em;">
+            <li><strong>CORS</strong> &mdash; the API must explicitly allow the Vite dev
+            server's origin, <code>localhost:5173</code>.</li>
+            <li><strong>Temporarily open <code>GET</code></strong> &mdash; signing in from
+            the browser (MSAL) is its own lesson, coming later. For today, reading is
+            public; <em>writing still isn't.</em></li>
+          </ul>
+          <div class="card orange-card" style="margin-top:1em;">
+            <h4>Scope, narrowed on purpose</h4>
+            <p><code>[Authorize]</code> stays on the controller. <code>POST</code>,
+            <code>PUT</code> and <code>DELETE</code> still need a valid token and will
+            <code>401</code> straight from the browser too &mdash; only <code>GET</code>
+            gets <code>[AllowAnonymous]</code>, and only for this lab.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="csharp">
+<span class="cm">// Program.cs — let the Vite dev server call us</span>
+builder.Services.<span class="fn">AddCors</span>(o =&gt; o.<span class="fn">AddDefaultPolicy</span>(p =&gt;
+    p.<span class="fn">WithOrigins</span>(<span class="str">"http://localhost:5173"</span>)
+     .<span class="fn">AllowAnyHeader</span>().<span class="fn">AllowAnyMethod</span>()));
+<span class="cm">// ...</span>
+app.<span class="fn">UseCors</span>();          <span class="cm">// before UseAuthorization</span>
+app.<span class="fn">UseAuthentication</span>();
+app.<span class="fn">UseAuthorization</span>();
+
+<span class="cm">// QuizzesController.cs — read stays open, for now</span>
+[<span class="ty">HttpGet</span>]
+[<span class="ty">AllowAnonymous</span>]   <span class="cm">// ← temporary</span>
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;...&gt; <span class="fn">GetAll</span>() { ... }
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · WHY REACT -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · the big idea</div>
+      <h2>Declarative UI: describe <em>what</em>, not <em>how</em></h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Plain JavaScript pushes you toward telling the browser exactly which DOM
+          node to find and mutate, one step at a time. React asks a different
+          question: <strong>given the current data, what should this look like?</strong></p>
+          <p style="margin-top:.9em;">A <strong>component</strong> is a function that
+          answers that question. When the data changes, you don't touch the DOM
+          yourself &mdash; you describe the new "what", and React figures out the "how".</p>
+        </div>
+        <div class="code-block" data-lang="javascript">
+<span class="cm">// imperative — you do the DOM surgery</span>
+<span class="kw">const</span> el = document.<span class="fn">getElementById</span>(<span class="str">'count'</span>);
+el.textContent = count;
+el.style.color = count &gt; 5 ? <span class="str">'red'</span> : <span class="str">'black'</span>;
+
+<span class="cm">// declarative — describe the result, React does the rest</span>
+<span class="kw">return</span> &lt;<span class="tg">span</span> style={{ color: count &gt; 5 ? <span class="str">'red'</span> : <span class="str">'black'</span> }}&gt;
+  {count}
+&lt;/<span class="tg">span</span>&gt;;
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · ANATOMY OF A COMPONENT -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · building blocks</div>
+      <h2>A component is just a function</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>It takes inputs, and returns <strong>JSX</strong> &mdash; markup that looks
+          like HTML but is plain JavaScript under the hood. Capitalised name, one
+          piece of UI, reusable wherever you need that piece.</p>
+          <p style="margin-top:.9em;" class="muted">JSX compiles to
+          <code>React.createElement(...)</code> calls &mdash; the curly braces
+          <code>{ }</code> are your escape hatch back into real JavaScript.</p>
+        </div>
+        <div class="code-block" data-lang="tsx">
+<span class="cm">// QuizCard.tsx</span>
+<span class="kw">type</span> <span class="ty">QuizCardProps</span> = {
+  title: <span class="ty">string</span>;
+  description?: <span class="ty">string</span>;
+};
+
+<span class="kw">function</span> <span class="fn">QuizCard</span>({ title, description }: <span class="ty">QuizCardProps</span>) {
+  <span class="kw">return</span> (
+    &lt;<span class="tg">div</span> className=<span class="str">"quiz-card"</span>&gt;
+      &lt;<span class="tg">h3</span>&gt;{title}&lt;/<span class="tg">h3</span>&gt;
+      {description &amp;&amp; &lt;<span class="tg">p</span>&gt;{description}&lt;/<span class="tg">p</span>&gt;}
+    &lt;/<span class="tg">div</span>&gt;
+  );
+}
+
+<span class="kw">export default</span> QuizCard;
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · PROPS -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · data flow</div>
+      <h2>Props: data flows down, one way</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p><strong>Props</strong> ("properties") are how a parent hands data to a
+          child &mdash; exactly like function arguments. The child reads them; it never
+          changes them.</p>
+          <div class="card" style="margin-top:1em;">
+            <h4>The rule</h4>
+            <p>If a component owns the value and can change it &mdash; that's
+            <strong>state</strong> (next slide). If it's handed in from outside and
+            only read &mdash; that's a <strong>prop</strong>.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="tsx">
+<span class="cm">// App.tsx — the parent passes data down</span>
+&lt;<span class="ty">QuizCard</span>
+  title=<span class="str">"C# fundamentals"</span>
+  description=<span class="str">"Variables, types, control flow"</span>
+/&gt;
+
+<span class="cm">// QuizCard.tsx — the child just receives it</span>
+<span class="kw">function</span> <span class="fn">QuizCard</span>({ title, description }: <span class="ty">QuizCardProps</span>) {
+  <span class="cm">// title, description are read-only here</span>
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 · STATE -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · the missing piece</div>
+      <h2>State: data a component owns &mdash; and can change</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p><code>useState</code> is a <strong>hook</strong> &mdash; a function that plugs
+          a component into React's machinery. It gives you a value, and a setter that
+          schedules a re-render with the new value.</p>
+          <div class="code-block" data-lang="tsx" style="margin-top:.8em;">
+<span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="kw">function</span> <span class="fn">ExistingQuizzes</span>() {
+  <span class="kw">const</span> [quizzes, setQuizzes] = <span class="fn">useState</span>&lt;<span class="ty">ApiQuiz</span>[]&gt;([]);
+  <span class="cm">//      ^value      ^setter         ^initial value</span>
+
+  <span class="cm">// calling setQuizzes(...) re-renders this component</span>
+  <span class="cm">// with the new array — you never push() into quizzes directly</span>
+}
+          </div>
+        </div>
+        <div class="grid-2" style="gap:1em;">
+          <div class="card">
+            <h4>Props</h4>
+            <p>Passed in from a parent. Read-only. Change &rarr; parent re-renders the child.</p>
+          </div>
+          <div class="card cyan-card">
+            <h4>State</h4>
+            <p>Owned by this component. Mutable via its setter. Change &rarr; this component re-renders.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 · RENDER CYCLE -->
+    <section class="slide">
+      <div class="eyebrow">Under the hood</div>
+      <h2>What "re-render" actually means</h2>
+      <div class="flow" style="margin-top:1.4em;">
+        <div class="flow-node"><strong>1 · Change</strong><span>setQuizzes(newData) is called</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>2 · Schedule</strong><span>React queues a re-render</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>3 · Re-run</strong><span>your component function runs again</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>4 · Diff</strong><span>compares new output to the last one</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>5 · Patch</strong><span>only the changed DOM nodes update</span></div>
+      </div>
+      <p class="muted" style="margin-top:1.6em;">
+        You never call the function yourself, and you never touch the DOM. You just
+        change the data; React decides what needs to move.
+      </p>
+    </section>
+
+    <!-- 11 · USEEFFECT -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · reaching outside React</div>
+      <h2>useEffect: for everything that isn't rendering</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Fetching data, timers, subscriptions &mdash; "side effects" that happen
+          <em>because</em> the component rendered, not part of describing the UI itself.
+          <code>useEffect</code> runs after render, and again whenever its dependencies change.</p>
+        </div>
+        <div class="code-block" data-lang="tsx">
+<span class="kw">import</span> { useEffect, useState } <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="kw">function</span> <span class="fn">ExistingQuizzes</span>() {
+  <span class="kw">const</span> [quizzes, setQuizzes] = <span class="fn">useState</span>&lt;<span class="ty">ApiQuiz</span>[]&gt;([]);
+
+  <span class="fn">useEffect</span>(() =&gt; {
+    <span class="fn">fetchQuizzes</span>().<span class="fn">then</span>(setQuizzes);
+  }, []);  <span class="cm">// ← empty array: run once, on mount</span>
+
+  <span class="kw">return</span> <span class="cm">/* ... */</span>;
+}
+        </div>
+      </div>
+      <div class="card orange-card" style="margin-top:1em;">
+        <h4>The classic gotcha</h4>
+        <p>Drop the <code>[]</code> and the effect runs after <em>every</em> render &mdash;
+        which, if it calls <code>setQuizzes</code>, triggers another render, which runs
+        the effect again. An infinite fetch loop, and it's the #1 thing people get
+        wrong in their first week of React.</p>
+      </div>
+    </section>
+
+    <!-- 12 · CONNECTING TO THE API -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · meeting the backend</div>
+      <h2>Connecting to the real API</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>Plain <code>fetch</code> today &mdash; no library yet. The <code>ApiQuiz</code>
+          type below mirrors the C# model from Lab 6 field for field, so the shape
+          shouldn't be a surprise.</p>
+          <p style="margin-top:.9em;">Because of the <code>[AllowAnonymous]</code> change
+          from slide 5, no <code>Authorization</code> header is needed for this call &mdash;
+          a deliberate simplification, not a permanent one.</p>
+        </div>
+        <div class="code-block" data-lang="tsx">
+<span class="kw">type</span> <span class="ty">ApiQuiz</span> = {
+  id: <span class="ty">string</span>;
+  title: <span class="ty">string</span>;
+  description?: <span class="ty">string</span>;
+  ownerId: <span class="ty">string</span>;
+};
+
+<span class="kw">async function</span> <span class="fn">fetchQuizzes</span>(): <span class="ty">Promise</span>&lt;<span class="ty">ApiQuiz</span>[]&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'http://localhost:5023/quizzes'</span>);
+  <span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> <span class="ty">Error</span>(<span class="str">`HTTP ${res.status}`</span>);
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 · COMPOSITION -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · putting it together</div>
+      <h2>Composition: building the screen out of pieces</h2>
+      <p style="max-width:78ch;">Components nest. A parent holds the data and passes
+      slices of it down as props &mdash; each child stays small and only knows about
+      its own piece.</p>
+      <div class="tree-wrap">
+        <div class="flow-node" style="max-width:300px;"><strong>App</strong><span>owns the built quizzes + which screen is shown</span></div>
+        <div class="flow-arrow">↓ renders the right screen, passes data down as props</div>
+        <div class="tree-row">
+          <div class="flow-node"><strong>ExistingQuizzes</strong><span>fetches &amp; lists the API quizzes</span></div>
+          <div class="flow-node"><strong>QuizBuilder</strong><span>onCreate(quiz)</span></div>
+          <div class="flow-node"><strong>QuizRunner</strong><span>quiz, onExit</span></div>
+        </div>
+        <div class="flow-arrow">↓ both lists render one &lt;QuizCard /&gt; per quiz</div>
+        <div class="tree-row">
+          <div class="flow-node"><strong>QuizCard</strong><span>title, subtitle, action</span></div>
+          <div class="flow-node"><strong>QuizCard</strong><span>title, subtitle, action</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 · LIFTING STATE -->
+    <section class="slide">
+      <div class="eyebrow">Concepts · where state lives</div>
+      <h2>Lifting state up</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>State lives in the <strong>closest component that needs it</strong> &mdash;
+          or, if several components need the same data, in their nearest common ancestor.
+          The built <code>quizzes</code> live in <code>App</code> because the builder adds
+          to them and the home list and runner read from them.</p>
+          <p style="margin-top:.9em;">But notice what <em>doesn't</em> get lifted: the
+          half-finished questions inside <code>QuizBuilder</code> stay local &mdash; no one
+          else needs them, so lifting them would just be noise.</p>
+        </div>
+        <div class="card cyan-card">
+          <h4>Today vs. next session</h4>
+          <p><strong>Today:</strong> state lifted one level into <code>App</code>, plus
+          local state inside the builder and runner. Props down, callbacks up.</p>
+          <p style="margin-top:.6em;"><strong>Next session</strong> brings the
+          <strong>Context API</strong> &mdash; for state that genuinely needs to be shared
+          across a whole screen, when passing props down many levels stops scaling.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15 · PROJECT SETUP -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on · setup</div>
+      <h2>Scaffolding the project</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p><strong>Vite</strong> is the build tool &mdash; fast dev server, instant
+          reload. The <code>react-ts</code> template gives us React + TypeScript out
+          of the box. You don't run this today &mdash; <code>Lab8/Code</code> is already
+          scaffolded this way; the command is just how it was made.</p>
+          <div class="card" style="margin-top:1em;">
+            <h4>Prerequisite</h4>
+            <p><strong>Node.js 20 LTS.</strong> Run <code>node -v</code> first &mdash; an
+            old Node version is the #1 reason a fresh Vite project fails to start.</p>
+          </div>
+        </div>
+        <div class="code-block" data-lang="shell">
+<span class="cm"># how Lab8/Code was scaffolded (don't re-run)</span>
+npm create vite@latest quizmaster-ui -- --template react-ts
+
+<span class="cm"># what you actually run, from inside Lab8/Code</span>
+<span class="kw">cd</span> Lab8/Code
+npm install
+npm run dev
+<span class="cm"># → http://localhost:5173</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16 · LAB ROADMAP -->
+    <section class="slide">
+      <div class="eyebrow">Hands-on</div>
+      <h2>The lab, step by step</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p class="accent" style="font-family:var(--mono); font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; margin-bottom:.4em;">Parts A&ndash;B · Setup &amp; fetch</p>
+          <ol class="steps" style="counter-reset: steps -1;">
+            <li>Run the API, then the React baseline (Node 20)</li>
+            <li>Tour the starter &mdash; the two families of <code>Quiz</code> type</li>
+            <li>Write <code>fetchQuizzes()</code> against the API</li>
+            <li><code>ExistingQuizzes</code>: <code>useState</code>/<code>useEffect</code>, loading &amp; error</li>
+          </ol>
+        </div>
+        <div>
+          <p class="cyan" style="font-family:var(--mono); font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; margin-bottom:.4em;">Part C · Build &amp; run</p>
+          <ol class="steps" style="counter-reset: steps 3;">
+            <li><code>QuizBuilder</code>: title, questions &amp; answers in state</li>
+            <li>Update nested state <em>immutably</em> &mdash; new refs every time</li>
+            <li><code>QuizRunner</code>: step through, record picks, summary</li>
+            <li>See how <code>App</code> lifts the quizzes &amp; switches screens</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 17 · GOTCHAS -->
+    <section class="slide">
+      <div class="eyebrow">Watch out</div>
+      <h2>Things people get wrong on day one</h2>
+      <ul>
+        <li class="warn-li"><strong>Missing dependency array</strong> &mdash; <code>useEffect(fn)</code> with no <code>[]</code> runs every render; combined with a state-setting fetch, that's an infinite loop.</li>
+        <li class="warn-li"><strong>No <code>key</code> prop on a list</strong> &mdash; mapping quizzes to <code>&lt;QuizCard&gt;</code> without a stable <code>key={quiz.id}</code> causes React warnings and reordering bugs.</li>
+        <li class="warn-li"><strong>Mutating state directly</strong> &mdash; <code>quizzes.push(x)</code> changes the array but doesn't tell React. Always go through the setter: <code>setQuizzes([...quizzes, x])</code>.</li>
+        <li class="warn-li"><strong>CORS errors in the console</strong> &mdash; means <code>UseCors()</code> is missing, in the wrong order, or the origin doesn't match <code>localhost:5173</code> exactly.</li>
+        <li class="warn-li"><strong>Forgetting only <code>GET</code> is open</strong> &mdash; <code>POST</code>/<code>PUT</code>/<code>DELETE</code> still need a Bearer token; calling them from the browser today will <code>401</code>, same as Lab 7.</li>
+        <li class="warn-li"><strong>Confusing props and state</strong> &mdash; if it's passed in, it's a prop; if this component owns and changes it, it's state.</li>
+      </ul>
+    </section>
+
+    <!-- 18 · RECAP -->
+    <section class="slide">
+      <div class="eyebrow">Wrap-up</div>
+      <h2>What you can do now</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>You took a backend-only API and gave it its first screen &mdash; then went
+          past read-only into the real work of state management.</p>
+          <ul style="margin-top:.8em;">
+            <li>Build functional components driven by props</li>
+            <li>Use <code>useEffect</code> to fetch on mount, with loading &amp; error states</li>
+            <li>Hold nested data (quiz &rarr; questions &rarr; answers) in <code>useState</code> and update it <em>immutably</em></li>
+            <li>Lift state to the right level and switch screens from it</li>
+          </ul>
+        </div>
+        <div class="card cyan-card">
+          <h4>Where this goes next</h4>
+          <p>Real forms and validation, and the <strong>Context API</strong> where
+          prop-drilling stops scaling. A component library for real styling. And eventually,
+          wiring sign-in (MSAL) into the browser so "Create quiz" can actually
+          <code>POST</code> &mdash; closing the gap this lab deliberately left open.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 19 · QUESTIONS -->
+    <section class="slide title-slide">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 08</span></div>
+      <h1>Questions?</h1>
+      <p class="muted" style="max-width:54ch; margin-top:.8em; font-size:1.1rem;">
+        Open the guide and let's build it. Start from the provided
+        <code>Lab8/Code</code> baseline &mdash; Step 00, and confirm your Node version first.
+      </p>
+    </section>
+
+  </div>
+
+  <div class="footer">
+    <span>AC Labs 2026 &middot; Lab 08 &mdash; Intro to React &amp; State Management</span>
+    <span class="slide-num"><em id="cur">1</em> / <span id="total">19</span></span>
+    <span><kbd>&rarr;</kbd> <kbd>&larr;</kbd> <kbd>F</kbd></span>
+  </div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  let i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    document.getElementById('cur').textContent = i + 1;
+    document.getElementById('progress').style.width = ((i + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight','PageDown',' '].includes(e.key)) { show(i+1); e.preventDefault(); }
+    else if (['ArrowLeft','PageUp'].includes(e.key)) { show(i-1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(total - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.footer')) return;
+    show(i + 1);
+  });
+
+  show(0);
+</script>
+</body>
+</html>

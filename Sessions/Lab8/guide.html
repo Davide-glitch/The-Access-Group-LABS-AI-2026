@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 8 &mdash; Step-by-step guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.2);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --green-border: rgba(5,150,105,0.2);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --orange-border: rgba(217,119,6,0.2);
+    --cyan: #0891b2;
+    --cyan-dim: rgba(8,145,178,0.08);
+    --cyan-border: rgba(8,145,178,0.2);
+    --border: #e5e7eb;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --display: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  .hero {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .3em .8em;
+    margin-bottom: 1.5rem;
+  }
+  .hero-badge span { color: var(--accent); font-weight: 700; }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: .8rem;
+    color: var(--fg);
+  }
+  .hero p {
+    font-size: 1.1rem;
+    color: var(--muted-2);
+    max-width: 62ch;
+  }
+
+  .overview {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 3rem;
+  }
+  .overview h3 {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--fg);
+  }
+  .step-index {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .4rem;
+  }
+  .step-index a {
+    display: flex; align-items: center; gap: .6em;
+    font-size: .88rem;
+    color: var(--muted-2);
+    text-decoration: none;
+    padding: .3em .5em;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+  }
+  .step-index a:hover { background: var(--bg-3); color: var(--accent); }
+  .step-index a .num {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 1.9em; height: 1.6em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .partlabel {
+    font-family: var(--mono);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 2.5rem 0 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--accent-border);
+  }
+
+  .step {
+    margin-bottom: 3.5rem;
+    scroll-margin-top: 2rem;
+  }
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  .step-num {
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 8px;
+    min-width: 2.4em; height: 2.4em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: .15em;
+  }
+  .step h2 {
+    font-family: var(--display);
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--fg);
+  }
+  .step p, .step li {
+    font-size: .97rem;
+    line-height: 1.7;
+    color: #374151;
+  }
+  .step ul, .step ol {
+    padding-left: 1.4rem;
+    margin: .6rem 0;
+  }
+  .step li { margin-bottom: .3em; }
+  .step p + p { margin-top: .7em; }
+  .step-body { padding-left: 3.4rem; }
+
+  .callout {
+    border-radius: 10px;
+    padding: 1em 1.2em;
+    margin: 1.1em 0;
+    font-size: .93rem;
+    line-height: 1.6;
+    border-left: 3px solid;
+  }
+  .callout strong { display: block; margin-bottom: .2em; font-size: .88rem; text-transform: uppercase; letter-spacing: .06em; }
+  .callout.why   { background: var(--accent-dim); border-color: var(--accent); color: #1e3a8a; }
+  .callout.why strong { color: var(--accent); }
+  .callout.check { background: var(--green-dim); border-color: var(--green); color: #065f46; }
+  .callout.check strong { color: var(--green); }
+  .callout.warn  { background: var(--orange-dim); border-color: var(--orange); color: #78350f; }
+  .callout.warn strong { color: var(--orange); }
+  .callout.tip   { background: var(--cyan-dim); border-color: var(--cyan); color: #164e63; }
+  .callout.tip strong { color: var(--cyan); }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.1em 1.3em;
+    font-family: var(--mono);
+    font-size: .84rem;
+    line-height: 1.85;
+    overflow-x: auto;
+    white-space: pre;
+    color: #cdd5e0;
+    position: relative;
+  }
+  .code-block[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: .9em;
+    font-size: .65rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .code-block.sm { font-size: .78rem; }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+  .tg  { color: #f0a3c4; }
+  .hi  { background: rgba(37,99,235,0.25); border-radius: 3px; padding: 0 2px; }
+  .hi-green { background: rgba(5,150,105,0.2); border-radius: 3px; padding: 0 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .87em;
+    background: var(--bg-3);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .step-divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 3rem 0;
+  }
+
+  .final {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 2rem;
+    margin-top: 4rem;
+    text-align: center;
+  }
+  .final h2 {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: .5rem;
+  }
+  .final p { color: var(--muted-2); font-size: .97rem; }
+
+  .file-path {
+    font-family: var(--mono);
+    font-size: .78rem;
+    background: var(--bg-3);
+    border: 1px dashed var(--border);
+    color: var(--muted-2);
+    padding: .3em .7em;
+    border-radius: 6px;
+    display: inline-block;
+    margin: .3em 0 .8em;
+  }
+  .file-path strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-badge">AC Labs 2026 &nbsp;·&nbsp; <span>Lab 08</span> &nbsp;·&nbsp; Self-paced guide</div>
+    <h1>Build QuizMaster: fetch, build, run</h1>
+    <p>Your first real React app, in three movements. First you <strong>fetch</strong> the quizzes already on your API and render them. Then you build a screen that lets you <strong>create</strong> a quiz in the browser &mdash; add questions, add answer options &mdash; holding it all in React state. Finally you <strong>run</strong> the quiz: step through the questions one at a time. Fetching teaches data; building and running teach state.</p>
+  </div>
+
+  <div class="overview">
+    <h3>Steps in this guide</h3>
+    <div class="step-index">
+      <a href="#s0"><span class="num">00</span> Run the API baseline</a>
+      <a href="#s1"><span class="num">01</span> Run the React baseline</a>
+      <a href="#s2"><span class="num">02</span> Tour the starter</a>
+      <a href="#s3"><span class="num">03</span> Read QuizCard</a>
+      <a href="#s4"><span class="num">04</span> Fetch the quizzes</a>
+      <a href="#s5"><span class="num">05</span> Wire up ExistingQuizzes</a>
+      <a href="#s6"><span class="num">06</span> Build the QuizBuilder</a>
+      <a href="#s7"><span class="num">07</span> Run the quiz</a>
+      <a href="#s8"><span class="num">08</span> How it composes</a>
+      <a href="#s9"><span class="num">09</span> Homework</a>
+    </div>
+  </div>
+
+  <div class="partlabel">Part A &middot; Setup &mdash; two baselines, two terminals</div>
+
+  <!-- STEP 0 -->
+  <div class="step" id="s0">
+    <div class="step-header">
+      <div class="step-num">00</div>
+      <h2>Run the API baseline</h2>
+    </div>
+    <div class="step-body">
+      <p>Open <span class="file-path"><strong>Sessions/Lab8/</strong>api</span> in a terminal. It's your Lab 7 solution &mdash; same auth and ownership rules &mdash; with two small changes for today.</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># from inside Sessions/Lab8/api</span>
+dotnet ef database update
+dotnet run</div>
+      <p>Open <code>http://localhost:5023/swagger</code> and run <code>GET /quizzes</code> <strong>without</strong> clicking Authorize.</p>
+      <div class="callout check">
+        <strong>200 OK, no sign-in</strong>
+        That's new. In Lab 7 this was a 401 until you authenticated. Try <code>POST /quizzes</code> without signing in &mdash; still <strong>401</strong>. Only reading got easier; writing didn't, and that's why today's "create a quiz" lives in the browser, not on the server.
+      </div>
+      <p>The two changes (both commented <code>NEW for Lab 8</code>):</p>
+      <ul>
+        <li><strong><code>[AllowAnonymous]</code> on <code>List()</code> only</strong> &mdash; so the React app can read quizzes without a sign-in flow. Every write is untouched.</li>
+        <li><strong><code>AddCors</code> / <code>UseCors()</code></strong> in <code>Program.cs</code>, allowing <code>http://localhost:5173</code> &mdash; the Vite dev server's origin.</li>
+      </ul>
+      <div class="callout why">
+        <strong>Why writing stays locked</strong>
+        A browser sign-in flow (MSAL, redirect URIs, token caching) deserves its own session. So today, <em>creating</em> and <em>running</em> quizzes happens entirely in React state &mdash; nothing is POSTed. Reading from the API is the one place we cross the wire, and it's public for one lab.
+      </div>
+      <p>Leave this running. Everything from here happens in a second terminal.</p>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 1 -->
+  <div class="step" id="s1">
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <h2>Run the React baseline</h2>
+    </div>
+    <div class="step-body">
+      <p>Open a <strong>second</strong> terminal in <span class="file-path"><strong>Sessions/Lab8/</strong>Code</span> &mdash; a Vite + React + TypeScript project, already scaffolded.</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># from inside Sessions/Lab8/Code</span>
+node -v   <span class="cm"># confirm Node 20 LTS first</span>
+npm install
+npm run dev
+<span class="cm"># → http://localhost:5173</span></div>
+      <p>Open that URL. You'll see the "QuizMaster" header and a single placeholder message. The starter is deliberately bare &mdash; just the scaffold and the types. You create every component yourself over the next steps; that's the lab.</p>
+      <div class="callout tip">
+        <strong>Keep <code>npm run dev</code> running as you work</strong>
+        The dev server hot-reloads on every save, so the page updates the moment you create or edit a file. It uses esbuild, which strips types without fully type-checking &mdash; so the app keeps running even mid-step. Run <code>npm run build</code> at the end if you want the full TypeScript check.
+      </div>
+    </div>
+  </div>
+
+  <div class="partlabel">Part B &middot; Fetch data from the API</div>
+
+  <!-- STEP 2 -->
+  <div class="step" id="s2">
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <h2>Tour the starter</h2>
+    </div>
+    <div class="step-body">
+      <p>The starter is bare on purpose. Here's what's there now &mdash; and what you'll create as you work through the guide.</p>
+      <div class="code-block" data-lang="text">
+src/                          what's already here
+  types/quiz.ts             ✓ ApiQuiz + Quiz/Question/Answer (given)
+  index.css                 ✓ all the styling (given)
+  App.tsx                   ✓ placeholder — you fill it in (step 08)
+  main.tsx                  ✓ React entry point
+
+                              you'll create:
+  api/quizzes.ts              fetchQuizzes()                  (step 04)
+  components/QuizCard.tsx     presentational card             (step 03)
+  components/ExistingQuizzes.tsx  fetch + render the list     (step 05)
+  components/QuizBuilder.tsx      build a quiz in state       (step 06)
+  components/QuizRunner.tsx       run a quiz                  (step 07)</div>
+      <p>Open <code>src/types/quiz.ts</code> &mdash; the one piece of the data model you don't have to type out. There are two families of type, and the comment in the file explains why:</p>
+      <div class="file-path"><strong>src/types/</strong>quiz.ts</div>
+      <div class="code-block" data-lang="tsx">
+<span class="cm">// What the API returns from GET /quizzes — read only.</span>
+<span class="kw">export type</span> <span class="ty">ApiQuiz</span> = {
+  id: <span class="ty">string</span>; title: <span class="ty">string</span>;
+  description?: <span class="ty">string</span>; ownerId: <span class="ty">string</span>;
+};
+
+<span class="cm">// What you build in the browser — lives only in React state.</span>
+<span class="kw">export type</span> <span class="ty">Answer</span>   = { id: <span class="ty">string</span>; text: <span class="ty">string</span>; };
+<span class="kw">export type</span> <span class="ty">Question</span> = { id: <span class="ty">string</span>; text: <span class="ty">string</span>; answers: <span class="ty">Answer</span>[]; };
+<span class="kw">export type</span> <span class="ty">Quiz</span>     = { id: <span class="ty">string</span>; title: <span class="ty">string</span>; questions: <span class="ty">Question</span>[]; };</div>
+      <div class="callout why">
+        <strong>Two types, because there are two kinds of quiz</strong>
+        The quizzes on the server are flat records you only read. The quizzes you build are nested (a quiz has questions, a question has answers) and you mutate them constantly. Notice there's no <code>isCorrect</code> &mdash; this app doesn't grade, it just records which option you picked.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 3 -->
+  <div class="step" id="s3">
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <h2>Create QuizCard &mdash; props in, JSX out</h2>
+    </div>
+    <div class="step-body">
+      <p>Make a <code>components/</code> folder and create <code>src/components/QuizCard.tsx</code>. It's the simplest kind of component &mdash; pure presentation &mdash; and both the API list and your own quizzes render through it, so it's the right place to start. Type it out and read it as you go:</p>
+      <div class="file-path"><strong>src/components/</strong>QuizCard.tsx</div>
+      <p style="margin-bottom:.4em;">Don't forget the import at the very top &mdash; <code>action</code> is a React node:</p>
+      <div class="code-block sm" data-lang="tsx">
+<span class="kw">import type</span> { ReactNode } <span class="kw">from</span> <span class="str">'react'</span>;</div>
+      <div class="code-block" data-lang="tsx">
+<span class="kw">type</span> <span class="ty">QuizCardProps</span> = {
+  title: <span class="ty">string</span>;
+  subtitle?: <span class="ty">string</span>;
+  action?: <span class="ty">ReactNode</span>;   <span class="cm">// an optional button the parent supplies</span>
+};
+
+<span class="kw">function</span> <span class="fn">QuizCard</span>({ title, subtitle, action }: <span class="ty">QuizCardProps</span>) {
+  <span class="kw">return</span> (
+    &lt;<span class="tg">div</span> className=<span class="str">"quiz-card"</span>&gt;
+      &lt;<span class="tg">div</span> className=<span class="str">"quiz-card-text"</span>&gt;
+        &lt;<span class="tg">h3</span>&gt;{title}&lt;/<span class="tg">h3</span>&gt;
+        {subtitle &amp;&amp; &lt;<span class="tg">p</span>&gt;{subtitle}&lt;/<span class="tg">p</span>&gt;}
+      &lt;/<span class="tg">div</span>&gt;
+      {action &amp;&amp; &lt;<span class="tg">div</span> className=<span class="str">"quiz-card-action"</span>&gt;{action}&lt;/<span class="tg">div</span>&gt;}
+    &lt;/<span class="tg">div</span>&gt;
+  );
+}</div>
+      <div class="callout why">
+        <strong>Props, not state &mdash; and an <code>action</code> slot</strong>
+        <code>QuizCard</code> owns nothing; it only reads what it's handed. The <code>action</code> prop is a <code>ReactNode</code> &mdash; the parent decides whether to pass a "Run" button or nothing at all. The card just gives it a place to sit. That's how you keep a presentational component reusable.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 4 -->
+  <div class="step" id="s4">
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <h2>Fetch the quizzes</h2>
+    </div>
+    <div class="step-body">
+      <p>Create an <code>api/</code> folder and <code>src/api/quizzes.ts</code>. This is the one function in the app that talks to the backend:</p>
+      <div class="file-path"><strong>src/api/</strong>quizzes.ts</div>
+      <div class="code-block" data-lang="tsx">
+<span class="kw">import type</span> { ApiQuiz } <span class="kw">from</span> <span class="str">'../types/quiz'</span>;
+
+<span class="kw">const</span> API_BASE = <span class="str">'http://localhost:5023'</span>;
+
+<span class="kw">export async function</span> <span class="fn">fetchQuizzes</span>(): <span class="ty">Promise</span>&lt;<span class="ty">ApiQuiz</span>[]&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`${API_BASE}/quizzes`</span>);
+  <span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> <span class="ty">Error</span>(<span class="str">`HTTP ${res.status}`</span>);
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}</div>
+      <p>It isn't called yet &mdash; that's the next step, from inside a <code>useEffect</code>. For now, just confirm the dev server doesn't complain.</p>
+      <div class="callout warn">
+        <strong>If you see a CORS error next step</strong>
+        It means the API in step 00 isn't running, or its <code>UseCors()</code> isn't wired correctly. A CORS error always means the browser blocked the response &mdash; the request reached the server fine.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 5 -->
+  <div class="step" id="s5">
+    <div class="step-header">
+      <div class="step-num">05</div>
+      <h2>Wire up ExistingQuizzes &mdash; state, effect, honest states</h2>
+    </div>
+    <div class="step-body">
+      <p>Create <code>src/components/ExistingQuizzes.tsx</code>. Three pieces of state &mdash; the data, plus whether we're loading and whether we failed &mdash; an effect that fetches once, and a render that handles every case.</p>
+      <div class="file-path"><strong>src/components/</strong>ExistingQuizzes.tsx</div>
+      <div class="code-block" data-lang="tsx">
+<span class="kw">import</span> { useEffect, useState } <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> QuizCard <span class="kw">from</span> <span class="str">'./QuizCard'</span>;
+<span class="kw">import</span> { fetchQuizzes } <span class="kw">from</span> <span class="str">'../api/quizzes'</span>;
+<span class="kw">import type</span> { ApiQuiz } <span class="kw">from</span> <span class="str">'../types/quiz'</span>;
+
+<span class="kw">function</span> <span class="fn">ExistingQuizzes</span>() {
+  <span class="hi-green"><span class="kw">const</span> [quizzes, setQuizzes] = <span class="fn">useState</span>&lt;<span class="ty">ApiQuiz</span>[]&gt;([]);
+  <span class="kw">const</span> [loading, setLoading] = <span class="fn">useState</span>(<span class="kw">true</span>);
+  <span class="kw">const</span> [error, setError]     = <span class="fn">useState</span>&lt;<span class="ty">string</span> | <span class="kw">null</span>&gt;(<span class="kw">null</span>);</span>
+
+  <span class="hi-green"><span class="fn">useEffect</span>(() =&gt; {
+    <span class="fn">fetchQuizzes</span>()
+      .<span class="fn">then</span>(setQuizzes)
+      .<span class="fn">catch</span>((err: <span class="ty">Error</span>) =&gt; <span class="fn">setError</span>(err.message))
+      .<span class="fn">finally</span>(() =&gt; <span class="fn">setLoading</span>(<span class="kw">false</span>));
+  }, []);  <span class="cm">// empty array — run once, on mount</span></span>
+
+  <span class="hi-green"><span class="kw">if</span> (loading) <span class="kw">return</span> &lt;<span class="tg">p</span> className=<span class="str">"status-message"</span>&gt;Loading quizzes from the API...&lt;/<span class="tg">p</span>&gt;;
+  <span class="kw">if</span> (error) <span class="kw">return</span> &lt;<span class="tg">p</span> className=<span class="str">"status-message error"</span>&gt;Couldn't load quizzes: {error}&lt;/<span class="tg">p</span>&gt;;
+  <span class="kw">if</span> (quizzes.length === <span class="nu">0</span>) <span class="kw">return</span> &lt;<span class="tg">p</span> className=<span class="str">"status-message"</span>&gt;No quizzes on the server yet.&lt;/<span class="tg">p</span>&gt;;</span>
+
+  <span class="kw">return</span> (
+    &lt;<span class="tg">div</span> className=<span class="str">"quiz-list"</span>&gt;
+      {quizzes.<span class="fn">map</span>((quiz) =&gt; (
+        &lt;<span class="ty">QuizCard</span> key={quiz.id} title={quiz.title} subtitle={quiz.description} /&gt;
+      ))}
+    &lt;/<span class="tg">div</span>&gt;
+  );
+}</div>
+      <p>Nothing renders it yet, so let's render it from <code>App</code> to see it work. Open <code>src/App.tsx</code> and, just for now, drop <code>&lt;ExistingQuizzes /&gt;</code> into the <code>&lt;main&gt;</code> (you'll replace this with the real App in step 08):</p>
+      <div class="file-path"><strong>src/</strong>App.tsx <span style="text-transform:none; letter-spacing:0;">(temporary)</span></div>
+      <div class="code-block sm" data-lang="tsx">
+<span class="kw">import</span> ExistingQuizzes <span class="kw">from</span> <span class="str">'./components/ExistingQuizzes'</span>;
+
+<span class="kw">function</span> <span class="fn">App</span>() {
+  <span class="kw">return</span> (
+    &lt;<span class="tg">div</span> className=<span class="str">"app"</span>&gt;
+      &lt;<span class="tg">header</span> className=<span class="str">"app-header"</span>&gt;&lt;<span class="tg">h1</span>&gt;QuizMaster&lt;/<span class="tg">h1</span>&gt;&lt;/<span class="tg">header</span>&gt;
+      &lt;<span class="tg">main</span>&gt;<span class="hi-green">&lt;<span class="ty">ExistingQuizzes</span> /&gt;</span>&lt;/<span class="tg">main</span>&gt;
+    &lt;/<span class="tg">div</span>&gt;
+  );
+}
+
+<span class="kw">export default</span> App;</div>
+      <p>With the API running, you'll see the three seeded quizzes appear.</p>
+      <div class="callout check">
+        <strong>Verify both paths</strong>
+        Open the Network tab and reload &mdash; exactly <strong>one</strong> request to <code>/quizzes</code>, not a loop. Then stop the API (<kbd>Ctrl</kbd>+<kbd>C</kbd>) and reload &mdash; you should see the error message, not a blank space.
+      </div>
+      <div class="callout warn">
+        <strong>The two classic mistakes</strong>
+        1. Drop the <code>[]</code> and the effect runs after every render &mdash; and since it calls a setter, that's an infinite fetch loop. 2. Only clear <code>loading</code> in <code>.then()</code> and a failed request spins forever; <code>.finally()</code> runs on both paths.
+      </div>
+    </div>
+  </div>
+
+  <div class="partlabel">Part C &middot; Build &amp; run your own quiz &mdash; state management</div>
+
+  <!-- STEP 6 -->
+  <div class="step" id="s6">
+    <div class="step-header">
+      <div class="step-num">06</div>
+      <h2>Build the QuizBuilder &mdash; nested state, immutably</h2>
+    </div>
+    <div class="step-body">
+      <p>This is the heart of the lab. Create <code>src/components/QuizBuilder.tsx</code>. It takes two callbacks from its parent &mdash; <code>onCreate</code> to hand back a finished quiz, and <code>onCancel</code> &mdash; and holds the quiz being built in local state. Start with the skeleton:</p>
+      <div class="file-path"><strong>src/components/</strong>QuizBuilder.tsx</div>
+      <div class="code-block sm" data-lang="tsx">
+<span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import type</span> { Question, Quiz } <span class="kw">from</span> <span class="str">'../types/quiz'</span>;
+
+<span class="kw">type</span> <span class="ty">QuizBuilderProps</span> = { onCreate: (quiz: <span class="ty">Quiz</span>) =&gt; <span class="ty">void</span>; onCancel: () =&gt; <span class="ty">void</span>; };
+
+<span class="kw">function</span> <span class="fn">QuizBuilder</span>({ onCreate, onCancel }: <span class="ty">QuizBuilderProps</span>) {
+  <span class="cm">/* state + handlers + save + a form, all below */</span>
+}
+<span class="kw">export default</span> QuizBuilder;</div>
+      <p>Your job: hold a list of questions, each with its own list of answers, and update them <em>without mutating</em> the existing arrays. Here are the state and the handlers &mdash; a controlled <code>title</code> input, plus immutable add/update functions for questions and answers:</p>
+      <div class="code-block sm" data-lang="tsx">
+<span class="kw">const</span> [title, setTitle] = <span class="fn">useState</span>(<span class="str">''</span>);
+<span class="hi-green"><span class="kw">const</span> [questions, setQuestions] = <span class="fn">useState</span>&lt;<span class="ty">Question</span>[]&gt;([]);</span>
+
+<span class="cm">// Each handler builds NEW arrays/objects — never mutates the old ones —</span>
+<span class="cm">// so React sees a new reference and re-renders.</span>
+<span class="kw">function</span> <span class="fn">addQuestion</span>() {
+  <span class="fn">setQuestions</span>((qs) =&gt; [...qs, { id: <span class="fn">crypto.randomUUID</span>(), text: <span class="str">''</span>, answers: [] }]);
+}
+<span class="kw">function</span> <span class="fn">updateQuestionText</span>(qid: <span class="ty">string</span>, text: <span class="ty">string</span>) {
+  <span class="fn">setQuestions</span>((qs) =&gt; qs.<span class="fn">map</span>((q) =&gt; (q.id === qid ? { ...q, text } : q)));
+}
+<span class="kw">function</span> <span class="fn">addAnswer</span>(qid: <span class="ty">string</span>) {
+  <span class="fn">setQuestions</span>((qs) =&gt; qs.<span class="fn">map</span>((q) =&gt;
+    q.id === qid ? { ...q, answers: [...q.answers, { id: <span class="fn">crypto.randomUUID</span>(), text: <span class="str">''</span> }] } : q));
+}
+<span class="kw">function</span> <span class="fn">updateAnswerText</span>(qid: <span class="ty">string</span>, aid: <span class="ty">string</span>, text: <span class="ty">string</span>) {
+  <span class="fn">setQuestions</span>((qs) =&gt; qs.<span class="fn">map</span>((q) =&gt; q.id === qid
+    ? { ...q, answers: q.answers.<span class="fn">map</span>((a) =&gt; (a.id === aid ? { ...a, text } : a)) }
+    : q));
+}</div>
+      <p>Then render one editor block per question &mdash; a text input bound to <code>updateQuestionText</code>, its answers each bound to <code>updateAnswerText</code>, an "+ Add answer" button, and an "+ Add question" button below the list. Finally, "Create quiz" and "Cancel" buttons. <code>save()</code> ties the form back to the parent:</p>
+      <div class="code-block sm" data-lang="tsx">
+<span class="kw">function</span> <span class="fn">save</span>() {
+  <span class="kw">if</span> (title.<span class="fn">trim</span>() === <span class="str">''</span> || questions.length === <span class="nu">0</span>) <span class="kw">return</span>;  <span class="cm">// (show a warning)</span>
+  <span class="fn">onCreate</span>({ id: <span class="fn">crypto.randomUUID</span>(), title: title.<span class="fn">trim</span>(), questions });
+}</div>
+      <div class="callout why">
+        <strong>Why immutable updates, really</strong>
+        React decides whether to re-render by comparing references. If you <code>push()</code> into the existing <code>questions</code> array and call <code>setQuestions(questions)</code>, it's the <em>same</em> array reference &mdash; React skips the render and your UI freezes. Spreading (<code>[...qs, ...]</code>, <code>{ ...q, text }</code>) makes a new reference every time. This is the single most common state bug in React.
+      </div>
+      <div class="callout tip">
+        <strong>The updater form <code>setQuestions((qs) =&gt; ...)</code></strong>
+        Passing a function to the setter gives you the latest state, which matters when several updates happen close together. Prefer it whenever your new state is derived from the old.
+      </div>
+      <div class="callout check">
+        <strong>Verify</strong>
+        Nothing renders <code>QuizBuilder</code> yet &mdash; that's wired in step 08. To eyeball it now, you can temporarily render <code>&lt;QuizBuilder onCreate={console.log} onCancel={() =&gt; {}} /&gt;</code> from <code>App</code>: type a title, add questions and answers, hit "Create quiz", and watch the finished quiz object print in the console. Then put <code>App</code> back.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 7 -->
+  <div class="step" id="s7">
+    <div class="step-header">
+      <div class="step-num">07</div>
+      <h2>Run the quiz &mdash; one question at a time</h2>
+    </div>
+    <div class="step-body">
+      <p>Create <code>src/components/QuizRunner.tsx</code>. It receives the quiz to run and a callback to exit (<code>{ quiz, onExit }</code>, typed with <code>quiz: Quiz</code> and <code>onExit: () =&gt; void</code>). Track three things: which question you're on, the option picked per question, and whether you've finished.</p>
+      <div class="file-path"><strong>src/components/</strong>QuizRunner.tsx</div>
+      <div class="code-block sm" data-lang="tsx">
+<span class="hi-green"><span class="kw">const</span> [current, setCurrent]   = <span class="fn">useState</span>(<span class="nu">0</span>);
+<span class="kw">const</span> [picks, setPicks]       = <span class="fn">useState</span>&lt;<span class="ty">Record</span>&lt;<span class="ty">string</span>, <span class="ty">string</span>&gt;&gt;({});
+<span class="kw">const</span> [finished, setFinished] = <span class="fn">useState</span>(<span class="kw">false</span>);</span>
+
+<span class="kw">const</span> question = quiz.questions[current];
+<span class="kw">const</span> isLast   = current === quiz.questions.length - <span class="nu">1</span>;
+
+<span class="kw">function</span> <span class="fn">pick</span>(answerId: <span class="ty">string</span>) {
+  <span class="fn">setPicks</span>((prev) =&gt; ({ ...prev, [question.id]: answerId }));  <span class="cm">// remember the pick</span>
+}</div>
+      <p>While not finished, render the current question, its answers as clickable options (highlight the one in <code>picks[question.id]</code>), and navigation: a "Previous" button (disabled at index 0), and either "Next" (<code>setCurrent(c =&gt; c + 1)</code>) or, on the last question, "Finish" (<code>setFinished(true)</code>). When finished, show a summary listing each question and the option the user chose, plus a "Back to home" button that calls <code>onExit()</code>.</p>
+      <div class="callout why">
+        <strong>No grading &mdash; on purpose</strong>
+        There's no "correct" answer in this model, so "run" means navigate and record, not score. That keeps the focus on the state mechanics: an index you move, a map you accumulate, a boolean that flips the whole view. Scoring would just be one more derived value on top &mdash; a natural homework extension.
+      </div>
+      <div class="callout check">
+        <strong>Verify (after step 08)</strong>
+        The runner needs <code>App</code> to hand it a quiz, so the real test comes once you wire <code>App</code> in the next step: build a quiz, click "Run", step forward and back &mdash; your earlier picks should still be highlighted when you return to a question (that's the <code>picks</code> map doing its job) &mdash; then finish and confirm the summary matches what you chose.
+      </div>
+    </div>
+  </div>
+
+  <div class="partlabel">Part D &middot; Tie it together</div>
+
+  <!-- STEP 8 -->
+  <div class="step" id="s8">
+    <div class="step-header">
+      <div class="step-num">08</div>
+      <h2>Wire it all together in App</h2>
+    </div>
+    <div class="step-body">
+      <p>Now replace your temporary <code>App</code> with the real one. <code>App</code> owns two things: the <code>quizzes</code> you build, and which screen (<code>view</code>) is showing. It renders the builder, the runner, or the home screen accordingly &mdash; passing data down as props and receiving changes back through callbacks.</p>
+      <div class="file-path"><strong>src/</strong>App.tsx</div>
+      <div class="code-block sm" data-lang="tsx">
+<span class="kw">import</span> { useState } <span class="kw">from</span> <span class="str">'react'</span>;
+<span class="kw">import</span> ExistingQuizzes <span class="kw">from</span> <span class="str">'./components/ExistingQuizzes'</span>;
+<span class="kw">import</span> QuizBuilder <span class="kw">from</span> <span class="str">'./components/QuizBuilder'</span>;
+<span class="kw">import</span> QuizRunner <span class="kw">from</span> <span class="str">'./components/QuizRunner'</span>;
+<span class="kw">import</span> QuizCard <span class="kw">from</span> <span class="str">'./components/QuizCard'</span>;
+<span class="kw">import type</span> { Quiz } <span class="kw">from</span> <span class="str">'./types/quiz'</span>;
+
+<span class="kw">type</span> <span class="ty">View</span> = { name: <span class="str">'home'</span> } | { name: <span class="str">'build'</span> } | { name: <span class="str">'run'</span>; quizId: <span class="ty">string</span> };
+
+<span class="kw">function</span> <span class="fn">App</span>() {
+  <span class="hi-green"><span class="kw">const</span> [quizzes, setQuizzes] = <span class="fn">useState</span>&lt;<span class="ty">Quiz</span>[]&gt;([]);
+  <span class="kw">const</span> [view, setView] = <span class="fn">useState</span>&lt;<span class="ty">View</span>&gt;({ name: <span class="str">'home'</span> });</span>
+
+  <span class="kw">function</span> <span class="fn">addQuiz</span>(quiz: <span class="ty">Quiz</span>) {
+    <span class="fn">setQuizzes</span>((qs) =&gt; [...qs, quiz]);
+    <span class="fn">setView</span>({ name: <span class="str">'home'</span> });
+  }
+
+  <span class="kw">const</span> running = view.name === <span class="str">'run'</span> ? quizzes.<span class="fn">find</span>((q) =&gt; q.id === view.quizId) : <span class="kw">undefined</span>;
+
+  <span class="kw">return</span> (
+    &lt;<span class="tg">div</span> className=<span class="str">"app"</span>&gt;
+      &lt;<span class="tg">header</span> className=<span class="str">"app-header"</span>&gt;
+        &lt;<span class="tg">h1</span> onClick={() =&gt; <span class="fn">setView</span>({ name: <span class="str">'home'</span> })}&gt;QuizMaster&lt;/<span class="tg">h1</span>&gt;
+      &lt;/<span class="tg">header</span>&gt;
+      &lt;<span class="tg">main</span>&gt;
+        {view.name === <span class="str">'build'</span> &amp;&amp; (
+          &lt;<span class="ty">QuizBuilder</span> onCreate={addQuiz} onCancel={() =&gt; <span class="fn">setView</span>({ name: <span class="str">'home'</span> })} /&gt;
+        )}
+        {view.name === <span class="str">'run'</span> &amp;&amp; running &amp;&amp; (
+          &lt;<span class="ty">QuizRunner</span> quiz={running} onExit={() =&gt; <span class="fn">setView</span>({ name: <span class="str">'home'</span> })} /&gt;
+        )}
+        {view.name === <span class="str">'home'</span> &amp;&amp; (
+          &lt;&gt;
+            &lt;<span class="tg">button</span> className=<span class="str">"btn-primary"</span> onClick={() =&gt; <span class="fn">setView</span>({ name: <span class="str">'build'</span> })}&gt;+ New quiz&lt;/<span class="tg">button</span>&gt;
+            {quizzes.<span class="fn">map</span>((q) =&gt; (
+              &lt;<span class="ty">QuizCard</span> key={q.id} title={q.title}
+                subtitle={`${q.questions.length} questions`}
+                action={&lt;<span class="tg">button</span> onClick={() =&gt; <span class="fn">setView</span>({ name: <span class="str">'run'</span>, quizId: q.id })}&gt;Run&lt;/<span class="tg">button</span>&gt;} /&gt;
+            ))}
+            &lt;<span class="ty">ExistingQuizzes</span> /&gt;
+          &lt;/&gt;
+        )}
+      &lt;/<span class="tg">main</span>&gt;
+    &lt;/<span class="tg">div</span>&gt;
+  );
+}
+
+<span class="kw">export default</span> App;</div>
+      <div class="callout why">
+        <strong>Why <code>quizzes</code> lives in App, not QuizBuilder</strong>
+        Several components need to agree on it: the builder <em>adds</em> to it, the home list and the runner <em>read</em> from it. The closest component that contains all of them is <code>App</code>, so the state lives there and flows down as props. That's "lifting state up." Notice the per-quiz editing state (the half-built questions) stays <em>inside</em> <code>QuizBuilder</code> &mdash; nobody else needs it, so it doesn't get lifted.
+      </div>
+      <div class="callout check">
+        <strong>Verify end to end</strong>
+        Click "+ New quiz", build one with a couple of questions and answers, "Create quiz" &mdash; it appears under your quizzes. Click "Run", step through it, finish, land back home. And with the API up, the server's quizzes still list below. That's the whole app.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 9 -->
+  <div class="step" id="s9">
+    <div class="step-header">
+      <div class="step-num">09</div>
+      <h2>Homework &mdash; take it further</h2>
+    </div>
+    <div class="step-body">
+      <p>You have an app that reads from your API and lets you build and run quizzes entirely in state. Extend it, and note your choices in a short <code>README.md</code> next to your code.</p>
+      <p><strong>Pick at least two:</strong></p>
+      <ul>
+        <li><strong>Mark a correct answer.</strong> Add an <code>isCorrect</code> flag per answer in the builder (a radio per question), then score the run and show "X / N correct" on the summary. This is the natural next layer on top of <code>picks</code>.</li>
+        <li><strong>Delete a quiz.</strong> Add a "Delete" action to each home card. You'll lift a <code>removeQuiz(id)</code> handler out of <code>App</code> and pass it down &mdash; the mirror of <code>onCreate</code>.</li>
+        <li><strong>Validation.</strong> Block "Create quiz" until every question has text and at least two answers, with inline messages instead of a single warning.</li>
+        <li><strong>Persist to <code>localStorage</code>.</strong> Save <code>quizzes</code> on change and load it on mount with a <code>useEffect</code>, so your quizzes survive a refresh &mdash; the same effect pattern as fetching, but against the browser instead of the network.</li>
+        <li><strong>Extract a hook.</strong> Move the fetch state out of <code>ExistingQuizzes</code> into a <code>useQuizzes()</code> hook. Your first reusable hook.</li>
+      </ul>
+      <div class="callout warn">
+        <strong>The rules to carry forward</strong>
+        1. Update state immutably &mdash; new references, every time. 2. State belongs to the closest component that needs it; don't lift further than that. 3. An effect's dependency array isn't decoration &mdash; get it wrong and you get an infinite loop or stale data.
+      </div>
+      <div class="callout check">
+        <strong>Stretch goal</strong>
+        Make "Create quiz" actually <code>POST</code> to <code>/quizzes</code>. It will get a <strong>401</strong> in the browser today &mdash; that's correct, not a bug. Write down what you'd need (a captured bearer token, an <code>Authorization</code> header) to make it work; you'll build exactly that in the session that introduces sign-in.
+      </div>
+    </div>
+  </div>
+
+  <div class="final">
+    <h2>That's the lab.</h2>
+    <p>You fetched live data from your own API with honest loading and error states, then built a screen that creates nested data in React state &mdash; updated immutably &mdash; and a runner that walks it one question at a time. Props down, state at the right level, effects for the outside world: that's the core of React. Next session: forms in depth, controlled inputs, and the Context API for state that needs to live above a single parent.</p>
+  </div>
+
+</div>
+
+</body>
+</html>
