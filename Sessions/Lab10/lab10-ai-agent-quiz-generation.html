@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 10 &mdash; An AI Agent for Quiz Generation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.25);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --cyan: #0891b2;
+    --cyan-dim: rgba(8,145,178,0.08);
+    --cyan-border: rgba(8,145,178,0.25);
+    --border: #e5e7eb;
+    --border-2: #d1d5db;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: radial-gradient(circle, #c7d2e8 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.45;
+  }
+
+  .deck { position: relative; width: 100vw; height: 100vh; }
+
+  .slide {
+    position: absolute; inset: 0;
+    padding: 5vh 7vw;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+    animation: slideIn .3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .slide.active { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin-bottom: 0.4em;
+  }
+  h2 {
+    font-size: clamp(1.7rem, 3.2vw, 2.7rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6em;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 1em;
+    display: flex;
+    align-items: center;
+    gap: .5em;
+  }
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px; height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  p, li {
+    font-size: clamp(.95rem, 1.4vw, 1.22rem);
+    line-height: 1.6;
+    color: #374151;
+    font-family: var(--sans);
+    font-weight: 400;
+  }
+  ul { padding-left: 0; list-style: none; }
+  li {
+    padding: .45em 0 .45em 1.4em;
+    position: relative;
+  }
+  li::before {
+    content: '›';
+    position: absolute; left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  strong { color: var(--fg); font-weight: 700; }
+
+  .accent   { color: var(--accent); }
+  .green    { color: var(--green); }
+  .orange   { color: var(--orange); }
+  .cyan     { color: var(--cyan); }
+  .muted    { color: var(--muted-2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5vw; align-items: start; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8vw; }
+
+  .card {
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 12px;
+    padding: 1.3em 1.4em;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: .5;
+  }
+  .card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: .5em;
+    font-family: var(--sans);
+  }
+  .card.green-card::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .card.green-card h4 { color: var(--green); }
+  .card.orange-card::before { background: linear-gradient(90deg, var(--orange), transparent); }
+  .card.orange-card h4 { color: var(--orange); }
+  .card.cyan-card::before { background: linear-gradient(90deg, var(--cyan), transparent); }
+  .card.cyan-card h4 { color: var(--cyan); }
+  .card p, .card li { font-size: .97rem; }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.2em 1.4em;
+    font-family: var(--mono);
+    font-size: clamp(.78rem, 1.1vw, .95rem);
+    line-height: 1.8;
+    overflow: auto;
+    position: relative;
+    white-space: pre;
+    color: #cdd5e0;
+  }
+  .code-block::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: 1em;
+    font-size: .68rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .code-block.sm { font-size: .76rem; line-height: 1.7; }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+  .tg  { color: #f0a3c4; }
+  .hi  { background: rgba(37,99,235,0.25); border-radius: 3px; padding: 0 2px; }
+  .hi-green { background: rgba(5,150,105,0.2); border-radius: 3px; padding: 0 2px; }
+
+  .flow {
+    display: flex; align-items: stretch;
+    gap: 0; margin-top: .8em;
+    flex-wrap: nowrap;
+  }
+  .flow-node {
+    flex: 1;
+    background: var(--bg-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: .9em .8em;
+    text-align: center;
+    position: relative;
+  }
+  .flow-node strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: .82rem;
+    color: var(--accent);
+    margin-bottom: .3em;
+  }
+  .flow-node span { font-size: .78rem; color: var(--muted-2); }
+  .flow-arrow {
+    display: flex; align-items: center;
+    color: var(--muted);
+    font-size: 1.1rem;
+    padding: 0 .3em;
+    flex-shrink: 0;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: .22em .75em;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    font-family: var(--mono);
+    font-size: .78rem;
+    margin: .2em .2em .2em 0;
+  }
+  .tag.green-tag  { background: var(--green-dim); color: var(--green); border-color: rgba(5,150,105,0.25); }
+  .tag.orange-tag { background: var(--orange-dim); color: var(--orange); border-color: rgba(217,119,6,0.25); }
+  .tag.cyan-tag   { background: var(--cyan-dim); color: var(--cyan); border-color: var(--cyan-border); }
+
+  .title-slide {
+    justify-content: flex-end;
+    padding-bottom: 10vh;
+  }
+  .title-slide h1 {
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    background: linear-gradient(135deg, #0f1117 20%, var(--accent) 60%, var(--cyan));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    max-width: 16ch;
+  }
+  .title-glow {
+    position: absolute;
+    top: 10%; left: -5%;
+    width: 60vw; height: 60vh;
+    background: radial-gradient(ellipse, rgba(37,99,235,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .title-glow-2 {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 50vw; height: 50vh;
+    background: radial-gradient(ellipse, rgba(8,145,178,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .lab-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .8rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: .4em .9em;
+    margin-bottom: 2em;
+  }
+  .lab-badge span { color: var(--accent); font-weight: 700; }
+
+  .steps { list-style: none; padding: 0; counter-reset: steps; }
+  .steps li {
+    counter-increment: steps;
+    padding: .55em 0 .55em 2.8em;
+    font-size: clamp(.9rem, 1.3vw, 1.1rem);
+  }
+  .steps li::before {
+    content: counter(steps, decimal-leading-zero);
+    position: absolute; left: 0;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 2em; height: 1.7em;
+    display: flex; align-items: center; justify-content: center;
+    top: .55em;
+  }
+
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--cyan));
+    transition: width .3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    box-shadow: 0 0 8px rgba(37,99,235,0.4);
+  }
+  .footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .65em 1.4em;
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: rgba(248,249,252,0.92);
+    backdrop-filter: blur(8px);
+    z-index: 50;
+  }
+  .footer .slide-num { color: var(--muted-2); }
+  .footer .slide-num em { color: var(--accent); font-style: normal; }
+  kbd {
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    color: var(--muted-2);
+    padding: 1px 5px; border-radius: 4px;
+    font-size: .78em; font-family: var(--mono);
+  }
+
+  .warn-li::before { color: var(--orange) !important; content: '!' !important; }
+
+  p code, li code, td code, th code {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: .88em;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1em;
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  th, td {
+    border-bottom: 1px solid var(--border-2);
+    border-right: 1px solid var(--border-2);
+    padding: .65em .9em;
+    text-align: left;
+    font-size: .87rem;
+    line-height: 1.45;
+    color: #374151;
+  }
+  th:last-child, td:last-child { border-right: none; }
+  tr:last-child td { border-bottom: none; }
+  th {
+    background: var(--bg-3);
+    font-family: var(--mono);
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted-2);
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="deck" id="deck">
+
+    <!-- 1 · TITLE -->
+    <section class="slide title-slide active">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;&middot;&nbsp; <span>Lab 10</span></div>
+      <h1>An AI Agent for Quiz Generation</h1>
+      <p class="muted" style="max-width:62ch; margin-top:.8em; font-size:1.1rem;">
+        The frontend already asks for a generated quiz, a play view, and a
+        graded result. Today the backend learns to actually deliver all three
+        &mdash; and the quiz generator becomes an agent, not a one-shot prompt.
+      </p>
+      <p class="muted" style="margin-top:2.5em; font-size:.88rem;">
+        <kbd>&rarr;</kbd> next &nbsp; <kbd>&larr;</kbd> previous &nbsp; <kbd>F</kbd> fullscreen
+      </p>
+    </section>
+
+    <!-- AGENDA -->
+    <section class="slide">
+      <div class="eyebrow">Agenda</div>
+      <h2>What we'll cover today &mdash; in three parts</h2>
+      <ul>
+        <li><strong class="accent">Concepts</strong> &mdash; why last lab's generator was a one-shot prompt, not an agent; what a tool call actually is; why <code>create_quiz</code> can <em>be</em> the final answer instead of just another step.</li>
+        <li><strong class="accent">Build it</strong> &mdash; the three endpoints you're writing today: <code>POST /quizzes/generate</code> (the agent), <code>GET /quizzes/{id}/play</code>, <code>POST /quizzes/{id}/evaluate</code>.</li>
+        <li><strong class="accent">Wrap-up</strong> &mdash; day-one gotchas, what you can do now, then straight into the guide.</li>
+      </ul>
+    </section>
+
+    <!-- PART 1 DIVIDER -->
+    <section class="slide">
+      <div class="eyebrow">Part 1 of 3</div>
+      <h1 style="font-size:clamp(2.4rem,5vw,3.8rem); max-width:18ch;">Concepts</h1>
+      <p class="muted" style="max-width:70ch; margin-top:.6em; font-size:1.1rem;">
+        The vocabulary before the code: what makes something an agent instead
+        of just a chat completion call, and why that distinction is the
+        entire point of today.
+      </p>
+    </section>
+
+    <!-- RECAP -->
+    <section class="slide">
+      <div class="eyebrow">Recap</div>
+      <h2>Where the frontend already is</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div>
+          <p>The React app in <code>frontend/</code> is Lab 9's finished
+          Solution, unchanged. It already has <code>QuizGenerator</code>,
+          <code>PlayQuiz</code>, and every fetch call they need.</p>
+        </div>
+        <div class="card orange-card">
+          <h4>It's calling into nothing</h4>
+          <ul style="padding-left:0;">
+            <li><code>POST /quizzes/generate</code> &mdash; not implemented</li>
+            <li><code>GET /quizzes/{id}/play</code> &mdash; not implemented</li>
+            <li><code>POST /quizzes/{id}/evaluate</code> &mdash; not implemented</li>
+          </ul>
+        </div>
+      </div>
+      <p class="accent" style="margin-top:1.2em;"><strong>Today, backend is the hands-on part &mdash; a role reversal from Lab 8 and 9.</strong></p>
+    </section>
+
+    <!-- ONE-SHOT RECAP -->
+    <section class="slide">
+      <div class="eyebrow">Last lab's version</div>
+      <h2>A one-shot prompt isn't an agent</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div class="code-block sm" data-lang="csharp">
+<span class="kw">var</span> completion = <span class="kw">await</span> _chatClient.<span class="fn">CompleteChatAsync</span>(messages, <span class="kw">new</span> <span class="ty">ChatCompletionOptions</span> {
+    ResponseFormat = <span class="ty">ChatResponseFormat</span>.<span class="fn">CreateJsonSchemaFormat</span>(
+        <span class="str">"quiz"</span>, quizSchema, jsonSchemaIsStrict: <span class="kw">true</span>)
+});
+
+<span class="kw">var</span> json = completion.Value.Content[<span class="nu">0</span>].Text;
+<span class="kw">var</span> payload = <span class="ty">JsonSerializer</span>.<span class="fn">Deserialize</span>&lt;<span class="ty">GeneratedQuizPayload</span>&gt;(json);
+        </div>
+        <div>
+          <p>One instruction string, one JSON schema, one call. The model
+          can't look anything up, can't ask a follow-up, can't be told
+          "that's wrong, try again" &mdash; it either returns usable JSON on
+          the first try or the request fails.</p>
+          <div class="card cyan-card" style="margin-top:1em;">
+            <h4>What's missing</h4>
+            <p>No way to check what quizzes already exist. No way to recover
+            from a malformed first attempt except throwing a <code>502</code>
+            back at the caller.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHAT MAKES IT AN AGENT -->
+    <section class="slide">
+      <div class="eyebrow">The upgrade</div>
+      <h2>What makes something an agent</h2>
+      <p style="max-width:80ch;">A chat completion becomes an agent the
+      moment the model can <strong>choose to run your code mid-conversation</strong>
+      and see what happened before it finishes answering. That's a tool call:
+      the model doesn't run anything itself &mdash; it asks, your app executes,
+      the result goes back in the conversation.</p>
+      <div class="flow">
+        <div class="flow-node"><strong>Model</strong><span>reads the prompt</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>Requests a tool call</strong><span>with arguments</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>Your code runs</strong><span>real logic, real data</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>Model sees the result</strong><span>and continues</span></div>
+      </div>
+      <p class="muted" style="margin-top:1em;">Everything after "Model requests a tool call" is new today &mdash; last lab's generator never left the first box.</p>
+    </section>
+
+    <!-- MICROSOFT.EXTENSIONS.AI -->
+    <section class="slide">
+      <div class="eyebrow">The library</div>
+      <h2><code>Microsoft.Extensions.AI</code> does the loop for you</h2>
+      <table>
+        <tr><th>Piece</th><th>Job</th></tr>
+        <tr>
+          <td><code>IChatClient</code></td>
+          <td>a model-agnostic abstraction over any chat client &mdash; wraps the same <code>OpenAI.Chat.ChatClient</code> from last lab</td>
+        </tr>
+        <tr>
+          <td><code>AIFunctionFactory.Create(method)</code></td>
+          <td>reflects a plain C# method into a tool schema &mdash; no hand-written JSON schema</td>
+        </tr>
+        <tr>
+          <td><code>UseFunctionInvocation()</code></td>
+          <td>middleware that runs the tool_call &rarr; execute &rarr; feed-result-back loop from the previous slide, automatically</td>
+        </tr>
+      </table>
+      <p class="muted" style="margin-top:1.2em;">You write the tools and the prompt. The loop in the flow diagram is middleware, not code you write by hand.</p>
+    </section>
+
+    <!-- TWO TOOLS -->
+    <section class="slide">
+      <div class="eyebrow">The design</div>
+      <h2>Two tools, two different jobs</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div class="card cyan-card">
+          <h4><code>list_existing_quiz_titles</code></h4>
+          <p>Reads real data &mdash; every existing quiz's title and
+          description, via the same <code>IQuizRepository</code> the
+          controller already depends on. Lets the model avoid writing a
+          quiz that duplicates one that already exists.</p>
+        </div>
+        <div class="card green-card">
+          <h4><code>create_quiz</code></h4>
+          <p>Doesn't read anything &mdash; its arguments <em>are</em> the
+          finished quiz. Calling it is the model's final answer, not a
+          step along the way.</p>
+        </div>
+      </div>
+      <p class="accent" style="margin-top:1.2em;"><strong>One tool is a side-effect-free lookup. The other one IS the output.</strong></p>
+    </section>
+
+    <!-- CREATE_QUIZ AS STRUCTURED OUTPUT -->
+    <section class="slide">
+      <div class="eyebrow">Why this replaces <code>ResponseFormat</code></div>
+      <h2>A tool's arguments are structured output, for free</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div class="code-block sm" data-lang="csharp">
+[<span class="fn">Description</span>(<span class="str">"Submit the finished quiz. Call this " +
+    "exactly once, when you're confident."</span>)]
+<span class="kw">private</span> <span class="ty">string</span> <span class="fn">CreateQuiz</span>(
+    [<span class="fn">Description</span>(<span class="str">"2+ options, exactly one isCorrect"</span>)]
+    <span class="ty">List</span>&lt;<span class="ty">GeneratedQuestionPayload</span>&gt; questions)
+{
+    <span class="cm">// validate, then stash the result</span>
+}
+        </div>
+        <div>
+          <p><code>AIFunctionFactory.Create</code> reflects this method's
+          parameter type into a JSON schema, the same guarantee
+          <code>ResponseFormat.CreateJsonSchemaFormat</code> gave last lab
+          &mdash; except now it lives on a tool, so it doesn't conflict with
+          also offering <code>list_existing_quiz_titles</code> in the same
+          request.</p>
+          <p style="margin-top:.8em;" class="muted">No manual JSON schema.
+          No manual deserialization. The method signature <em>is</em> the
+          contract.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VALIDATION + SELF-CORRECTION -->
+    <section class="slide">
+      <div class="eyebrow">Still your job</div>
+      <h2>A schema guarantees shape, never correctness</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div class="code-block sm" data-lang="csharp">
+<span class="kw">foreach</span> (<span class="kw">var</span> q <span class="kw">in</span> payload.Questions)
+{
+    <span class="kw">if</span> (q.Options.Count &lt; <span class="nu">2</span>
+        || q.Options.<span class="fn">Count</span>(o =&gt; o.IsCorrect) != <span class="nu">1</span>)
+        <span class="kw">throw new</span> <span class="ty">InvalidOperationException</span>(
+            <span class="str">$"Malformed question (\"{q.Text}\")..."</span>);
+}
+        </div>
+        <div>
+          <p>Same check as last lab, just reading tool arguments instead of
+          a deserialized completion. Every input you don't control gets
+          checked before you trust it &mdash; a tool call is no exception.</p>
+          <div class="card green-card" style="margin-top:1em;">
+            <h4>A bonus this time</h4>
+            <p>The function-invocation middleware catches this exception and
+            feeds the message back to the model as the tool's result. A
+            malformed first attempt becomes a chance to self-correct, not an
+            automatic failure.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FULL FLOW DIAGRAM -->
+    <section class="slide">
+      <div class="eyebrow">Putting it together</div>
+      <h2>One call to <code>GetResponseAsync</code>, hides a whole conversation</h2>
+      <div class="flow">
+        <div class="flow-node"><strong>System + user</strong><span>instructions, source text</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>list_existing_&#8203;quiz_titles</strong><span>model calls it first</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>create_quiz</strong><span>model's final answer</span></div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-node"><strong>Validated & stashed</strong><span>ready to persist</span></div>
+      </div>
+      <p class="muted" style="margin-top:1em;">Your <code>GenerateAsync</code> method makes exactly one call into this pipeline and reads back whatever <code>create_quiz</code> captured &mdash; the tool-call rounds happen inside <code>GetResponseAsync</code>, not in code you write.</p>
+    </section>
+
+    <!-- PART 2 DIVIDER -->
+    <section class="slide">
+      <div class="eyebrow">Part 2 of 3</div>
+      <h1 style="font-size:clamp(2.4rem,5vw,3.8rem); max-width:18ch;">Build it</h1>
+      <p class="muted" style="max-width:70ch; margin-top:.6em; font-size:1.1rem;">
+        Three endpoints. The guide walks through each with code to follow
+        along &mdash; this part is the map before you start typing.
+      </p>
+    </section>
+
+    <!-- THE THREE ENDPOINTS -->
+    <section class="slide">
+      <div class="eyebrow">At a glance</div>
+      <h2>What you're building today</h2>
+      <table>
+        <tr><th>Endpoint</th><th>Auth</th><th>Job</th></tr>
+        <tr>
+          <td><code>POST /quizzes/generate</code></td>
+          <td>required</td>
+          <td>the agent: source text in &rarr; tool-calling loop &rarr; validated quiz &rarr; saved</td>
+        </tr>
+        <tr>
+          <td><code>GET /quizzes/{id}/play</code></td>
+          <td>public</td>
+          <td>the no-peeking shape &mdash; questions and options, <strong>no</strong> <code>isCorrect</code></td>
+        </tr>
+        <tr>
+          <td><code>POST /quizzes/{id}/evaluate</code></td>
+          <td>public</td>
+          <td>submitted picks in &rarr; server grades &rarr; result with <code>isCorrect</code> revealed</td>
+        </tr>
+      </table>
+      <p class="muted" style="margin-top:1.2em;">Generating is a write (it creates rows), so it's <code>[Authorize]</code>d. Playing and evaluating are reads/computes over data the server already owns &mdash; public, even though one of them is a <code>POST</code>.</p>
+    </section>
+
+    <!-- DI: SCOPED NOT SINGLETON -->
+    <section class="slide">
+      <div class="eyebrow">A wiring detail that bites</div>
+      <h2>Register the generator <code>Scoped</code>, not <code>Singleton</code></h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div class="code-block sm" data-lang="csharp">
+<span class="cm">// last lab: no per-request dependency, Singleton was fine</span>
+<span class="fn">AddSingleton</span>&lt;<span class="ty">IQuizGenerator</span>, <span class="ty">OpenAiQuizGenerator</span>&gt;();
+
+<span class="cm">// today: depends on IQuizRepository (Scoped)</span>
+<span class="fn">AddScoped</span>&lt;<span class="ty">IQuizGenerator</span>, <span class="ty">OpenAiQuizGenerator</span>&gt;();
+        </div>
+        <div>
+          <p>The <code>list_existing_quiz_titles</code> tool needs
+          <code>IQuizRepository</code>, which is <code>Scoped</code> because
+          <code>DbContext</code> isn't thread-safe to share.</p>
+          <div class="card orange-card" style="margin-top:1em;">
+            <h4>Captive dependency</h4>
+            <p>A <code>Singleton</code> can't safely depend on a
+            <code>Scoped</code> service &mdash; it would pin the first
+            request's <code>DbContext</code> for the app's entire lifetime.
+            .NET throws at startup if you get this backwards.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENDPOINT: GENERATE -->
+    <section class="slide">
+      <div class="eyebrow">Endpoint 1</div>
+      <h2><code>POST /quizzes/generate</code> &mdash; the agent</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div class="code-block sm" data-lang="csharp">
+_chatClient = openAiClient
+    .<span class="fn">GetChatClient</span>(modelId)
+    .<span class="fn">AsIChatClient</span>()
+    .<span class="fn">AsBuilder</span>()
+    .<span class="fn">UseFunctionInvocation</span>()
+    .<span class="fn">Build</span>();
+
+<span class="kw">var</span> chatOptions = <span class="kw">new</span> <span class="ty">ChatOptions</span> {
+    Tools = [
+        <span class="ty">AIFunctionFactory</span>.<span class="fn">Create</span>(ListExistingQuizTitlesAsync),
+        <span class="ty">AIFunctionFactory</span>.<span class="fn">Create</span>(CreateQuiz),
+    ],
+};
+        </div>
+        <div>
+          <p><code>GenerateAsync</code> sends the system+user messages once,
+          then returns whatever <code>CreateQuiz</code> stashed in
+          <code>_result</code> &mdash; or throws if the model never called
+          it after several tool-call rounds.</p>
+          <p style="margin-top:.8em;" class="muted"><code>GenerateQuizDto</code> is
+          already defined for you in <code>Dtos/</code> &mdash; the controller
+          action itself looks almost exactly like Lab 9's, just wrapped in
+          the same 502-on-failure handling.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENDPOINT: PLAY -->
+    <section class="slide">
+      <div class="eyebrow">Endpoint 2</div>
+      <h2><code>GET /quizzes/{id}/play</code> &mdash; the no-peeking view</h2>
+      <div class="grid-2" style="gap:3vw; align-items:start;">
+        <div class="code-block" data-lang="csharp">
+Options = q.Options.<span class="fn">Select</span>(o =&gt; <span class="kw">new</span> <span class="ty">PlayOptionDto</span> {
+  Id = o.Id,
+  Text = o.Text
+}).<span class="fn">ToList</span>()
+        </div>
+        <div>
+          <p><code>PlayOptionDto</code> simply doesn't <em>have</em> an
+          <code>IsCorrect</code> property &mdash; the guarantee is
+          structural, not behavioral. Nothing is being hidden at render
+          time; the field doesn't exist on the type that goes over HTTP.</p>
+          <div class="card cyan-card" style="margin-top:1em;">
+            <h4><code>[AllowAnonymous]</code></h4>
+            <p>Same reasoning as <code>List()</code> &mdash; reading a quiz
+            to play it is a read, not a write.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENDPOINT: EVALUATE -->
+    <section class="slide">
+      <div class="eyebrow">Endpoint 3</div>
+      <h2><code>POST /quizzes/{id}/evaluate</code> &mdash; grade server-side</h2>
+      <p style="max-width:80ch;">The core rule this whole lab keeps coming
+      back to: <strong>where is it safe to say a question's correct answer
+      out loud?</strong> Never to a client that hasn't submitted an answer
+      yet &mdash; which is exactly why grading happens here, not in the
+      browser that already saw the answer-free <code>play</code> shape.</p>
+      <div class="grid-3" style="margin-top:1.2em;">
+        <div class="card green-card">
+          <h4>In the database</h4>
+          <p>Fine &mdash; the source of truth.</p>
+        </div>
+        <div class="card orange-card">
+          <h4>In the <code>play</code> response</h4>
+          <p><strong>Never.</strong> That's what <code>PlayOptionDto</code> enforces.</p>
+        </div>
+        <div class="card green-card">
+          <h4>In the <code>evaluate</code> response</h4>
+          <p>Fine &mdash; the student already answered.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART 3 DIVIDER -->
+    <section class="slide">
+      <div class="eyebrow">Part 3 of 3</div>
+      <h1 style="font-size:clamp(2.4rem,5vw,3.8rem); max-width:18ch;">Wrap-up</h1>
+      <p class="muted" style="max-width:70ch; margin-top:.6em; font-size:1.1rem;">
+        The things people trip over on day one, what you'll be able to do
+        after this, and then straight into the guide.
+      </p>
+    </section>
+
+    <!-- GOTCHAS -->
+    <section class="slide">
+      <div class="eyebrow">Watch out</div>
+      <h2>Things people get wrong on day one</h2>
+      <ul>
+        <li class="warn-li"><strong>Registering the generator <code>Singleton</code></strong> &mdash; it depends on <code>IQuizRepository</code> now; .NET throws a captive-dependency error at startup.</li>
+        <li class="warn-li"><strong>Forgetting to validate inside <code>create_quiz</code></strong> &mdash; a strict tool schema guarantees shape, never correctness. Skip the check and a malformed quiz saves silently.</li>
+        <li class="warn-li"><strong>The model never calls <code>create_quiz</code></strong> &mdash; it can get stuck describing the quiz in plain text instead of calling the tool. Your prompt has to say, explicitly, that the tool call <em>is</em> the answer.</li>
+      </ul>
+    </section>
+
+    <!-- RECAP -->
+    <section class="slide">
+      <div class="eyebrow">Wrap-up</div>
+      <h2>What you can do now</h2>
+      <ul>
+        <li>Explain, in one sentence, what turns a chat completion into an agent.</li>
+        <li>Design a tool whose arguments <em>are</em> the final answer, instead of a side-effect lookup.</li>
+        <li>Explain why registering a service <code>Singleton</code> can fail once it depends on something <code>Scoped</code>.</li>
+        <li>Explain why a strict JSON schema on a tool call still doesn't remove the need to validate the result.</li>
+        <li>Trace a generated quiz from pasted text, through two tool calls, to a graded result &mdash; naming every endpoint it touches.</li>
+      </ul>
+    </section>
+
+    <!-- QUESTIONS -->
+    <section class="slide title-slide">
+      <div class="title-glow"></div>
+      <div class="title-glow-2"></div>
+      <div class="lab-badge">AC Labs 2026 &nbsp;&middot;&nbsp; <span>Lab 10</span></div>
+      <h1>Questions?</h1>
+      <p class="muted" style="max-width:54ch; margin-top:.8em; font-size:1.1rem;">
+        Open the guide and let's build it. Start from <code>Lab10/Code/backend</code>
+        &mdash; Step 00. The frontend's already running for you at <code>localhost:5173</code>.
+      </p>
+    </section>
+
+  </div>
+
+  <div class="footer">
+    <span>AC Labs 2026 &middot; Lab 10 &mdash; An AI Agent for Quiz Generation</span>
+    <span class="slide-num"><em id="cur">1</em> / <span id="total">1</span></span>
+    <span><kbd>&rarr;</kbd> <kbd>&larr;</kbd> <kbd>F</kbd></span>
+  </div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  let i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    document.getElementById('cur').textContent = i + 1;
+    document.getElementById('progress').style.width = ((i + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight','PageDown',' '].includes(e.key)) { show(i+1); e.preventDefault(); }
+    else if (['ArrowLeft','PageUp'].includes(e.key)) { show(i-1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(total - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.footer')) return;
+    show(i + 1);
+  });
+
+  show(0);
+</script>
+</body>
+</html>

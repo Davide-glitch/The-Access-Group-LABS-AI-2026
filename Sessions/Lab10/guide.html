@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lab 10 &mdash; Step-by-step guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f8f9fc;
+    --bg-2: #ffffff;
+    --bg-3: #eef0f6;
+    --fg: #0f1117;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --accent: #2563eb;
+    --accent-dim: rgba(37,99,235,0.08);
+    --accent-border: rgba(37,99,235,0.2);
+    --green: #059669;
+    --green-dim: rgba(5,150,105,0.08);
+    --green-border: rgba(5,150,105,0.2);
+    --orange: #d97706;
+    --orange-dim: rgba(217,119,6,0.08);
+    --orange-border: rgba(217,119,6,0.2);
+    --cyan: #0891b2;
+    --cyan-dim: rgba(8,145,178,0.08);
+    --cyan-border: rgba(8,145,178,0.2);
+    --border: #e5e7eb;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --display: 'Syne', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  .hero {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--muted-2);
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .3em .8em;
+    margin-bottom: 1.5rem;
+  }
+  .hero-badge span { color: var(--accent); font-weight: 700; }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: .8rem;
+    color: var(--fg);
+  }
+  .hero p {
+    font-size: 1.1rem;
+    color: var(--muted-2);
+    max-width: 62ch;
+  }
+
+  .overview {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 3rem;
+  }
+  .overview h3 {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--fg);
+  }
+  .step-index {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .4rem;
+  }
+  .step-index a {
+    display: flex; align-items: center; gap: .6em;
+    font-size: .88rem;
+    color: var(--muted-2);
+    text-decoration: none;
+    padding: .3em .5em;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+  }
+  .step-index a:hover { background: var(--bg-3); color: var(--accent); }
+  .step-index a .num {
+    font-family: var(--mono);
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    width: 1.9em; height: 1.6em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .partlabel {
+    font-family: var(--mono);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 2.5rem 0 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--accent-border);
+  }
+
+  .step {
+    margin-bottom: 3.5rem;
+    scroll-margin-top: 2rem;
+  }
+  .step-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  .step-num {
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 8px;
+    min-width: 2.4em; height: 2.4em;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: .15em;
+  }
+  .step h2 {
+    font-family: var(--display);
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--fg);
+  }
+  .step p, .step li {
+    font-size: .97rem;
+    line-height: 1.7;
+    color: #374151;
+  }
+  .step ul, .step ol {
+    padding-left: 1.4rem;
+    margin: .6rem 0;
+  }
+  .step li { margin-bottom: .3em; }
+  .step p + p { margin-top: .7em; }
+  .step-body { padding-left: 3.4rem; }
+
+  .callout {
+    border-radius: 10px;
+    padding: 1em 1.2em;
+    margin: 1.1em 0;
+    font-size: .93rem;
+    line-height: 1.6;
+    border-left: 3px solid;
+  }
+  .callout strong { display: block; margin-bottom: .2em; font-size: .88rem; text-transform: uppercase; letter-spacing: .06em; }
+  .callout.why   { background: var(--accent-dim); border-color: var(--accent); color: #1e3a8a; }
+  .callout.why strong { color: var(--accent); }
+  .callout.check { background: var(--green-dim); border-color: var(--green); color: #065f46; }
+  .callout.check strong { color: var(--green); }
+  .callout.warn  { background: var(--orange-dim); border-color: var(--orange); color: #78350f; }
+  .callout.warn strong { color: var(--orange); }
+  .callout.tip   { background: var(--cyan-dim); border-color: var(--cyan); color: #164e63; }
+  .callout.tip strong { color: var(--cyan); }
+
+  .code-block {
+    background: #1a1f2e;
+    border: 1px solid #2d3548;
+    border-radius: 10px;
+    padding: 1.1em 1.3em;
+    font-family: var(--mono);
+    font-size: .84rem;
+    line-height: 1.85;
+    overflow-x: auto;
+    white-space: pre;
+    color: #cdd5e0;
+    position: relative;
+  }
+  .code-block[data-lang]::before {
+    content: attr(data-lang);
+    position: absolute; top: .6em; right: .9em;
+    font-size: .65rem;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .code-block.sm { font-size: .78rem; }
+  .kw  { color: #93b4ff; }
+  .ty  { color: #6dd5f7; }
+  .str { color: #95e09a; }
+  .cm  { color: #6b7a99; font-style: italic; }
+  .fn  { color: #ffc96b; }
+  .nu  { color: #ff9db5; }
+  .at  { color: #d6aaff; }
+  .tg  { color: #f0a3c4; }
+  .hi  { background: rgba(37,99,235,0.25); border-radius: 3px; padding: 0 2px; }
+  .hi-green { background: rgba(5,150,105,0.2); border-radius: 3px; padding: 0 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: .87em;
+    background: var(--bg-3);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .step-divider {
+    border: none;
+    border-top: 1px dashed var(--border);
+    margin: 3rem 0;
+  }
+
+  .final {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 2rem;
+    margin-top: 4rem;
+    text-align: center;
+  }
+  .final h2 {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: .5rem;
+  }
+  .final p { color: var(--muted-2); font-size: .97rem; }
+
+  .file-path {
+    font-family: var(--mono);
+    font-size: .78rem;
+    background: var(--bg-3);
+    border: 1px dashed var(--border);
+    color: var(--muted-2);
+    padding: .3em .7em;
+    border-radius: 6px;
+    display: inline-block;
+    margin: .3em 0 .8em;
+  }
+  .file-path strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-badge">AC Labs 2026 &nbsp;&middot;&nbsp; <span>Lab 10</span> &nbsp;&middot;&nbsp; Self-paced guide</div>
+    <h1>An AI agent for quiz generation</h1>
+    <p>The frontend already knows how to generate a quiz, play it, and show a graded result &mdash; it's Lab 9's finished Solution, and it's been calling three endpoints that don't exist yet. Today you build all three, and <code>/quizzes/generate</code> becomes a real <strong>agent</strong>: the model gets a tool to check for duplicate topics, and another tool that <em>is</em> its final answer. By the end, pasting a paragraph produces a non-duplicate quiz, playing it never leaks the answer key, and grading happens where it belongs &mdash; on the server.</p>
+  </div>
+
+  <div class="overview">
+    <h3>Steps in this guide</h3>
+    <div class="step-index">
+      <a href="#s0"><span class="num">00</span> Run the baseline</a>
+      <a href="#s1"><span class="num">01</span> Tour the starter</a>
+      <a href="#s2"><span class="num">02</span> Add the agent packages</a>
+      <a href="#s3"><span class="num">03</span> Build the chat client</a>
+      <a href="#s4"><span class="num">04</span> Write the two tools</a>
+      <a href="#s5"><span class="num">05</span> Wire GenerateAsync</a>
+      <a href="#s6"><span class="num">06</span> The generate endpoint</a>
+      <a href="#s7"><span class="num">07</span> GET .../play</a>
+      <a href="#s8"><span class="num">08</span> POST .../evaluate</a>
+      <a href="#s9"><span class="num">09</span> Run it end to end</a>
+      <a href="#s10"><span class="num">10</span> Homework</a>
+    </div>
+  </div>
+
+  <div class="partlabel">Part A &middot; Setup &mdash; run the frontend, tour the starter</div>
+
+  <!-- STEP 0 -->
+  <div class="step" id="s0">
+    <div class="step-header">
+      <div class="step-num">00</div>
+      <h2>Run the baseline</h2>
+    </div>
+    <div class="step-body">
+      <p>Two things to start, from inside <code>Lab10/Code</code>:</p>
+      <div class="code-block" data-lang="shell">
+<span class="cm"># terminal 1 — the frontend (already fully built, don't edit it)</span>
+<span class="kw">cd</span> Lab10/Code/frontend
+npm install
+npm run dev
+<span class="cm"># → http://localhost:5173</span>
+
+<span class="cm"># terminal 2 — your starter backend</span>
+<span class="kw">cd</span> Lab10/Code/backend
+dotnet ef database update
+export GITHUB_TOKEN=ghp_xxxxxxxxxxxx   <span class="cm"># same token as Lab 1-4</span>
+dotnet run
+<span class="cm"># → http://localhost:5023</span></div>
+      <p>Open <code>http://localhost:5173</code> and try to generate a quiz, or open an existing one to play it. Both fail right now &mdash; that's expected. You're looking at a fully-built frontend calling three endpoints that don't exist yet.</p>
+      <div class="callout warn">
+        <strong>Fine-grained PAT users</strong>
+        <code>GITHUB_TOKEN</code> needs the "Models" permission explicitly granted on the token itself, not just presence of a token. If you get a <code>401</code> straight from GitHub (not just from this API), that's the first thing to check.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 1 -->
+  <div class="step" id="s1">
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <h2>Tour the starter</h2>
+    </div>
+    <div class="step-body">
+      <p><code>backend/</code> is your Lab 7-9 API, unchanged except for one deliberate gap: <code>Controllers/QuizzesController.cs</code> has three <code>TODO</code> comments where <code>Generate</code>, <code>GetForPlay</code>, and <code>Evaluate</code> used to be. Everything else &mdash; CRUD, auth, answer-option validation on <code>AddQuestion</code> &mdash; is exactly as it was.</p>
+      <p>Also already there, so you don't have to write them today:</p>
+      <ul>
+        <li><code>Dtos/GenerateQuizDto.cs</code>, <code>PlayQuizDto.cs</code>, <code>SubmitQuizDto.cs</code>, <code>QuizResultDto.cs</code> &mdash; every shape you'll return or accept.</li>
+        <li><code>Repositories/IQuizRepository.cs</code> &mdash; unchanged; you'll call <code>AllAsync()</code> from inside the agent, and <code>AddAsync</code>/<code>AddQuestionAsync</code> from the controller, same as always.</li>
+      </ul>
+      <p>What's missing entirely: a <code>Services/</code> folder. You're building <code>IQuizGenerator</code> and its implementation from nothing today &mdash; last lab's version was handed to you already built; this time you're the one connecting the chat client to real tools.</p>
+    </div>
+  </div>
+
+  <div class="partlabel">Part B &middot; The agent &mdash; POST /quizzes/generate</div>
+
+  <!-- STEP 2 -->
+  <div class="step" id="s2">
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <h2>Add the agent packages</h2>
+    </div>
+    <div class="step-body">
+      <p>Open <code>backend/Lab7.csproj</code> and replace the <code>TODO</code> comment with:</p>
+      <div class="file-path"><strong>backend/</strong>Lab7.csproj</div>
+      <div class="code-block" data-lang="xml">
+&lt;<span class="tg">PackageReference</span> <span class="at">Include</span>=<span class="str">"OpenAI"</span> <span class="at">Version</span>=<span class="str">"2.11.0"</span> /&gt;
+&lt;<span class="tg">PackageReference</span> <span class="at">Include</span>=<span class="str">"Microsoft.Extensions.AI"</span> <span class="at">Version</span>=<span class="str">"10.7.0"</span> /&gt;
+&lt;<span class="tg">PackageReference</span> <span class="at">Include</span>=<span class="str">"Microsoft.Extensions.AI.OpenAI"</span> <span class="at">Version</span>=<span class="str">"10.7.0"</span> /&gt;</div>
+      <div class="callout why">
+        <strong>Why 2.11.0, not 2.4.0</strong>
+        <code>Microsoft.Extensions.AI.OpenAI</code> depends on <code>OpenAI &gt;= 2.11.0</code>. Ask for anything older and restore fails with a package-downgrade error.
+      </div>
+      <p>Then create the folder you'll spend the rest of this part in:</p>
+      <div class="code-block" data-lang="shell">
+<span class="kw">mkdir</span> backend/Services</div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 3 -->
+  <div class="step" id="s3">
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <h2>Build the chat client</h2>
+    </div>
+    <div class="step-body">
+      <p>Create <code>Services/IQuizGenerator.cs</code> &mdash; the contract the controller will depend on, plus the plain classes the model's answer gets deserialized into:</p>
+      <div class="file-path"><strong>backend/Services/</strong>IQuizGenerator.cs</div>
+      <div class="code-block" data-lang="csharp">
+<span class="kw">namespace</span> Lab7.Services;
+
+<span class="kw">public interface</span> <span class="ty">IQuizGenerator</span>
+{
+    <span class="ty">Task</span>&lt;<span class="ty">GeneratedQuizPayload</span>&gt; <span class="fn">GenerateAsync</span>(
+        <span class="ty">string</span> sourceText, <span class="ty">int</span> questionCount, <span class="ty">CancellationToken</span> cancellationToken = <span class="kw">default</span>);
+}
+
+<span class="kw">public class</span> <span class="ty">GeneratedQuizPayload</span>
+{
+    <span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">GeneratedQuestionPayload</span>&gt; Questions { <span class="kw">get</span>; <span class="kw">set</span>; } = [];
+}
+
+<span class="kw">public class</span> <span class="ty">GeneratedQuestionPayload</span>
+{
+    <span class="kw">public</span> <span class="ty">string</span> Text { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+    <span class="kw">public</span> <span class="ty">List</span>&lt;<span class="ty">GeneratedOptionPayload</span>&gt; Options { <span class="kw">get</span>; <span class="kw">set</span>; } = [];
+}
+
+<span class="kw">public class</span> <span class="ty">GeneratedOptionPayload</span>
+{
+    <span class="kw">public</span> <span class="ty">string</span> Text { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+    <span class="kw">public</span> <span class="ty">bool</span> IsCorrect { <span class="kw">get</span>; <span class="kw">set</span>; }
+}</div>
+      <p>Now start <code>Services/OpenAiQuizGenerator.cs</code> with just the constructor &mdash; this part is almost identical to a plain chat client, plus two extra calls that turn it into an agent:</p>
+      <div class="file-path"><strong>backend/Services/</strong>OpenAiQuizGenerator.cs</div>
+      <div class="code-block sm" data-lang="csharp">
+<span class="kw">using</span> System.ClientModel;
+<span class="kw">using</span> System.ComponentModel;
+<span class="kw">using</span> Lab7.Repositories;
+<span class="kw">using</span> Microsoft.Extensions.AI;
+<span class="kw">using</span> OpenAI;
+
+<span class="kw">namespace</span> Lab7.Services;
+
+<span class="kw">public class</span> <span class="ty">OpenAiQuizGenerator</span> : <span class="ty">IQuizGenerator</span>
+{
+    <span class="kw">private readonly</span> <span class="ty">IChatClient</span> _chatClient;
+    <span class="kw">private readonly</span> <span class="ty">IQuizRepository</span> _repo;
+    <span class="kw">private</span> <span class="ty">GeneratedQuizPayload</span>? _result;
+
+    <span class="kw">public</span> <span class="fn">OpenAiQuizGenerator</span>(<span class="ty">IQuizRepository</span> repo)
+    {
+        _repo = repo;
+
+        <span class="kw">var</span> token = <span class="ty">Environment</span>.<span class="fn">GetEnvironmentVariable</span>(<span class="str">"GITHUB_TOKEN"</span>)
+            ?? <span class="kw">throw new</span> <span class="ty">InvalidOperationException</span>(<span class="str">"Set GITHUB_TOKEN before calling /quizzes/generate."</span>);
+
+        <span class="kw">var</span> modelId = <span class="ty">Environment</span>.<span class="fn">GetEnvironmentVariable</span>(<span class="str">"GITHUB_MODEL"</span>) ?? <span class="str">"openai/gpt-4o-mini"</span>;
+
+        <span class="kw">var</span> openAiClient = <span class="kw">new</span> <span class="ty">OpenAIClient</span>(
+            <span class="kw">new</span> <span class="ty">ApiKeyCredential</span>(token),
+            <span class="kw">new</span> <span class="ty">OpenAIClientOptions</span> { Endpoint = <span class="kw">new</span> <span class="ty">Uri</span>(<span class="str">"https://models.github.ai/inference"</span>) });
+
+        <span class="cm">// Wrap the plain OpenAI chat client in Microsoft.Extensions.AI's
+        // IChatClient abstraction, then layer on function-invocation
+        // middleware — it's what turns "the model asked for a tool call"
+        // into "the tool actually ran and the model saw the result."</span>
+        _chatClient = openAiClient
+            .<span class="fn">GetChatClient</span>(modelId)
+            .<span class="fn">AsIChatClient</span>()
+            .<span class="fn">AsBuilder</span>()
+            .<span class="fn">UseFunctionInvocation</span>()
+            .<span class="fn">Build</span>();
+    }
+}</div>
+      <div class="callout tip">
+        <strong>Nothing exotic yet</strong>
+        Same <code>OpenAIClient</code>, same GitHub Models endpoint, same <code>GITHUB_TOKEN</code>/<code>GITHUB_MODEL</code> pattern as last lab. The only new lines are <code>.AsIChatClient().AsBuilder().UseFunctionInvocation().Build()</code> — everything before that is identical to a plain chat client.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 4 -->
+  <div class="step" id="s4">
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <h2>Write the two tools</h2>
+    </div>
+    <div class="step-body">
+      <p>Add these two private methods to <code>OpenAiQuizGenerator</code>, below the constructor. Each is a plain C# method &mdash; <code>[Description]</code> is the only thing telling <code>AIFunctionFactory</code> what it does.</p>
+      <div class="file-path"><strong>backend/Services/</strong>OpenAiQuizGenerator.cs</div>
+      <div class="code-block sm" data-lang="csharp">
+[<span class="fn">Description</span>(<span class="str">"Returns the title and description of every existing quiz — call "</span> +
+             <span class="str">"this before writing questions, so you can avoid duplicating an "</span> +
+             <span class="str">"existing quiz's topic."</span>)]
+<span class="kw">private async</span> <span class="ty">Task</span>&lt;<span class="ty">IEnumerable</span>&lt;<span class="ty">object</span>&gt;&gt; <span class="fn">ListExistingQuizTitlesAsync</span>()
+{
+    <span class="kw">var</span> quizzes = <span class="kw">await</span> _repo.<span class="fn">AllAsync</span>();
+    <span class="kw">return</span> quizzes.<span class="fn">Select</span>(q =&gt; <span class="kw">new</span> { q.Title, q.Description });
+}
+
+[<span class="fn">Description</span>(<span class="str">"Submit the finished quiz. Call this exactly once, when you're "</span> +
+             <span class="str">"confident the questions are accurate and non-duplicate."</span>)]
+<span class="kw">private</span> <span class="ty">string</span> <span class="fn">CreateQuiz</span>(
+    [<span class="fn">Description</span>(<span class="str">"The quiz questions. Each needs 2+ answer options with exactly one isCorrect = true."</span>)]
+    <span class="ty">List</span>&lt;<span class="ty">GeneratedQuestionPayload</span>&gt; questions)
+{
+    <span class="kw">var</span> payload = <span class="kw">new</span> <span class="ty">GeneratedQuizPayload</span> { Questions = questions };
+
+    <span class="kw">if</span> (payload.Questions.Count == <span class="nu">0</span>)
+        <span class="kw">throw new</span> <span class="ty">InvalidOperationException</span>(<span class="str">"A quiz needs at least one question."</span>);
+
+    <span class="kw">foreach</span> (<span class="kw">var</span> q <span class="kw">in</span> payload.Questions)
+    {
+        <span class="kw">if</span> (q.Options.Count &lt; <span class="nu">2</span> || q.Options.<span class="fn">Count</span>(o =&gt; o.IsCorrect) != <span class="nu">1</span>)
+            <span class="kw">throw new</span> <span class="ty">InvalidOperationException</span>(
+                <span class="str">$"Malformed question (\"{q.Text}\"): needs 2+ options and exactly one marked correct."</span>);
+    }
+
+    _result = payload;
+    <span class="kw">return</span> <span class="str">"Quiz recorded."</span>;
+}</div>
+      <div class="callout why">
+        <strong>Why <code>CreateQuiz</code> can be the final answer</strong>
+        <code>AIFunctionFactory.Create(CreateQuiz)</code> reflects this method's parameter type into a JSON schema — the same guarantee <code>ResponseFormat.CreateJsonSchemaFormat</code> gave last lab's one-shot call, except now it lives on a tool instead of the whole response, so it doesn't conflict with also offering <code>ListExistingQuizTitlesAsync</code> in the same request.
+      </div>
+      <div class="callout check">
+        <strong>A bonus you get for free</strong>
+        Thrown exceptions inside a tool method are caught by the function-invocation middleware and fed back to the model as that tool's result. A malformed first attempt becomes a self-correction opportunity — the model sees the error message and can call <code>create_quiz</code> again — instead of a hard failure.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 5 -->
+  <div class="step" id="s5">
+    <div class="step-header">
+      <div class="step-num">05</div>
+      <h2>Wire <code>GenerateAsync</code></h2>
+    </div>
+    <div class="step-body">
+      <p>Add the instructions string and the interface method, tying the tools and the prompt together:</p>
+      <div class="file-path"><strong>backend/Services/</strong>OpenAiQuizGenerator.cs</div>
+      <div class="code-block sm" data-lang="csharp">
+<span class="kw">private const</span> <span class="ty">string</span> Instructions =
+    <span class="str">"You turn source text into a multiple-choice quiz. Read the supplied text "</span> +
+    <span class="str">"carefully and write clear, self-contained questions that can be answered "</span> +
+    <span class="str">"from the text alone — never invent facts that aren't in it. Every question "</span> +
+    <span class="str">"needs exactly four answer options, with exactly one isCorrect = true. Keep "</span> +
+    <span class="str">"question and option text concise.\n\n"</span> +
+    <span class="str">"Before writing questions, call list_existing_quiz_titles to see what quizzes "</span> +
+    <span class="str">"already exist, and pick a title and angle that doesn't duplicate one of them. "</span> +
+    <span class="str">"When you're confident the questions are accurate and non-duplicate, call "</span> +
+    <span class="str">"create_quiz exactly once with the finished quiz — that call IS your final "</span> +
+    <span class="str">"answer, don't also repeat the quiz back as plain text."</span>;
+
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">GeneratedQuizPayload</span>&gt; <span class="fn">GenerateAsync</span>(
+    <span class="ty">string</span> sourceText, <span class="ty">int</span> questionCount, <span class="ty">CancellationToken</span> cancellationToken = <span class="kw">default</span>)
+{
+    _result = <span class="kw">null</span>;
+
+    <span class="kw">var</span> chatOptions = <span class="kw">new</span> <span class="ty">ChatOptions</span>
+    {
+        Tools =
+        [
+            <span class="ty">AIFunctionFactory</span>.<span class="fn">Create</span>(ListExistingQuizTitlesAsync),
+            <span class="ty">AIFunctionFactory</span>.<span class="fn">Create</span>(CreateQuiz),
+        ],
+    };
+
+    <span class="kw">var</span> messages = <span class="kw">new</span> <span class="ty">List</span>&lt;<span class="ty">ChatMessage</span>&gt;
+    {
+        <span class="kw">new</span>(<span class="ty">ChatRole</span>.System, Instructions),
+        <span class="kw">new</span>(<span class="ty">ChatRole</span>.User,
+            <span class="str">$"Source text:\n\"\"\"\n{sourceText}\n\"\"\"\n\n"</span> +
+            <span class="str">$"Write exactly {questionCount} multiple-choice questions based only on the source text above."</span>),
+    };
+
+    <span class="kw">await</span> _chatClient.<span class="fn">GetResponseAsync</span>(messages, chatOptions, cancellationToken);
+
+    <span class="kw">return</span> _result ?? <span class="kw">throw new</span> <span class="ty">InvalidOperationException</span>(
+        <span class="str">"The model finished without calling create_quiz."</span>);
+}</div>
+      <p>Now register it in <code>Program.cs</code>, where the <code>TODO</code> comment is:</p>
+      <div class="file-path"><strong>backend/</strong>Program.cs</div>
+      <div class="code-block sm" data-lang="csharp">
+builder.Services.<span class="fn">AddScoped</span>&lt;<span class="ty">IQuizGenerator</span>, <span class="ty">OpenAiQuizGenerator</span>&gt;();</div>
+      <div class="callout warn">
+        <strong><code>AddScoped</code>, not <code>AddSingleton</code></strong>
+        <code>OpenAiQuizGenerator</code> now depends on <code>IQuizRepository</code>, which is <code>Scoped</code> (because <code>DbContext</code> isn't thread-safe to share). A <code>Singleton</code> can't safely depend on a <code>Scoped</code> service — it would pin the first request's <code>DbContext</code> for the app's whole lifetime, and .NET throws at startup if you try.
+      </div>
+      <p>Add the <code>using</code> for <code>Lab7.Services</code> at the top of <code>Program.cs</code> if it isn't already there.</p>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 6 -->
+  <div class="step" id="s6">
+    <div class="step-header">
+      <div class="step-num">06</div>
+      <h2>The generate endpoint</h2>
+    </div>
+    <div class="step-body">
+      <p>Back in <code>Controllers/QuizzesController.cs</code>: add the constructor parameter, and replace the first <code>TODO</code>.</p>
+      <div class="file-path"><strong>backend/Controllers/</strong>QuizzesController.cs</div>
+      <div class="code-block sm" data-lang="csharp">
+<span class="kw">private readonly</span> <span class="ty">IQuizRepository</span> _repo;
+<span class="kw">private readonly</span> <span class="ty">IQuizGenerator</span> _generator;
+
+<span class="kw">public</span> <span class="fn">QuizzesController</span>(<span class="ty">IQuizRepository</span> repo, <span class="ty">IQuizGenerator</span> generator)
+{
+    _repo = repo;
+    _generator = generator;
+}
+
+[<span class="ty">HttpPost</span>(<span class="str">"generate"</span>)]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">ActionResult</span>&lt;<span class="ty">Quiz</span>&gt;&gt; <span class="fn">Generate</span>(<span class="ty">GenerateQuizDto</span> dto)
+{
+    <span class="kw">var</span> ownerId = User.<span class="fn">GetObjectId</span>()!;
+
+    <span class="ty">GeneratedQuizPayload</span> generated;
+    <span class="kw">try</span>
+    {
+        generated = <span class="kw">await</span> _generator.<span class="fn">GenerateAsync</span>(dto.SourceText, dto.QuestionCount);
+    }
+    <span class="kw">catch</span> (<span class="ty">InvalidOperationException</span> ex)
+    {
+        <span class="kw">return</span> <span class="fn">StatusCode</span>(<span class="ty">StatusCodes</span>.Status502BadGateway, ex.Message);
+    }
+
+    <span class="kw">var</span> title = <span class="ty">string</span>.<span class="fn">IsNullOrWhiteSpace</span>(dto.Title)
+        ? <span class="str">$"Generated quiz — {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC"</span>
+        : dto.Title!;
+
+    <span class="kw">var</span> quiz = <span class="kw">await</span> _repo.<span class="fn">AddAsync</span>(title, description: <span class="str">"Generated from source text by QuizGenerator."</span>, ownerId);
+
+    <span class="kw">foreach</span> (<span class="kw">var</span> q <span class="kw">in</span> generated.Questions)
+    {
+        <span class="kw">var</span> options = q.Options.<span class="fn">Select</span>(o =&gt; (o.Text, o.IsCorrect)).<span class="fn">ToList</span>();
+        <span class="kw">await</span> _repo.<span class="fn">AddQuestionAsync</span>(quiz.Id, q.Text, options);
+    }
+
+    <span class="kw">var</span> withQuestions = <span class="kw">await</span> _repo.<span class="fn">FindAsync</span>(quiz.Id);
+    <span class="kw">return</span> <span class="fn">CreatedAtAction</span>(<span class="fn">nameof</span>(GetById), <span class="kw">new</span> { id = quiz.Id }, withQuestions);
+}</div>
+      <p>Don't forget <code>using Lab7.Services;</code> at the top of the file.</p>
+      <div class="callout tip">
+        <strong>Try it before moving on</strong>
+        Open <code>http://localhost:5023/swagger</code>, sign in, and call <code>POST /quizzes/generate</code> with a paragraph of text (200+ characters) and <code>questionCount: 3</code>. Watch the response &mdash; a <code>201</code> with a new quiz means the whole tool-calling round trip worked.
+      </div>
+    </div>
+  </div>
+
+  <div class="partlabel">Part C &middot; Play &amp; grade</div>
+
+  <!-- STEP 7 -->
+  <div class="step" id="s7">
+    <div class="step-header">
+      <div class="step-num">07</div>
+      <h2><code>GET /quizzes/{id}/play</code></h2>
+    </div>
+    <div class="step-body">
+      <p>Replace the second <code>TODO</code> in <code>QuizzesController.cs</code>:</p>
+      <div class="file-path"><strong>backend/Controllers/</strong>QuizzesController.cs</div>
+      <div class="code-block sm" data-lang="csharp">
+[<span class="ty">HttpGet</span>(<span class="str">"{id:guid}/play"</span>)]
+[<span class="ty">AllowAnonymous</span>]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">ActionResult</span>&lt;<span class="ty">PlayQuizDto</span>&gt;&gt; <span class="fn">GetForPlay</span>(<span class="ty">Guid</span> id)
+{
+    <span class="kw">var</span> quiz = <span class="kw">await</span> _repo.<span class="fn">FindAsync</span>(id);
+    <span class="kw">if</span> (quiz <span class="kw">is null</span>) <span class="kw">return</span> <span class="fn">NotFound</span>();
+
+    <span class="kw">return</span> <span class="fn">Ok</span>(<span class="kw">new</span> <span class="ty">PlayQuizDto</span>
+    {
+        Id = quiz.Id,
+        Title = quiz.Title,
+        Description = quiz.Description,
+        Questions = quiz.Questions.<span class="fn">Select</span>(q =&gt; <span class="kw">new</span> <span class="ty">PlayQuestionDto</span>
+        {
+            Id = q.Id,
+            Text = q.Text,
+            Options = q.Options.<span class="fn">Select</span>(o =&gt; <span class="kw">new</span> <span class="ty">PlayOptionDto</span> { Id = o.Id, Text = o.Text }).<span class="fn">ToList</span>()
+        }).<span class="fn">ToList</span>()
+    });
+}</div>
+      <div class="callout why">
+        <strong>Structural, not behavioral</strong>
+        <code>PlayOptionDto</code> simply doesn't <em>have</em> an <code>IsCorrect</code> property. The guarantee comes from the type itself, not from remembering to strip a field at render time.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 8 -->
+  <div class="step" id="s8">
+    <div class="step-header">
+      <div class="step-num">08</div>
+      <h2><code>POST /quizzes/{id}/evaluate</code></h2>
+    </div>
+    <div class="step-body">
+      <p>Replace the third <code>TODO</code>:</p>
+      <div class="file-path"><strong>backend/Controllers/</strong>QuizzesController.cs</div>
+      <div class="code-block sm" data-lang="csharp">
+[<span class="ty">HttpPost</span>(<span class="str">"{id:guid}/evaluate"</span>)]
+[<span class="ty">AllowAnonymous</span>]
+<span class="kw">public async</span> <span class="ty">Task</span>&lt;<span class="ty">ActionResult</span>&lt;<span class="ty">QuizResultDto</span>&gt;&gt; <span class="fn">Evaluate</span>(<span class="ty">Guid</span> id, <span class="ty">SubmitQuizDto</span> dto)
+{
+    <span class="kw">var</span> quiz = <span class="kw">await</span> _repo.<span class="fn">FindAsync</span>(id);
+    <span class="kw">if</span> (quiz <span class="kw">is null</span>) <span class="kw">return</span> <span class="fn">NotFound</span>();
+
+    <span class="kw">var</span> gradableQuestions = quiz.Questions.<span class="fn">Where</span>(q =&gt; q.Options.Count &gt; <span class="nu">0</span>).<span class="fn">ToList</span>();
+
+    <span class="kw">var</span> results = <span class="kw">new</span> <span class="ty">List</span>&lt;<span class="ty">QuestionResultDto</span>&gt;();
+    <span class="kw">foreach</span> (<span class="kw">var</span> q <span class="kw">in</span> gradableQuestions)
+    {
+        <span class="kw">var</span> correctOption = q.Options.<span class="fn">First</span>(o =&gt; o.IsCorrect);
+        <span class="kw">var</span> submitted = dto.Answers.<span class="fn">FirstOrDefault</span>(a =&gt; a.QuestionId == q.Id);
+
+        results.<span class="fn">Add</span>(<span class="kw">new</span> <span class="ty">QuestionResultDto</span>
+        {
+            QuestionId = q.Id,
+            QuestionText = q.Text,
+            SelectedOptionId = submitted?.SelectedOptionId,
+            CorrectOptionId = correctOption.Id,
+            WasCorrect = submitted <span class="kw">is not null</span> &amp;&amp; submitted.SelectedOptionId == correctOption.Id,
+            Options = q.Options.<span class="fn">Select</span>(o =&gt; <span class="kw">new</span> <span class="ty">ResultOptionDto</span>
+            {
+                Id = o.Id, Text = o.Text, IsCorrect = o.IsCorrect
+            }).<span class="fn">ToList</span>()
+        });
+    }
+
+    <span class="kw">var</span> correctCount = results.<span class="fn">Count</span>(r =&gt; r.WasCorrect);
+
+    <span class="kw">return</span> <span class="fn">Ok</span>(<span class="kw">new</span> <span class="ty">QuizResultDto</span>
+    {
+        TotalQuestions = results.Count,
+        CorrectCount = correctCount,
+        ScorePercentage = results.Count == <span class="nu">0</span> ? <span class="nu">0</span> : <span class="ty">Math</span>.<span class="fn">Round</span>(<span class="nu">100.0</span> * correctCount / results.Count, <span class="nu">1</span>),
+        Results = results
+    });
+}</div>
+      <div class="callout why">
+        <strong>Where it's safe to say "you're right"</strong>
+        Never to a client that hasn't submitted an answer yet — that's why <code>play</code> withholds it. Once a client has posted its picks here, revealing which were correct is fine: nothing left to cheat on.
+      </div>
+    </div>
+  </div>
+
+  <div class="partlabel">Part D &middot; Verify &amp; homework</div>
+
+  <!-- STEP 9 -->
+  <div class="step" id="s9">
+    <div class="step-header">
+      <div class="step-num">09</div>
+      <h2>Run it end to end</h2>
+    </div>
+    <div class="step-body">
+      <p>Restart the API (<code>dotnet run</code> again if it's still running the old build) and go back to <code>http://localhost:5173</code>:</p>
+      <ol>
+        <li>Sign in with Microsoft.</li>
+        <li>Paste 200+ characters of source text into <strong>Generate a quiz</strong> and submit &mdash; you should see a new quiz appear, written by your agent.</li>
+        <li>Generate a <em>second</em> quiz from similar source text. Check the new quiz's title/angle against the first &mdash; the <code>list_existing_quiz_titles</code> tool should have steered the model away from repeating itself.</li>
+        <li>Open any quiz and play it. Confirm you never see a correct answer before submitting.</li>
+        <li>Submit your picks and confirm you get a score, with correct answers now revealed.</li>
+      </ol>
+      <div class="callout check">
+        <strong>If generation returns a 502</strong>
+        That's the model or your validation rejecting a response &mdash; check the API's console output for the exception message from <code>CreateQuiz</code>. A 502 means something you don't control misbehaved, not that your request was malformed.
+      </div>
+    </div>
+  </div>
+
+  <hr class="step-divider" />
+
+  <!-- STEP 10 -->
+  <div class="step" id="s10">
+    <div class="step-header">
+      <div class="step-num">10</div>
+      <h2>Homework &mdash; take it further</h2>
+    </div>
+    <div class="step-body">
+      <p><strong>Pick one (or more):</strong></p>
+      <ul>
+        <li><strong>Bound the tool-call rounds.</strong> Right now <code>GenerateAsync</code> trusts the model to eventually call <code>create_quiz</code>. Add a way to cap how many rounds of tool calls happen before giving up with a clearer error &mdash; look at <code>ChatOptions</code> and the function-invocation middleware's configuration for a built-in way to do this before writing your own counter.</li>
+        <li><strong>Surface the model's last message on failure.</strong> If the model never calls <code>create_quiz</code>, <code>GenerateAsync</code> throws a generic message. Capture the model's last text response (if any) and include it in the exception, so the 502 the caller sees explains <em>why</em> the model stalled.</li>
+        <li><strong>A third tool.</strong> Give the model a way to check the source text's approximate reading level or length before deciding how many questions to write, instead of always trusting the caller's <code>questionCount</code> blindly.</li>
+        <li><strong>Duplicate-topic enforcement, for real.</strong> Right now the model is only <em>asked</em> to avoid duplicating a topic &mdash; nothing stops it from ignoring the tool result. Add a lightweight server-side check (e.g. title similarity) that rejects an obviously duplicate generated quiz before it's persisted, the same way option validation already happens in <code>CreateQuiz</code>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="final">
+    <h2>That's the lab.</h2>
+    <p>The frontend didn't change today &mdash; the backend caught up to it. <code>/quizzes/generate</code> went from a single chat completion to a model that reads real data, decides when it's done, and hands back an answer whose shape you never had to write a JSON schema for by hand. Same validation discipline as always: a tool call is just another input you don't control until you've checked it.</p>
+  </div>
+
+</div>
+
+</body>
+</html>
