@@ -1,19 +1,11 @@
 import { useEffect, useState } from 'react';
-import QuizCard from './QuizCard';
 import { fetchQuizzes } from '../api/quizzes';
+import QuizCard from './QuizCard';
 import type { ApiQuiz } from '../types/quiz';
 
-type ExistingQuizzesProps = {
-  // Called when the user opens a server quiz. The parent owns navigation and
-  // the runner, so we just hand the picked quiz up.
-  onOpen: (quiz: ApiQuiz) => void;
-};
+type Props = { onView: (quiz: ApiQuiz) => void; };
 
-// The "fetch data from the API" half of the lab. This component owns three
-// pieces of state — the data, plus whether we're still loading and whether
-// the request failed — and renders each honestly instead of only the happy
-// path.
-function ExistingQuizzes({ onOpen }: ExistingQuizzesProps) {
+function ExistingQuizzes({ onView }: Props) {
   const [quizzes, setQuizzes] = useState<ApiQuiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,26 +15,25 @@ function ExistingQuizzes({ onOpen }: ExistingQuizzesProps) {
       .then(setQuizzes)
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
-  }, []); // empty array — run once, on mount
+  }, []);
 
-  if (loading) return <p className="status-message">Loading quizzes from the API...</p>;
-  if (error) return <p className="status-message error">Couldn't load quizzes: {error}</p>;
-  if (quizzes.length === 0) return <p className="status-message">No quizzes on the server yet.</p>;
+  if (loading) return <p>Loading quizzes from the API...</p>;
+  if (error) return <p className="status-message error">{error}</p>;
+  if (quizzes.length === 0) return <p>No quizzes on the server yet.</p>;
 
   return (
-    <div className="quiz-list">
-      {quizzes.map((quiz) => (
-        <QuizCard
-          key={quiz.id}
-          title={quiz.title}
-          subtitle={quiz.description}
-          action={
-            <button className="btn-secondary" onClick={() => onOpen(quiz)}>
-              View
-            </button>
-          }
-        />
-      ))}
+    <div className="existing-quizzes">
+      <h2>On the server</h2>
+      <div className="quiz-grid" style={{ marginTop: '10px' }}>
+        {quizzes.map((q) => (
+          <QuizCard
+            key={q.id}
+            title={q.title}
+            subtitle={q.description}
+            action={<button className="btn-secondary" onClick={() => onView(q)}>View</button>}
+          />
+        ))}
+      </div>
     </div>
   );
 }
